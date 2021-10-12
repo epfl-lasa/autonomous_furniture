@@ -1,10 +1,30 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <robot name="table">
+  <!--link name="base_link" /-->
+  
+  <material name="C_table">
+    <color rgba="0.33 0.24 0.15 1" />
+  </material>
+
   <link name="base_table">
     <visual>
       <geometry>
-        <box size="2 1 1"/>
+        <mesh filename="package://meshes/table/table.stl" />
       </geometry>
+      <material name="C_table"/>
     </visual>
+	<collision>  
+		<origin xyz="0 0.18 0.4" rpy="0 0 0" />
+	      <geometry>
+		  <box size="1.6 0.7 0.7" />
+	      </geometry>                       
+	</collision>
+
   </link>
+
+  <!--joint name="table" type="fixed">
+    <parent link="base_link" />
+    <child link="table" />
+  </joint-->
+
 </robot>
