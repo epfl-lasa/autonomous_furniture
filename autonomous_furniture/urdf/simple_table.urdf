@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot name="table">
+  <link name="base_table">
+    <visual>
+      <geometry>
+        <box size="2 1 1"/>
+      </geometry>
+    </visual>
+  </link>
+</robot>
