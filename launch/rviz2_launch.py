@@ -19,19 +19,45 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("object_descriptions"), "objects/open_box.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("autonomous_furniture"), "simple_chair.urdf"]),
             " ",
             "prefix:=box_ ",
             "connected_to:='' ",
             "xyz:='1 0.5 0.25' ",
-            "rpy:='1.57 0 0' ",
-            "height:=0.15 ",
+            "rpy:='' ",
+            "height:=1 ",
             "x_size:=0.5 ",
             "y_size:=0.5"
         ]
     )
 
-    return LaunchDescription([
+    robot_description = {"robot_description": robot_description_content}
+
+    robot_state_pub_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[robot_description],
+    )
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", PathJoinSubstitution([FindPackageShare("autonomous_furniture"), "object.rviz"])],
+        output="log",
+    )
+
+    nodes = [
+        robot_state_pub_node,
+        rviz_node,
+    ]
+
+    return LaunchDescription(nodes)
+
+
+"""
+    LaunchDescription([
         Node(
             package='robot_state_publisher', name='robot_state_publisher', executable='robot_state_publisher',
             parameters=[{'robot_description': urdf}],
@@ -40,19 +66,7 @@ def generate_launch_description():
             package='rviz2', name='rviz2', executable='rviz2', arguments=['-d', str('~/.rviz2/default.rviz')],
 
         )
-    ])
-
-
-def main(argv=sys.argv[1:]):
-    """Run lifecycle nodes via launch."""
-    ld = generate_launch_description()
-    ls = launch.LaunchService(argv=argv)
-    ls.include_launch_description(ld)
-    return ls.run()
-
-
-if __name__ == '__main__':
-    main()
+    ])"""
 
 """
         Node(

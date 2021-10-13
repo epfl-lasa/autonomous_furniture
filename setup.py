@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*_launch.py')),
         (os.path.join('share', package_name), glob('urdf/*.urdf')),
+        (os.path.join('share', package_name), glob('rviz/*.rviz')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
