@@ -1,3 +1,0 @@
-[submodule "libraries/dynamic_obstavle_avoidance"]
-	path = libraries/dynamic_obstacle_avoidance/
-	url = git@github.com:epfl-lasa/dynamic_obstacle_avoidance.git
