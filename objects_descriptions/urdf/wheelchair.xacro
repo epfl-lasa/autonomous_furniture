@@ -1,12 +1,8 @@
 <?xml version="1.0"?>
-<robot name="table_sim" xmlns:xacro="http://wiki.ros.org/xacro">
+<robot name="wheelchair_sim" xmlns:xacro="http://wiki.ros.org/xacro">
 
-    <xacro:macro name="table"
-                 params="prefix='table_' connected_to:='' xyz:='0 0 0' rpy:='0 0 0' mass=3.0">
-
-        <material name="Shape.003">
-            <color rgba="0.33 0.24 0.15 1"/>
-        </material>
+    <xacro:macro name="wheelchair"
+                 params="prefix='wheelchair_' connected_to:='' xyz:='0 0 0' rpy:='0 0 0' mass=3.0">
 
         <xacro:if value="${connected_to == ''}">
             <link name="world"/>
@@ -22,21 +18,25 @@
 
         <joint name="${prefix}base_to_${base_frame_name}" type="fixed">
             <parent link="${base_frame_name}"/>
-            <child link="${prefix}main_link"/>
+            <child link="${prefix}base_link"/>
             <origin rpy="${rpy}" xyz="${xyz}"/>
         </joint>
 
-        <link name="${prefix}main_link">
+        <link name="${prefix}base_link"/>
+        <joint name="${prefix}base" type="fixed">
+            <parent link="${prefix}base_link"/>
+            <child link="${prefix}chair"/>
+        </joint>
+
+        <link name="${prefix}chair">
             <visual>
                 <geometry>
-                    <mesh filename="package://objects_descriptions/meshes/table/table.stl"/>
+                    <mesh filename="package://objects_descriptions/meshes/wheelchair/wheelchair.dae"/>
                 </geometry>
-                <material name="Shape.003"/>
             </visual>
             <collision>
-                <origin xyz="0 0.18 0.4" rpy="0 0 0"/>
                 <geometry>
-                    <box size="1.6 0.7 0.7"/>
+                    <box size="0.5 0.5 0.5"/>
                 </geometry>
             </collision>
         </link>

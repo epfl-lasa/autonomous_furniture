@@ -10,9 +10,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/table.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wheelchair.urdf.xacro"]),
             " ",
-            "prefix:=table_ ",
+            "prefix:=wheelchair_ ",
             "connected_to:='' ",
             "xyz:='1 1 0' ",
             "rpy:='0 0 0' ",
