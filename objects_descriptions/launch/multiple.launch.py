@@ -29,7 +29,7 @@ def generate_launch_description():
             "prefix:=chair1_ ",
             "connected_to:='' ",
             "xyz:='0 -1 0' ",
-            "rpy:='0 0 0' ",
+            "rpy:='0 0 1.570796327' ",
         ]
     )
     chair1_description = {"robot_description": chair1_description_content}
@@ -43,7 +43,7 @@ def generate_launch_description():
             "prefix:=chair2_ ",
             "connected_to:='' ",
             "xyz:='0 1 0' ",
-            "rpy:='0 0 0' ",
+            "rpy:='0 0 -1.570796327' ",
         ]
     )
     chair2_description = {"robot_description": chair2_description_content}
@@ -61,6 +61,20 @@ def generate_launch_description():
         ]
     )
     wheelchair_description = {"robot_description": wheelchair_description_content}
+
+    qolo_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            " ",
+            "prefix:=qolo_ ",
+            "connected_to:='' ",
+            "xyz:='-1.5 0 0' ",
+            "rpy:='0 0 0' ",
+        ]
+    )
+    qolo_description = {"robot_description": qolo_description_content}
 
     table_state_pub_node = Node(
         package="robot_state_publisher",
@@ -94,6 +108,14 @@ def generate_launch_description():
         parameters=[wheelchair_description],
     )
 
+    qolo_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="qolo",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[qolo_description],
+    )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -106,7 +128,8 @@ def generate_launch_description():
         table_state_pub_node,
         chair1_state_pub_node,
         chair2_state_pub_node,
-        #wheelchair_state_pub_node,
+        # wheelchair_state_pub_node,
+        qolo_state_pub_node,
         rviz_node,
     ]
 
