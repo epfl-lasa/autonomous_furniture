@@ -5,7 +5,7 @@
     <xacro:arg name="connected_to" default=""/>
     <xacro:arg name="xyz" default="'0 0 0'"/>
     <xacro:arg name="rpy" default="'0 0 0'"/>
-    <xacro:arg name="mass" default="3.0"/>
+    <xacro:arg name="mass" default="8.0"/>
 
     <xacro:include filename="$(find objects_descriptions)/urdf/table.xacro"/>
 
