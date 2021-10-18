@@ -14,7 +14,7 @@ def generate_launch_description():
             " ",
             "prefix:=qolo_ ",
             "connected_to:='' ",
-            "xyz:='1 0 0' ",
+            "xyz:='1 0 0.2' ",
             "rpy:='0 0 0' ",
         ]
     )
