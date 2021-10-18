@@ -1,10 +1,6 @@
-import os
-from ament_index_python.packages import get_package_share_directory
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-
 from launch import LaunchDescription
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -17,12 +13,12 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/table.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
             " ",
-            "prefix:=table_ ",
+            "prefix:=chair_ ",
             "connected_to:='' ",
-            # "xyz:='0 0 0' ",
-            # "rpy:='0 0 0' ",
+            "xyz:='0 0 0' ",
+            "rpy:='0 0 0' ",
         ]
     )
     robot_description = {"use_sim_time": use_sim_time, "robot_description": robot_description_content}
@@ -36,8 +32,8 @@ def generate_launch_description():
 
     state_pub_node = Node(
         package='autonomous_furniture',
-        executable='state_publisher',
-        name='state_publisher',
+        executable='chair_state_publisher',
+        name='chair_state_publisher',
         output='screen',
     )
 
