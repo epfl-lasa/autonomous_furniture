@@ -11,23 +11,23 @@
             <color rgba="0.4 0.4 0.4 1"/>
         </material>
 
-        <xacro:if value="${connected_to == ''}">
-            <link name="world"/>
-            <xacro:property name="base_frame_name" value="world"/>
-        </xacro:if>
-        <xacro:unless value="${connected_to == ''}">
-            <xacro:property name="base_frame_name" value="${connected_to}"/>
-        </xacro:unless>
-        <xacro:if value="${connected_to == 'odom'}">
-            <link name="odom"/>
-            <xacro:property name="base_frame_name" value="odom"/>
-        </xacro:if>
+<!--        <xacro:if value="${connected_to == ''}">-->
+<!--            <link name="world"/>-->
+<!--            <xacro:property name="base_frame_name" value="world"/>-->
+<!--        </xacro:if>-->
+<!--        <xacro:unless value="${connected_to == ''}">-->
+<!--            <xacro:property name="base_frame_name" value="${connected_to}"/>-->
+<!--        </xacro:unless>-->
+<!--        <xacro:if value="${connected_to == 'odom'}">-->
+<!--            <link name="odom"/>-->
+<!--            <xacro:property name="base_frame_name" value="odom"/>-->
+<!--        </xacro:if>-->
 
-        <joint name="${prefix}base_to_${base_frame_name}" type="fixed">
-            <parent link="${base_frame_name}"/>
-            <child link="${prefix}tf"/>
-            <origin rpy="${rpy}" xyz="${xyz}"/>
-        </joint>
+<!--        <joint name="${prefix}base_to_${base_frame_name}" type="fixed">-->
+<!--            <parent link="${base_frame_name}"/>-->
+<!--            <child link="${prefix}tf"/>-->
+<!--            <origin rpy="${rpy}" xyz="${xyz}"/>-->
+<!--        </joint>-->
 
         <link name="${prefix}tf">
             <inertial>
