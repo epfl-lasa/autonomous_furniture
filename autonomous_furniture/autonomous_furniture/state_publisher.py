@@ -10,10 +10,10 @@ from tf2_ros import TransformBroadcaster, TransformStamped
 class StatePublisher(Node):
     def __init__(self):
         rclpy.init()
-        super().__init('state_publisher')
+        super().__init__('state_publisher')
 
         qos_profile = QoSProfile(depth=10)
-        self.joint_pub = self.create_publisher(JointState, 'joint_state', qos_profile)
+        self.joint_pub = self.create_publisher(JointState, 'joint_states', qos_profile)
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
         self.nodeName = self.get_name()
 
@@ -21,17 +21,13 @@ class StatePublisher(Node):
         loop_rate = self.create_rate(30)
 
         # robot state, this should be changed TODO
-        tilt = 0
-        tinc = degree
         swivel = 0.
         angle = 0.
-        height = 0.
-        hinc = 0.005
 
         # message declarations
         odom_trans = TransformStamped()
         odom_trans.header.frame_id = 'odom'
-        odom_trans.child_frame_id = 'axis'  # may need to change this
+        odom_trans.child_frame_id = 'table_main_link'  # may need to change this TODO
         joint_state = JointState()
 
         try:
@@ -41,29 +37,23 @@ class StatePublisher(Node):
                 # update joint_state
                 now = self.get_clock().now()
                 joint_state.header.stamp = now.to_msg()
-                joint_state.name = ['swivel', 'tilt', 'periscope']  # may need to change this TODO
-                joint_state.position = [swivel, tilt, height]  # may need to change this TODO
+                joint_state.name = ['swivel']  # may need to change this TODO
+                joint_state.position = [swivel]  # may need to change this TODO
 
                 # update transform
                 # (moving in a circle with radius = 2)
                 odom_trans.header.stamp = now.to_msg()
                 odom_trans.transform.translation.x = cos(angle) * 2
                 odom_trans.transform.translation.y = sin(angle) * 2
-                odom_trans.transform.translation.z = 0.7
+                odom_trans.transform.translation.z = 0.
                 odom_trans.transform.rotation = \
                     euler_to_quaternion(0, 0, angle + pi / 2)  # rpy
 
                 # send the joint state and transform
-                self.joint_pub.publish(joint_state)
+                # self.joint_pub.publish(joint_state)
                 self.broadcaster.sendTransform(odom_trans)
 
                 # create new robot state, TODO
-                tilt += tinc
-                if tilt < -0.5 or tilt > 0.0:
-                    tinc *= -1
-                height += hinc
-                if height > 0.2 or height < 0.0:
-                    hinc *= -1
                 swivel += degree
                 angle += degree / 4
 

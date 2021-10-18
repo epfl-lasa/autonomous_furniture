@@ -21,8 +21,8 @@ def generate_launch_description():
             " ",
             "prefix:=table_ ",
             "connected_to:='' ",
-            "xyz:='1 1 0' ",
-            "rpy:='0 0 0' ",
+            # "xyz:='0 0 0' ",
+            # "rpy:='0 0 0' ",
         ]
     )
     robot_description = {"use_sim_time": use_sim_time, "robot_description": robot_description_content}
@@ -45,7 +45,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/object.rviz"])],
+        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/object_move.rviz"])],
         output="log",
     )
 
