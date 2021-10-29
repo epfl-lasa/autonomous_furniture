@@ -32,8 +32,8 @@ def generate_launch_description():
 
     state_pub_node = Node(
         package='autonomous_furniture',
-        executable='chair_state_publisher',
-        name='chair_state_publisher',
+        executable='state_publisher',
+        name='state_publisher',
         output='screen',
     )
 

@@ -14,7 +14,7 @@ def generate_launch_description():
             " ",
             "prefix:=table_ ",
             "connected_to:='' ",
-            "xyz:='0 0 0' ",
+            "xyz:='0 -0.2 0' ",
             "rpy:='0 0 0' ",
         ]
     )
@@ -28,7 +28,7 @@ def generate_launch_description():
             " ",
             "prefix:=chair1_ ",
             "connected_to:='' ",
-            "xyz:='0 -1 0' ",
+            "xyz:='-0.4 -0.5 0' ",
             "rpy:='0 0 1.570796327' ",
         ]
     )
@@ -42,11 +42,39 @@ def generate_launch_description():
             " ",
             "prefix:=chair2_ ",
             "connected_to:='' ",
-            "xyz:='0 1 0' ",
-            "rpy:='0 0 -1.570796327' ",
+            "xyz:='0.4 -0.5 0' ",
+            "rpy:='0 0 1.570796327' ",
         ]
     )
     chair2_description = {"robot_description": chair2_description_content}
+
+    chair3_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
+            " ",
+            "prefix:=chair3_ ",
+            "connected_to:='' ",
+            "xyz:='-0.4 0.5 0' ",
+            "rpy:='0 0 -1.570796327' ",
+        ]
+    )
+    chair3_description = {"robot_description": chair3_description_content}
+
+    chair4_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
+            " ",
+            "prefix:=chair4_ ",
+            "connected_to:='' ",
+            "xyz:='0.4 0.5 0' ",
+            "rpy:='0 0 -1.570796327' ",
+        ]
+    )
+    chair4_description = {"robot_description": chair4_description_content}
 
     wheelchair_description_content = Command(
         [
@@ -70,7 +98,7 @@ def generate_launch_description():
             " ",
             "prefix:=qolo_ ",
             "connected_to:='' ",
-            "xyz:='-1.5 0 0' ",
+            "xyz:='-1.5 0 0.2' ",
             "rpy:='0 0 0' ",
         ]
     )
@@ -98,6 +126,22 @@ def generate_launch_description():
         executable="robot_state_publisher",
         output="both",
         parameters=[chair2_description],
+    )
+
+    chair3_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="chair3",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[chair3_description],
+    )
+
+    chair4_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="chair4",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[chair4_description],
     )
 
     wheelchair_state_pub_node = Node(
@@ -128,6 +172,8 @@ def generate_launch_description():
         table_state_pub_node,
         chair1_state_pub_node,
         chair2_state_pub_node,
+        chair3_state_pub_node,
+        chair4_state_pub_node,
         # wheelchair_state_pub_node,
         qolo_state_pub_node,
         rviz_node,

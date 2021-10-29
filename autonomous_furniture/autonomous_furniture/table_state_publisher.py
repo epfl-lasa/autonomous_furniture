@@ -5,7 +5,7 @@ from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-DISPLACEMENT = 0.05
+DISPLACEMENT = 0.01
 
 
 class StatePublisher(Node):
@@ -51,19 +51,24 @@ class StatePublisher(Node):
 
                 # create new robot state, TODO
                 angle += degree / 4
-                if pos_xy[0] < -4.0:
-                    pos_xy[0] += DISPLACEMENT
-                    prev_dir = 0
-                elif pos_xy[0] > 4.0:
-                    pos_xy[0] += -DISPLACEMENT
-                    prev_dir = 1
-                elif prev_dir == 0 and pos_xy[0] < 4.0:
-                    pos_xy[0] += DISPLACEMENT
-                    prev_dir = 0
-                elif prev_dir == 1 and pos_xy[0] > -4.0:
-                    pos_xy[0] += -DISPLACEMENT
-                    prev_dir = 1
-                # pos_xy[1] += 0.1
+
+                if pos_xy[1] > 1.0:
+                    pos_xy[1] = 0.0
+                else:
+                    pos_xy[1] += DISPLACEMENT
+
+                # if pos_xy[0] < -4.0:
+                #     pos_xy[0] += DISPLACEMENT
+                #     prev_dir = 0
+                # elif pos_xy[0] > 4.0:
+                #     pos_xy[0] += -DISPLACEMENT
+                #     prev_dir = 1
+                # elif prev_dir == 0 and pos_xy[0] < 4.0:
+                #     pos_xy[0] += DISPLACEMENT
+                #     prev_dir = 0
+                # elif prev_dir == 1 and pos_xy[0] > -4.0:
+                #     pos_xy[0] += -DISPLACEMENT
+                #     prev_dir = 1
 
                 # THis will adjust as needed per iteration
                 loop_rate.sleep()

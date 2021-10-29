@@ -43,47 +43,47 @@
         </link>
 
         <!-- virtual links for convex shapes of chair parts -->
-<!--        <link name="${prefix}back_support"/>-->
-<!--        <joint name="${prefix}back_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}back_support"/>-->
-<!--        </joint>-->
+        <link name="${prefix}back_support"/>
+        <joint name="${prefix}back_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}back_support"/>
+        </joint>
 
-<!--        <link name="${prefix}left_handle"/>-->
-<!--        <joint name="${prefix}lhandle_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}left_handle"/>-->
-<!--        </joint>-->
+        <link name="${prefix}left_handle"/>
+        <joint name="${prefix}lhandle_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}left_handle"/>
+        </joint>
 
-<!--        <link name="${prefix}right_handle"/>-->
-<!--        <joint name="${prefix}rhandle_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}right_handle"/>-->
-<!--        </joint>-->
+        <link name="${prefix}right_handle"/>
+        <joint name="${prefix}rhandle_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}right_handle"/>
+        </joint>
 
-<!--        <link name="${prefix}leg_fl"/>-->
-<!--        <joint name="${prefix}leg_fl_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}leg_fl"/>-->
-<!--        </joint>-->
+        <link name="${prefix}leg_fl"/>
+        <joint name="${prefix}leg_fl_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}leg_fl"/>
+        </joint>
 
-<!--        <link name="${prefix}leg_fr"/>-->
-<!--        <joint name="${prefix}leg_fr_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}leg_fr"/>-->
-<!--        </joint>-->
+        <link name="${prefix}leg_fr"/>
+        <joint name="${prefix}leg_fr_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}leg_fr"/>
+        </joint>
 
-<!--        <link name="${prefix}leg_rl"/>-->
-<!--        <joint name="${prefix}leg_rl_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}leg_rl"/>-->
-<!--        </joint>-->
+        <link name="${prefix}leg_rl"/>
+        <joint name="${prefix}leg_rl_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}leg_rl"/>
+        </joint>
 
-<!--        <link name="${prefix}leg_rr"/>-->
-<!--        <joint name="${prefix}leg_rr_joint" type="fixed">-->
-<!--            <parent link="${prefix}main"/>-->
-<!--            <child link="${prefix}leg_rr"/>-->
-<!--        </joint>-->
+        <link name="${prefix}leg_rr"/>
+        <joint name="${prefix}leg_rr_joint" type="fixed">
+            <parent link="${prefix}main"/>
+            <child link="${prefix}leg_rr"/>
+        </joint>
 
     </xacro:macro>
 

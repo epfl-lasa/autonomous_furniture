@@ -5,7 +5,7 @@ from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-DISPLACEMENT = 0.05
+DISPLACEMENT = 0.01
 
 
 class StatePublisher(Node):
@@ -22,7 +22,7 @@ class StatePublisher(Node):
 
         # robot state, this should be changed TODO
         angle = 0.
-        pos_xy = [0., -1.]
+        pos_xy = [0., -0.5]
         prev_dir = 0
 
         # message declarations
@@ -44,25 +44,29 @@ class StatePublisher(Node):
                 odom_trans.transform.translation.y = pos_xy[1]
                 odom_trans.transform.translation.z = 0.
                 odom_trans.transform.rotation = \
-                    euler_to_quaternion(0, 0, 0)  # rpy
+                    euler_to_quaternion(0, 0, 1.570796327)  # rpy
 
                 # send the joint state and transform
                 self.broadcaster.sendTransform(odom_trans)
 
                 # create new robot state, TODO
-                angle += degree / 4
-                if pos_xy[1] < -4.0:
-                    pos_xy[1] += DISPLACEMENT
-                    prev_dir = 0
-                elif pos_xy[1] > 4.0:
+                if pos_xy[1] < -1.5:
+                    pos_xy[1] = -.5
+                else:
                     pos_xy[1] += -DISPLACEMENT
-                    prev_dir = 1
-                elif prev_dir == 0 and pos_xy[1] < 4.0:
-                    pos_xy[1] += DISPLACEMENT
-                    prev_dir = 0
-                elif prev_dir == 1 and pos_xy[1] > -4.0:
-                    pos_xy[1] += -DISPLACEMENT
-                    prev_dir = 1
+
+                # if pos_xy[1] < -4.0:
+                #     pos_xy[1] += DISPLACEMENT
+                #     prev_dir = 0
+                # elif pos_xy[1] > 4.0:
+                #     pos_xy[1] += -DISPLACEMENT
+                #     prev_dir = 1
+                # elif prev_dir == 0 and pos_xy[1] < 4.0:
+                #     pos_xy[1] += DISPLACEMENT
+                #     prev_dir = 0
+                # elif prev_dir == 1 and pos_xy[1] > -4.0:
+                #     pos_xy[1] += -DISPLACEMENT
+                #     prev_dir = 1
 
                 # This will adjust as needed per iteration
                 loop_rate.sleep()

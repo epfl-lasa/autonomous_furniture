@@ -5,7 +5,7 @@ from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-DISPLACEMENT = 0.05
+DISPLACEMENT = 0.01
 
 
 class StatePublisher(Node):
@@ -23,7 +23,8 @@ class StatePublisher(Node):
         # robot state, this should be changed TODO
         angle = 0.
         pos_xy = [-2., 0.]
-        prev_dir = 0
+        prev_dir_x = 0
+        prev_dir_y = 0
 
         # message declarations
         odom_trans = TransformStamped()
@@ -52,18 +53,36 @@ class StatePublisher(Node):
                 # create new robot state, TODO
                 angle += degree / 4
 
-                if pos_xy[0] < -4.0:
+                if pos_xy[0] > -1.0:
+                    pos_xy[0] = -2.0
+                else:
                     pos_xy[0] += DISPLACEMENT
-                    prev_dir = 0
-                elif pos_xy[0] > 4.0:
-                    pos_xy[0] += -DISPLACEMENT
-                    prev_dir = 1
-                elif prev_dir == 0 and pos_xy[0] < 4.0:
-                    pos_xy[0] += DISPLACEMENT
-                    prev_dir = 0
-                elif prev_dir == 1 and pos_xy[0] > -4.0:
-                    pos_xy[0] += -DISPLACEMENT
-                    prev_dir = 1
+
+                # if pos_xy[0] < -4.0:
+                #     pos_xy[0] += DISPLACEMENT
+                #     prev_dir_x = 0
+                # elif pos_xy[0] > 4.0:
+                #     pos_xy[0] += -DISPLACEMENT
+                #     prev_dir_x = 1
+                # elif prev_dir_x == 0 and pos_xy[0] < 4.0:
+                #     pos_xy[0] += DISPLACEMENT
+                #     prev_dir_x = 0
+                # elif prev_dir_x == 1 and pos_xy[0] > -4.0:
+                #     pos_xy[0] += -DISPLACEMENT
+                #     prev_dir_x = 1
+                #
+                # if pos_xy[1] < -4.0:
+                #     pos_xy[1] += DISPLACEMENT
+                #     prev_dir_y = 0
+                # elif pos_xy[1] > 4.0:
+                #     pos_xy[1] += -DISPLACEMENT
+                #     prev_dir_y = 1
+                # elif prev_dir_y == 0 and pos_xy[1] < 4.0:
+                #     pos_xy[1] += DISPLACEMENT
+                #     prev_dir_y = 0
+                # elif prev_dir_y == 1 and pos_xy[1] > -4.0:
+                #     pos_xy[1] += -DISPLACEMENT
+                #     prev_dir_y = 1
 
                 # This will adjust as needed per iteration
                 loop_rate.sleep()
