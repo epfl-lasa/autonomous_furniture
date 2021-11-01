@@ -69,9 +69,13 @@ class DynamicalSystemScenario:
 
             # Here come the main calculation part
             for agent in range(num_agents):
-                velocity = dynamic_avoider.evaluate_for_crowd_agent(position_list[agent, :, ii - 1], agent)
+                max_axis = max(obstacle_environment[agent].axes_length)
+                for obs in range(num_obs):
+                    obstacle_environment[obs].margin_absolut = max_axis
+
+                velocity = dynamic_avoider.evaluate_for_crowd_agent(position=position_list[agent, :, ii - 1], selected_agent=agent, agent_is_obs=True)
                 obstacle_environment[agent].linear_velocity = velocity
-                position_list[agent, :, ii] = velocity * dt_step + position_list[agent, :, ii - 1] + np.random.uniform(-0.01, 0.01, 2)
+                position_list[agent, :, ii] = velocity * dt_step + position_list[agent, :, ii - 1] #+ np.random.uniform(-0.01, 0.01, 2)
 
             # if i do it like this the agent has to be in the last index of the "position_list"
             for obstacle in range(num_obs):
@@ -115,10 +119,8 @@ class DynamicalSystemScenario:
 
 
 def multiple_robots():
-    TABLE_POS = -1.5
-    CHAIR_POS_Y = 1.6
-    obstacle_pos = np.array([[0, TABLE_POS], [0, CHAIR_POS_Y], [-2.0, 0.0]])
-    agent_pos = np.array([[0, TABLE_POS], [0, CHAIR_POS_Y]])
+    obstacle_pos = np.array([[0, 0.01], [0.4, 0.61], [-2.0, 0.0]])
+    agent_pos = obstacle_pos[0:-1]
     attractor_pos = np.array([[0.0, 0.0], [0.4, 0.6], [0, 0]])
     obstacle_environment = ObstacleContainer()
     # Table

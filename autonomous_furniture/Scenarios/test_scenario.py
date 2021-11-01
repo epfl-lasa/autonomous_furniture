@@ -2,10 +2,10 @@
 """
 
 """
-# Author: LukasHuber
-# Email: lukas.huber@epfl.ch
-# Created:  2021-09-23
-import time
+# Author: Federico Conzelmann
+# Email: federico.conzelmann@epfl.ch
+# Created: 2021-10-28
+
 from math import pi
 
 import numpy as np
@@ -14,14 +14,13 @@ import matplotlib.pyplot as plt
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
+from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
-from vartools.dynamical_systems import ConstVelocityDecreasingAtAttractor
 
 
-class DynamicalSystemAnimation():
+class DynamicalSystemAnimation:
     def __init__(self):
         self.animation_paused = False
 
@@ -33,17 +32,23 @@ class DynamicalSystemAnimation():
 
     def run(
             self, initial_dynamics, obstacle_environment,
-            start_position=np.array([0, 0.0]),
-            x_lim=[-1.5, 2], y_lim=[-0.5, 2.5],
+            start_position=np.array([[0, 0.01], [0, -1]]),
+            x_lim=None, y_lim=None,
             it_max=1000, dt_step=0.03, dt_sleep=0.1
     ):
 
-        dynamic_avoider = DynamicModulationAvoider(
+        if y_lim is None:
+            y_lim = [-0.5, 2.5]
+        if x_lim is None:
+            x_lim = [-1.5, 2]
+
+        dynamic_avoider = DynamicCrowdAvoider(
             initial_dynamics=initial_dynamics, environment=obstacle_environment)
 
         dim = 2
-        position_list = np.zeros((dim, it_max))
-        position_list[:, 0] = start_position
+        num_agent = len(start_position)
+        position_list = np.zeros((num_agent, dim, it_max))
+        position_list[:, :, 0] = start_position
 
         fig, ax = plt.subplots(figsize=(10, 8))
         cid = fig.canvas.mpl_connect('button_press_event', self.on_click)
@@ -65,28 +70,31 @@ class DynamicalSystemAnimation():
                 pass
 
             # Here come the main calculation part
-            velocity = dynamic_avoider.evaluate(position_list[:, ii - 1])
-            position_list[:, ii] = velocity * dt_step + position_list[:, ii - 1] + np.random.uniform(-0.01, 0.01, 2)
-            # print(
+            for agent in range(num_agent):
+                velocity = dynamic_avoider.evaluate_for_crowd_agent(position_list[agent, :, ii - 1], agent, False)
+                position_list[agent, :, ii] = velocity * dt_step + position_list[agent, :, ii - 1] #+ np.random.uniform(-0.01, 0.01, 2)
 
             obstacle_environment[0].center_position += np.array([0.05, 0])
+            obstacle_environment[1].center_position -= np.array([0, 0.02])
 
             # Clear right before drawing again
             ax.clear()
 
             # Drawing and adjusting of the axis
-            plt.plot(position_list[0, :ii], position_list[1, :ii], ':',
-                     color='#135e08')
-            plt.plot(position_list[0, ii], position_list[1, ii],
-                     'o', color='#135e08', markersize=12, )
+            for agent in range(num_agent):
+                plt.plot(position_list[agent, 0, :ii], position_list[agent, 1, :ii], ':',
+                         color='#135e08')
+                plt.plot(position_list[agent, 0, ii], position_list[agent, 1, ii],
+                         'o', color='#135e08', markersize=12, )
 
             ax.set_xlim(x_lim)
             ax.set_ylim(y_lim)
 
             plot_obstacles(ax, obstacle_environment, x_lim, y_lim, showLabel=False)
 
-            ax.plot(initial_dynamics.attractor_position[0],
-                    initial_dynamics.attractor_position[1], 'k*', markersize=8, )
+            for agent in range(num_agent):
+                ax.plot(initial_dynamics[agent].attractor_position[0],
+                        initial_dynamics[agent].attractor_position[1], 'k*', markersize=8, )
             ax.grid()
 
             ax.set_aspect('equal', adjustable='box')
@@ -115,10 +123,27 @@ def simple_point_robot():
                 repulsion_coeff=1.4,
                 is_dynamic=True,
                 linear_velocity=np.array([0.05, 0]),
-                ))
+                )
+    )
+    obstacle_environment.append(
+        Ellipse(axes_length=[0.5, 0.5],
+                center_position=np.array([0.0, 2.0]),
+                margin_absolut=0.4,
+                orientation=0,
+                tail_effect=False,
+                repulsion_coeff=1.4,
+                is_dynamic=True,
+                linear_velocity=np.array([0, -0.02]),
+                )
+    )
 
-    initial_dynamics = LinearSystem(attractor_position=np.array([0, 0]),
-                                    maximum_velocity=1, distance_decrease=0.3)
+    initial_dynamics = [LinearSystem(
+        attractor_position=np.array([0, 0]),
+        maximum_velocity=1, distance_decrease=0.3,
+    ), LinearSystem(
+        attractor_position=np.array([0, 0]),
+        maximum_velocity=1, distance_decrease=0.3
+    )]
 
     DynamicalSystemAnimation().run(
         initial_dynamics, obstacle_environment,
