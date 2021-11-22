@@ -28,7 +28,7 @@ class StatePublisher(Node):
         # message declarations
         odom_trans = TransformStamped()
         odom_trans.header.frame_id = 'odom'
-        odom_trans.child_frame_id = 'table_main_link'  # may need to change this TODO
+        odom_trans.child_frame_id = 'table_base_link'  # may need to change this TODO
 
         try:
             while rclpy.ok():

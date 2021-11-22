@@ -4,6 +4,8 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
+from rclpy.exceptions import ParameterNotDeclaredException
+from rcl_interfaces.msg import ParameterType
 
 DISPLACEMENT = 0.01
 
@@ -12,6 +14,8 @@ class StatePublisher(Node):
     def __init__(self):
         rclpy.init()
         super().__init__('state_publisher')
+
+        self.declare_parameter("prefix", "chair_")
 
         qos_profile = QoSProfile(depth=10)
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
@@ -27,8 +31,9 @@ class StatePublisher(Node):
 
         # message declarations
         odom_trans = TransformStamped()
-        odom_trans.header.frame_id = 'odom'
-        odom_trans.child_frame_id = 'chair_base_link'  # may need to change this TODO
+        odom_trans.header.frame_id = "odom"
+        my_param = self.get_parameter("prefix").get_parameter_value().string_value
+        odom_trans.child_frame_id = my_param + "base_link"  # may need to change this TODO
 
         try:
             while rclpy.ok():

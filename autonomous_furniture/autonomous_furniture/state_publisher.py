@@ -11,6 +11,8 @@ class StatePublisher(Node):
         rclpy.init()
         super().__init__('state_publisher')
 
+        self.declare_parameter("prefix", "")
+
         qos_profile = QoSProfile(depth=10)
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
         self.nodeName = self.get_name()
@@ -24,7 +26,8 @@ class StatePublisher(Node):
         # message declarations
         odom_trans = TransformStamped()
         odom_trans.header.frame_id = 'odom'
-        odom_trans.child_frame_id = 'chair_main'  # may need to change this TODO
+        my_param = self.get_parameter("prefix").get_parameter_value().string_value
+        odom_trans.child_frame_id = my_param + "base_link"  # may need to change this TODO
 
         try:
             while rclpy.ok():

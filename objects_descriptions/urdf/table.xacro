@@ -22,11 +22,11 @@
 
 <!--        <joint name="${prefix}base_to_${base_frame_name}" type="fixed">-->
 <!--            <parent link="${base_frame_name}"/>-->
-<!--            <child link="${prefix}main_link"/>-->
+<!--            <child link="${prefix}base_link"/>-->
 <!--            <origin rpy="${rpy}" xyz="${xyz}"/>-->
 <!--        </joint>-->
 
-        <link name="${prefix}main_link">
+        <link name="${prefix}base_link">
             <visual>
                 <geometry>
                     <mesh filename="package://objects_descriptions/meshes/table/table.stl"/>
