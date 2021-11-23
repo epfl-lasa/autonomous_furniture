@@ -134,7 +134,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/move_multiple_obj.rviz"])],
+        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/move_multiple_ds.rviz"])],
         output="log",
     )
 

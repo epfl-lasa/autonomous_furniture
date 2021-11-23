@@ -22,7 +22,7 @@ class StatePublisher(Node):
 
         # robot state, this should be changed TODO
         angle = 0.
-        pos_xy = [-2., 0.]
+        pos_xy = [-3., 0.]
         prev_dir_x = 0
         prev_dir_y = 0
 
@@ -53,10 +53,12 @@ class StatePublisher(Node):
                 # create new robot state, TODO
                 angle += degree / 4
 
-                if pos_xy[0] > -1.0:
-                    pos_xy[0] = -2.0
-                else:
-                    pos_xy[0] += DISPLACEMENT
+                # if pos_xy[0] > -1.0:
+                #     pos_xy[0] = -3.0
+                # else:
+                #     pos_xy[0] += DISPLACEMENT
+
+                pos_xy[0] += DISPLACEMENT
 
                 # if pos_xy[0] < -4.0:
                 #     pos_xy[0] += DISPLACEMENT
