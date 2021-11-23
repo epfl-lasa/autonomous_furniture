@@ -33,7 +33,7 @@ class DynamicalSystemRviz(Node):
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
         self.nodeName = self.get_name()
         self.odom_trans = TransformStamped()
-        self.odom_trans.header.frame_id = 'odom'
+        self.odom_trans.header.frame_id = "odom"
 
     def update_state_publisher(self, prefix, position, rotation):
         self.odom_trans.child_frame_id = prefix + "base_link"
@@ -252,6 +252,7 @@ def main():
     for i in range(num_agent):
         obs_multi_agent[0].append(i)
 
+    node = DynamicalSystemRviz()
     DynamicalSystemRviz().run(
         initial_dynamics,
         obstacle_environment,
