@@ -1,4 +1,5 @@
 import math
+from math import cos, sin
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
+from autonomous_furniture.attractor_dynamics import AttractorDynamics
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -91,6 +93,11 @@ class DynamicalSystemAnimation:
             # Here come the main calculation part
             weights = dynamic_avoider.get_influence_weight_at_ctl_points(position_list[:, :, ii-1])
             print(f"weights: {weights}")
+
+            if ii % 10 == 0 and ii <= 100:
+                # TODO: find a way to move the attractor pos
+                pass
+
             for obs in range(num_obs):
                 start_time = time.time()
                 num_agents_in_obs = len(obs_w_multi_agent[obs])
@@ -167,6 +174,33 @@ class DynamicalSystemAnimation:
                 break
 
 
+def calculate_relative_position(num_agent, max_ax, min_ax):
+    div = max_ax / (num_agent + 1)
+    radius = math.sqrt(((min_ax / 2) ** 2) + (div ** 2))
+    rel_agent_pos = np.zeros((num_agent, 2))
+
+    for i in range(num_agent):
+        rel_agent_pos[i, 0] = (div * (i + 1)) - (max_ax / 2)
+
+    return rel_agent_pos, radius
+
+
+def relative2global(relative_pos, obstacle):
+    angle = obstacle.orientation
+    obs_pos = obstacle.center_position
+    print(f"obs pos: {obs_pos}")
+    global_pos = np.zeros_like(relative_pos)
+    print(f"rel: {relative_pos}")
+    rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
+
+    for i in range(relative_pos.shape[0]):
+        rot_rel_pos = np.dot(rot, relative_pos[i, :])
+        global_pos[i, :] = obs_pos + rot_rel_pos
+
+    print(f"glob: {global_pos}")
+    return global_pos
+
+
 def multiple_robots():
     center_point = 3.0
     num_agent = int(args.num_ctl)
@@ -174,16 +208,18 @@ def multiple_robots():
     axis = [float(str_axis[0]), float(str_axis[1])]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-    div = max_ax_len / (num_agent + 1)
-    radius = math.sqrt(((min_ax_len / 2) ** 2) + (div ** 2))
+    # div = max_ax_len / (num_agent + 1)
+    # radius = math.sqrt(((min_ax_len / 2) ** 2) + (div ** 2))
     obstacle_pos = np.array([[-center_point, 0.0], [3.0, -0.5]])
-    agent_pos = np.zeros((num_agent, 2))
-    for i in range(num_agent):
-        agent_pos[i, 0] = - center_point + ((div * (i+1)) - (max_ax_len / 2))
+    # agent_pos = np.zeros((num_agent, 2))
+    # for i in range(num_agent):
+    #     agent_pos[i, 0] = - center_point + ((div * (i+1)) - (max_ax_len / 2))
     attractor_pos = np.zeros((num_agent, 2))
-    for i in range(num_agent):
-        attractor_pos[i, 0] = 1.0
-        attractor_pos[i, 1] = (div * (i+1)) - (max_ax_len / 2)
+    # for i in range(num_agent):
+    #     attractor_pos[i, 0] = 1.0
+    #     attractor_pos[i, 1] = (div * (i+1)) - (max_ax_len / 2)
+
+    rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
 
     obstacle_environment = ObstacleContainer()
     obstacle_environment.append(Cuboid(
@@ -203,6 +239,22 @@ def multiple_robots():
         repulsion_coeff=1,
         linear_velocity=np.array([-0.3, 0.0]),
     ))
+
+    agent_pos = relative2global(rel_agent_pos, obstacle_environment[0])
+
+    attractor_env = ObstacleContainer()
+    attractor_env.append(Ellipse(
+        axes_length=[0.6, 0.6],
+        center_position=np.array([1., 0.]),
+        margin_absolut=radius,
+        orientation=math.pi/2,
+        tail_effect=False,
+        repulsion_coeff=1,
+        linear_velocity=np.array([0., 0.]),
+    ))
+
+    attractor_pos = relative2global(rel_agent_pos, attractor_env[0])
+
     initial_dynamics = [LinearSystem(
         attractor_position=attractor_pos[0],
         maximum_velocity=1, distance_decrease=0.3
