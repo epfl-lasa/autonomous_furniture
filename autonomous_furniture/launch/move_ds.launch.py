@@ -162,7 +162,7 @@ def generate_launch_description():
         qolo_state_pub_node,
         # qolo_pos_pub_node,
         rviz_node,
-        ds_algo,
+        # ds_algo,
     ]
 
     return LaunchDescription(nodes)

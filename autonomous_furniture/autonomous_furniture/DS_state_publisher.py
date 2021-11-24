@@ -27,6 +27,7 @@ def euler_to_quaternion(roll, pitch, yaw):
 
 class DynamicalSystemRviz(Node):
     def __init__(self):
+        print("line 30")
         rclpy.init()
         super().__init__('DS_state_publisher')
         qos_profile = QoSProfile(depth=10)
@@ -55,7 +56,7 @@ class DynamicalSystemRviz(Node):
             x_lim=None, y_lim=None,
             it_max=1000, dt_step=0.03, dt_sleep=0.1
     ):
-        loop_rate = self.create_rate(30)
+        loop_rate = self.create_rate(10)
 
         num_obs = len(obstacle_environment)
         if start_position.ndim > 1:
@@ -90,7 +91,7 @@ class DynamicalSystemRviz(Node):
                 else:
                     relative_agent_pos = - (obstacle_environment[obs].center_position - start_position)
 
-        obs_name = ["chair_", "qolo_"]
+        obs_name = ["table_", "qolo_"]
         position_list[:, :, 0] = start_position
 
         # fig, ax = plt.subplots(figsize=(10, 8))  # figsize=(10, 8)
@@ -101,6 +102,7 @@ class DynamicalSystemRviz(Node):
 
         ii = 0
         while ii < it_max:
+            rclpy.spin_once(self)
             # if not plt.fignum_exists(fig.number):
             #     print("Stopped animation on closing of the figure..")
             #     break
@@ -155,7 +157,9 @@ class DynamicalSystemRviz(Node):
             for obs in range(num_obs):
                 self.update_state_publisher(obs_name[obs], obstacle_environment[obs].center_position, obstacle_environment[obs].orientation)
 
+            print("i am before the loop")
             loop_rate.sleep()
+            print("i passed the loop")
 
             # Clear right before drawing again
             # ax.clear()
@@ -187,7 +191,9 @@ class DynamicalSystemRviz(Node):
                 print(f"Converged at it={ii}")
                 break
 
+            # print("i am before the sleep")
             # plt.pause(dt_sleep)
+            # print("i passed the sleep")
             # if not plt.fignum_exists(fig.number):
             #     print("Stopped animation on closing of the figure..")
             #     break
@@ -252,7 +258,6 @@ def main():
     for i in range(num_agent):
         obs_multi_agent[0].append(i)
 
-    node = DynamicalSystemRviz()
     DynamicalSystemRviz().run(
         initial_dynamics,
         obstacle_environment,
