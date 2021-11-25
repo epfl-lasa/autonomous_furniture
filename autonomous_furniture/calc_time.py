@@ -72,7 +72,7 @@ class DynamicalSystemAnimation:
 
         print(f"starting position: {start_position}")
 
-        attractor_dynamic = AttractorDynamics(obstacle_environment[0])
+        attractor_dynamic = AttractorDynamics(obstacle_environment[1])
         dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment, obs_multi_agent=obs_w_multi_agent)
         position_list = np.zeros((num_agent, dim, it_max))
         time_list = np.zeros((num_obs, it_max))
@@ -242,7 +242,7 @@ def global2relative(global_pos, obstacle):
 
 
 def multiple_robots():
-    center_point = -2.
+    center_point = -1.
     num_agent = int(args.num_ctl)
     str_axis = args.rect_size.split(",")
     axis = [float(str_axis[0]), float(str_axis[1])]
@@ -282,10 +282,10 @@ def multiple_robots():
 
     agent_pos = relative2global(rel_agent_pos, obstacle_environment[0])
 
-    attractor_env = Ellipse(
-        axes_length=[0.6, 0.6],
+    attractor_env = Cuboid(
+        axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([1., 0.]),
-        margin_absolut=radius,
+        margin_absolut=0.,
         orientation=math.pi/2,
         tail_effect=False,
         repulsion_coeff=1,
