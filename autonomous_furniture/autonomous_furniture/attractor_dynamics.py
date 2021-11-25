@@ -80,6 +80,7 @@ class AttractorDynamics(DynamicalSystem):
 
     def evaluate(self, position):
         dir_agent = position - self.agent.center_position
+        print(f"position before gamma: {position}")
         dist_agent = self.agent.get_gamma(position, in_global_frame=True, )
 
         if dist_agent < 1:
@@ -133,10 +134,10 @@ def main():
 
     theta = np.deg2rad(10)
     rot = np.array([[cos(theta), -sin(theta)], [sin(theta), cos(theta)]])
-    for ii in range(36):
+    for ii in range(37):
         fig.canvas.mpl_connect('button_press_event', onclick)
         if pause:
-            plt.pause(0.1)
+            plt.pause(7)
             continue
 
         ax.clear()

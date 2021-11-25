@@ -34,6 +34,8 @@ class DynamicalSystemAnimation:
             self, initial_dynamics, obstacle_environment,
             obs_w_multi_agent,
             start_position=None,
+            relative_attractor_position=None,
+            goal=None,
             x_lim=None, y_lim=None,
             it_max=1000, dt_step=0.03, dt_sleep=0.1
     ):
@@ -46,36 +48,54 @@ class DynamicalSystemAnimation:
         dim = 2
 
         if y_lim is None:
-            y_lim = [-0.5, 2.5]
+            y_lim = [-3., 3.]
         if x_lim is None:
-            x_lim = [-1.5, 2]
+            x_lim = [-3., 3.]
         if start_position is None:
             start_position = np.zeros((num_obs, dim))
         if num_agent > 1:
             velocity = np.zeros((num_agent, dim))
         else:
             velocity = np.zeros((2, dim))
+        if relative_attractor_position is None:
+            relative_attractor_position = np.array([0., 0.])
+        if goal is None:
+            goal = Ellipse(
+                axes_length=[0.6, 0.6],
+                center_position=np.array([0., 0.]),
+                margin_absolut=0,
+                orientation=0,
+                tail_effect=False,
+                repulsion_coeff=1,
+                linear_velocity=np.array([0., 0.]),
+            )
 
+        print(f"starting position: {start_position}")
+
+        attractor_dynamic = AttractorDynamics(obstacle_environment[0])
         dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment, obs_multi_agent=obs_w_multi_agent)
         position_list = np.zeros((num_agent, dim, it_max))
         time_list = np.zeros((num_obs, it_max))
         relative_agent_pos = np.zeros((num_agent, dim))
 
         for obs in range(num_obs):
-            for agent in obs_w_multi_agent[obs]:
-                if start_position.ndim > 1:
-                    relative_agent_pos[agent, :] = - (obstacle_environment[obs].center_position - start_position[agent, :])
-                else:
-                    relative_agent_pos = - (obstacle_environment[obs].center_position - start_position)
+            relative_agent_pos[obs_w_multi_agent[obs], :] = global2relative(start_position[obs_w_multi_agent[obs]], obstacle_environment[obs])
+            # for agent in obs_w_multi_agent[obs]:
+            #     if start_position.ndim > 1:
+            #         relative_agent_pos[agent, :] = - (obstacle_environment[obs].center_position - start_position[agent, :])
+            #     else:
+            #         relative_agent_pos = - (obstacle_environment[obs].center_position - start_position)
 
         position_list[:, :, 0] = start_position
+
+        print(f"position list: {position_list[:, :, 0]}")
 
         fig, ax = plt.subplots(figsize=(10, 8))  # figsize=(10, 8)
         ax.set_aspect(1.0)
         cid = fig.canvas.mpl_connect('button_press_event', self.on_click)
 
-        print(f"init dyn: {initial_dynamics[0].attractor_position}")
-        print(f"Class dyn avoider: {dynamic_avoider}")
+        # print(f"init dyn: {initial_dynamics[0].attractor_position}")
+        # print(f"Class dyn avoider: {dynamic_avoider}")
 
         ii = 0
         while ii < it_max:
@@ -92,11 +112,18 @@ class DynamicalSystemAnimation:
 
             # Here come the main calculation part
             weights = dynamic_avoider.get_influence_weight_at_ctl_points(position_list[:, :, ii-1])
-            print(f"weights: {weights}")
+            # print(f"weights: {weights}")
 
-            if ii % 10 == 0 and ii <= 100:
+            if ii % 10 == 0:
                 # TODO: find a way to move the attractor pos
-                pass
+                attractor_vel = attractor_dynamic.evaluate(goal.center_position)
+                new_goal_pos = attractor_vel * dt_step + goal.center_position
+                goal.center_position = new_goal_pos
+                global_attractor_pos = relative2global(relative_attractor_position, goal)
+                for i in obs_w_multi_agent[0]:
+                    # initial_dynamics[i].attractor_position = global_attractor_pos[i]
+                    dynamic_avoider.set_attractor_position(global_attractor_pos[i], i)
+                # pass
 
             for obs in range(num_obs):
                 start_time = time.time()
@@ -136,7 +163,7 @@ class DynamicalSystemAnimation:
                 stop_time = time.time()
                 time_list[obs, ii-1] = stop_time-start_time
 
-            print(f"Max time: {max(time_list[0, :])}, mean time: {sum(time_list[0, :])/ii}, for obs: {0}, with {len(obs_w_multi_agent[0])} control points")
+            # print(f"Max time: {max(time_list[0, :])}, mean time: {sum(time_list[0, :])/ii}, for obs: {0}, with {len(obs_w_multi_agent[0])} control points")
 
             # Clear right before drawing again
             ax.clear()
@@ -164,9 +191,9 @@ class DynamicalSystemAnimation:
             # breakpoiont()
 
             # Check convergence
-            if np.sum(np.abs(velocity)) < 1e-2:
-                print(f"Converged at it={ii}")
-                break
+            # if np.sum(np.abs(velocity)) < 1e-2:
+            #     print(f"Converged at it={ii}")
+            #     break
 
             plt.pause(dt_sleep)
             if not plt.fignum_exists(fig.number):
@@ -188,21 +215,34 @@ def calculate_relative_position(num_agent, max_ax, min_ax):
 def relative2global(relative_pos, obstacle):
     angle = obstacle.orientation
     obs_pos = obstacle.center_position
-    print(f"obs pos: {obs_pos}")
+    # print(f"obs pos: {obs_pos}")
     global_pos = np.zeros_like(relative_pos)
-    print(f"rel: {relative_pos}")
+    # print(f"rel: {relative_pos}")
     rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
 
     for i in range(relative_pos.shape[0]):
         rot_rel_pos = np.dot(rot, relative_pos[i, :])
         global_pos[i, :] = obs_pos + rot_rel_pos
 
-    print(f"glob: {global_pos}")
+    # print(f"glob: {global_pos}")
     return global_pos
 
 
+def global2relative(global_pos, obstacle):
+    angle = -1 * obstacle.orientation
+    obs_pos = obstacle.center_position
+    relative_pos = np.zeros_like(global_pos)
+    rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
+
+    for i in range(global_pos.shape[0]):
+        rel_pos_pre_rot = global_pos[i, :] - obs_pos
+        relative_pos[i, :] = np.dot(rot, rel_pos_pre_rot)
+
+    return relative_pos
+
+
 def multiple_robots():
-    center_point = 3.0
+    center_point = -2.
     num_agent = int(args.num_ctl)
     str_axis = args.rect_size.split(",")
     axis = [float(str_axis[0]), float(str_axis[1])]
@@ -210,7 +250,7 @@ def multiple_robots():
     min_ax_len = min(axis)
     # div = max_ax_len / (num_agent + 1)
     # radius = math.sqrt(((min_ax_len / 2) ** 2) + (div ** 2))
-    obstacle_pos = np.array([[-center_point, 0.0], [3.0, -0.5]])
+    obstacle_pos = np.array([[center_point, 0.0], [3.0, -0.5]])
     # agent_pos = np.zeros((num_agent, 2))
     # for i in range(num_agent):
     #     agent_pos[i, 0] = - center_point + ((div * (i+1)) - (max_ax_len / 2))
@@ -226,7 +266,7 @@ def multiple_robots():
         axes_length=[max_ax_len, min_ax_len],
         center_position=obstacle_pos[0],
         margin_absolut=0,
-        orientation=0,
+        orientation=math.pi/2,
         tail_effect=False,
         repulsion_coeff=1,
     ))
@@ -242,8 +282,7 @@ def multiple_robots():
 
     agent_pos = relative2global(rel_agent_pos, obstacle_environment[0])
 
-    attractor_env = ObstacleContainer()
-    attractor_env.append(Ellipse(
+    attractor_env = Ellipse(
         axes_length=[0.6, 0.6],
         center_position=np.array([1., 0.]),
         margin_absolut=radius,
@@ -251,9 +290,9 @@ def multiple_robots():
         tail_effect=False,
         repulsion_coeff=1,
         linear_velocity=np.array([0., 0.]),
-    ))
+    )
 
-    attractor_pos = relative2global(rel_agent_pos, attractor_env[0])
+    attractor_pos = relative2global(rel_agent_pos, attractor_env)
 
     initial_dynamics = [LinearSystem(
         attractor_position=attractor_pos[0],
@@ -283,6 +322,8 @@ def multiple_robots():
         obstacle_environment,
         obs_multi_agent,
         agent_pos,
+        rel_agent_pos,
+        attractor_env,
         x_lim=[-4, 3],
         y_lim=[-3, 3],
         dt_step=0.05,
