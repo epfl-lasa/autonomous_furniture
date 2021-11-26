@@ -77,10 +77,11 @@ class AttractorDynamics(DynamicalSystem):
         self.cutoff_dist = cutoff_dist
         self.max_repulsion = max_repulsion
         self.animation_paused = False
+        self.lambda_p = 10
 
     def evaluate(self, position):
         dir_agent = position - self.agent.center_position
-        print(f"position before gamma: {position}")
+        # print(f"position before gamma: {position}")
         dist_agent = self.agent.get_gamma(position, in_global_frame=True, )
 
         if dist_agent < 1:
@@ -106,10 +107,13 @@ class AttractorDynamics(DynamicalSystem):
         basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
         lambda_p = 10
         basis_d = np.eye(self.dim)
-        basis_d[1] *= lambda_p
-        new_vect = basis_e @ basis_d @ basis_e.T @ vect_agent
+        basis_d[1] *= self.lambda_p
+        new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
 
         return new_vect
+
+    def set_lambda(self, lambda_p):
+        self.lambda_p = lambda_p
 
 
 def main():
@@ -117,6 +121,10 @@ def main():
     pos = np.array([0., 0.])
     vel = np.array([1., 0.])
     # u_vel = vel / np.linalg.norm(vel)
+    theta = np.deg2rad(10)
+    rot = np.array([[cos(theta), -sin(theta)], [sin(theta), cos(theta)]])
+    # vel = np.dot(rot, vel)
+
     obstacle_environment = Ellipse(
         axes_length=[0.6, 0.6],
         center_position=pos,
@@ -132,15 +140,15 @@ def main():
     y_lim = x_lim
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    theta = np.deg2rad(10)
-    rot = np.array([[cos(theta), -sin(theta)], [sin(theta), cos(theta)]])
-    for ii in range(37):
+    ii = 0
+    while ii < 37:
         fig.canvas.mpl_connect('button_press_event', onclick)
         if pause:
-            plt.pause(7)
+            plt.pause(0.1)
             continue
 
         ax.clear()
+        # my_dynamics.set_lambda(ii+1)
         plot_dynamical_system(n_resolution=61, dynamical_system=my_dynamics, x_lim=x_lim, y_lim=y_lim,
                               fig_ax_handle=[fig, ax])
         plot_obstacles(ax, obs_env, x_lim, y_lim, showLabel=False, drawVelArrow=False)
@@ -148,6 +156,7 @@ def main():
         vel = np.dot(rot, vel)
         obstacle_environment.linear_velocity = vel
         plt.pause(0.5)
+        ii += 1
 
 
 if __name__ == "__main__":
