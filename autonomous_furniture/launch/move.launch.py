@@ -19,6 +19,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='0 0 0' ",
             "rpy:='0 0 0' ",
+            "fixed:='0' ",
         ]
     )
     robot_description = {"use_sim_time": use_sim_time, "robot_description": robot_description_content}

@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 class DynamicalSystemAnimation:
     def __init__(self):
-        self.animation_paused = True
+        self.animation_paused = False
 
     def on_click(self, event):
         if self.animation_paused:
@@ -72,7 +72,7 @@ class DynamicalSystemAnimation:
 
         print(f"starting position: {start_position}")
 
-        attractor_dynamic = AttractorDynamics(obstacle_environment[1])
+        attractor_dynamic = AttractorDynamics(obstacle_environment[1], cutoff_dist=3)
         dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment, obs_multi_agent=obs_w_multi_agent)
         position_list = np.zeros((num_agent, dim, it_max))
         time_list = np.zeros((num_obs, it_max))
@@ -144,7 +144,7 @@ class DynamicalSystemAnimation:
                     for agent in obs_w_multi_agent[obs]:
                         obs_vel += weights[obs][agent] * velocity[agent, :]
                 else:
-                    obs_vel = np.array([-0.3, 0.0])
+                    obs_vel = np.array([-0.3, 0.1])
 
                 angular_vel = np.zeros(num_agents_in_obs)
                 for agent in obs_w_multi_agent[obs]:
@@ -242,7 +242,7 @@ def global2relative(global_pos, obstacle):
 
 
 def multiple_robots():
-    center_point = -1.
+    center_point = 1.
     num_agent = int(args.num_ctl)
     str_axis = args.rect_size.split(",")
     axis = [float(str_axis[0]), float(str_axis[1])]
@@ -254,7 +254,7 @@ def multiple_robots():
     # agent_pos = np.zeros((num_agent, 2))
     # for i in range(num_agent):
     #     agent_pos[i, 0] = - center_point + ((div * (i+1)) - (max_ax_len / 2))
-    attractor_pos = np.zeros((num_agent, 2))
+    # attractor_pos = np.zeros((num_agent, 2))
     # for i in range(num_agent):
     #     attractor_pos[i, 0] = 1.0
     #     attractor_pos[i, 1] = (div * (i+1)) - (max_ax_len / 2)
@@ -294,15 +294,15 @@ def multiple_robots():
 
     attractor_pos = relative2global(rel_agent_pos, attractor_env)
 
-    initial_dynamics = [LinearSystem(
-        attractor_position=attractor_pos[0],
-        maximum_velocity=1, distance_decrease=0.3
-    ),
-        LinearSystem(
-            attractor_position=attractor_pos[1],
-            maximum_velocity=1, distance_decrease=0.3
-        )
-    ]
+    # initial_dynamics = [LinearSystem(
+    #     attractor_position=attractor_pos[0],
+    #     maximum_velocity=1, distance_decrease=0.3
+    # ),
+    #     LinearSystem(
+    #         attractor_position=attractor_pos[1],
+    #         maximum_velocity=1, distance_decrease=0.3
+    #     )
+    # ]
     initial_dynamics = []
     for i in range(num_agent):
         initial_dynamics.append(

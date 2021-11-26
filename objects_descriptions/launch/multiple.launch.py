@@ -16,6 +16,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='0 -0.2 0' ",
             "rpy:='0 0 0' ",
+            "fixed:='1' ",
         ]
     )
     table_description = {"robot_description": table_description_content}
@@ -30,6 +31,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='-0.4 -0.5 0' ",
             "rpy:='0 0 1.570796327' ",
+            "fixed:='1' ",
         ]
     )
     chair1_description = {"robot_description": chair1_description_content}
@@ -44,6 +46,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='0.4 -0.5 0' ",
             "rpy:='0 0 1.570796327' ",
+            "fixed:='1' ",
         ]
     )
     chair2_description = {"robot_description": chair2_description_content}
@@ -58,6 +61,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='-0.4 0.5 0' ",
             "rpy:='0 0 -1.570796327' ",
+            "fixed:='1' ",
         ]
     )
     chair3_description = {"robot_description": chair3_description_content}
@@ -72,6 +76,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='0.4 0.5 0' ",
             "rpy:='0 0 -1.570796327' ",
+            "fixed:='1' ",
         ]
     )
     chair4_description = {"robot_description": chair4_description_content}
@@ -86,6 +91,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='-1.5 0 0' ",
             "rpy:='0 0 0' ",
+            "fixed:='1' ",
         ]
     )
     wheelchair_description = {"robot_description": wheelchair_description_content}
@@ -100,6 +106,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='-1.5 0 0.2' ",
             "rpy:='0 0 0' ",
+            "fixed:='1' ",
         ]
     )
     qolo_description = {"robot_description": qolo_description_content}

@@ -6,9 +6,10 @@
     <xacro:arg name="xyz" default="'0 0 0'"/>
     <xacro:arg name="rpy" default="'0 0 0'"/>
     <xacro:arg name="mass" default="3.0"/>
+    <xacro:arg name="fixed" default="1"/>
 
     <xacro:include filename="$(find objects_descriptions)/urdf/qolo.xacro"/>
 
     <xacro:qolo prefix="$(arg prefix)" connected_to="$(arg connected_to)" xyz="$(arg xyz)" rpy="$(arg rpy)"
-                 mass="$(arg mass)"/>
+                 mass="$(arg mass)" fixed="$(arg fixed)"/>
 </robot>

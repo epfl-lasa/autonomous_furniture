@@ -16,6 +16,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/table.urdf.xacro"]),
             " ",
             "prefix:=table_ ",
+            "fixed:='0' ",
         ]
     )
     table_description = {"use_sim_time": use_sim_time, "robot_description": table_description_content}
@@ -27,6 +28,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
             " ",
             "prefix:=chair_ ",
+            "fixed:='0' ",
         ]
     )
     chair1_description = {"use_sim_time": use_sim_time, "robot_description": chair1_description_content}
@@ -38,6 +40,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wheelchair.urdf.xacro"]),
             " ",
             "prefix:=wheelchair_ ",
+            "fixed:='0' ",
         ]
     )
     wheelchair_description = {"use_sim_time": use_sim_time, "robot_description": wheelchair_description_content}
@@ -49,6 +52,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
             " ",
             "prefix:=qolo_ ",
+            "fixed:='0' ",
         ]
     )
     qolo_description = {"use_sim_time": use_sim_time, "robot_description": qolo_description_content}

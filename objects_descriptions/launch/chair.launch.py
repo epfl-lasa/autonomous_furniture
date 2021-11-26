@@ -16,6 +16,7 @@ def generate_launch_description():
             "connected_to:='' ",
             "xyz:='1 0 0' ",
             "rpy:='0 0 0' ",
+            "fixed:='1' ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
