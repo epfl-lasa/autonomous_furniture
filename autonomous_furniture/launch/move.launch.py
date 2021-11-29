@@ -13,9 +13,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
             " ",
-            "prefix:=chair_ ",
+            "prefix:=h_bed_ ",
             "connected_to:='' ",
             "xyz:='0 0 0' ",
             "rpy:='0 0 0' ",
@@ -36,6 +36,9 @@ def generate_launch_description():
         executable='state_publisher',
         name='state_publisher',
         output='screen',
+        parameters=[
+            {"prefix": "h_bed_"}
+        ],
     )
 
     rviz_node = Node(
