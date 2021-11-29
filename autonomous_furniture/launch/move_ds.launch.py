@@ -177,7 +177,7 @@ def generate_launch_description():
         output='screen',
     )
 
-    h_bed_pos_pub_node = Node(
+    h_bed_1_pos_pub_node = Node(
         package='autonomous_furniture',
         executable='state_publisher',
         name='state_publisher',
@@ -210,7 +210,7 @@ def generate_launch_description():
 
     nodes = [
         sim_arg,
-        table_state_pub_node,
+        # table_state_pub_node,
         # table_pos_pub_node,
         # chair1_state_pub_node,
         # chair1_pos_pub_node,
@@ -218,8 +218,10 @@ def generate_launch_description():
         # chair2_pos_pub_node,
         qolo_state_pub_node,
         # qolo_pos_pub_node,
-        h_bed_state_pub_node,
-        # h_bed_pos_pub_node,
+        h_bed_1_state_pub_node,
+        # h_bed_1_pos_pub_node,
+        h_bed_2_state_pub_node,
+        # h_bed_2_pos_pub_node,
         rviz_node,
         # ds_algo,
     ]
