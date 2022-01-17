@@ -95,6 +95,58 @@ def generate_launch_description():
     )
     h_bed_2_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_2_description_content}
 
+    h_bed_3_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            " ",
+            "prefix:=h_bed_3_ ",
+            "fixed:='0' ",
+            "rpy:='-1.57 0 0' ",
+        ]
+    )
+    h_bed_3_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_3_description_content}
+
+    h_bed_4_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            " ",
+            "prefix:=h_bed_4_ ",
+            "fixed:='0' ",
+            "rpy:='-1.57 0 0' ",
+        ]
+    )
+    h_bed_4_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_4_description_content}
+
+    h_bed_5_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            " ",
+            "prefix:=h_bed_5_ ",
+            "fixed:='0' ",
+            "rpy:='-1.57 0 0' ",
+        ]
+    )
+    h_bed_5_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_5_description_content}
+
+    h_bed_6_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            " ",
+            "prefix:=h_bed_6_ ",
+            "fixed:='0' ",
+            "rpy:='-1.57 0 0' ",
+        ]
+    )
+    h_bed_6_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_6_description_content}
+
     table_state_pub_node = Node(
         package="robot_state_publisher",
         namespace="table",
@@ -143,48 +195,36 @@ def generate_launch_description():
         parameters=[h_bed_2_description],
     )
 
-    table_pos_pub_node = Node(
-        package='autonomous_furniture',
-        executable='table_state_publisher',
-        name='table_state_publisher',
-        output='screen',
+    h_bed_3_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="h_bed_3_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[h_bed_3_description],
     )
 
-    chair1_pos_pub_node = Node(
-        package='autonomous_furniture',
-        executable='chair_state_publisher',
-        name='chair_state_publisher',
-        output='screen',
-        parameters=[
-            {"prefix": "chair_1_"}
-        ],
+    h_bed_4_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="h_bed_4_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[h_bed_4_description],
     )
 
-    chair2_pos_pub_node = Node(
-        package='autonomous_furniture',
-        executable='state_publisher',
-        name='state_publisher',
-        output='screen',
-        parameters=[
-            {"prefix": "chair_2_"}
-        ],
+    h_bed_5_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="h_bed_5_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[h_bed_5_description],
     )
 
-    qolo_pos_pub_node = Node(
-        package='autonomous_furniture',
-        executable='qolo_state_publisher',
-        name='qolo_state_publisher',
-        output='screen',
-    )
-
-    h_bed_1_pos_pub_node = Node(
-        package='autonomous_furniture',
-        executable='state_publisher',
-        name='state_publisher',
-        output='screen',
-        parameters=[
-            {"prefix": "h_bed_1_"}
-        ],
+    h_bed_6_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="h_bed_6_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[h_bed_6_description],
     )
 
     rviz_node = Node(
@@ -201,29 +241,19 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true'
     )
 
-    ds_algo = Node(
-        package="autonomous_furniture",
-        executable="DS_state_publisher",
-        name="DS_state_publisher",
-        output="screen",
-    )
-
     nodes = [
         sim_arg,
         # table_state_pub_node,
-        # table_pos_pub_node,
         # chair1_state_pub_node,
-        # chair1_pos_pub_node,
         # chair2_state_pub_node,
-        # chair2_pos_pub_node,
         qolo_state_pub_node,
-        # qolo_pos_pub_node,
         h_bed_1_state_pub_node,
-        # h_bed_1_pos_pub_node,
         h_bed_2_state_pub_node,
-        # h_bed_2_pos_pub_node,
+        h_bed_3_state_pub_node,
+        h_bed_4_state_pub_node,
+        h_bed_5_state_pub_node,
+        h_bed_6_state_pub_node,
         rviz_node,
-        # ds_algo,
     ]
 
     return LaunchDescription(nodes)

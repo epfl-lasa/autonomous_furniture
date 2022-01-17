@@ -1,11 +1,14 @@
 from math import cos, sin
+import warnings
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 import matplotlib.pyplot as plt
-from dynamic_obstacle_avoidance.obstacles import Ellipse
+from dynamic_obstacle_avoidance.obstacles import Ellipse, Cuboid, GammaType
 from vartools.dynamical_systems import DynamicalSystem
 import numpy as np
+from numpy import linalg as LA
 from vartools.dynamical_systems import plot_dynamical_system_quiver, plot_dynamical_system_streamplot
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
+from dynamic_obstacle_avoidance.avoidance.modulation import obs_avoidance_interpolation_moving
 
 pause = False
 
@@ -13,6 +16,15 @@ pause = False
 def onclick(event):
     global pause
     pause = not pause
+
+
+def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5):
+    weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
+    weights = weights / frac_gamma_nth
+    weights = 1.0 / weights
+    weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
+    weights = weights / n_points
+    return weights
 
 
 def plot_dynamical_system(
@@ -38,7 +50,7 @@ def plot_dynamical_system(
     positions = np.vstack((x_vals.reshape(1, -1), y_vals.reshape(1, -1)))
     velocities = np.zeros(positions.shape)
     for it in range(positions.shape[1]):
-        velocities[:, it] = dynamical_system.evaluate(positions[:, it])
+        velocities[:, it] = dynamical_system.evaluate(positions[:, it], None)
 
     index_nonzero = np.unique(velocities.nonzero()[1])
 
@@ -72,17 +84,26 @@ class AttractorDynamics(DynamicalSystem):
     min_dist = 1
     dim = 2
 
-    def __init__(self, agent, cutoff_dist=5, max_repulsion=1):
-        self.agent = agent
+    def __init__(self, env, cutoff_dist=5, max_repulsion=1, parking_zone=None, num_goals=None):
+        self.env = env
         self.cutoff_dist = cutoff_dist
         self.max_repulsion = max_repulsion
+        self.parking_zone = parking_zone
+        if self.parking_zone is None:
+            self.move_to_pk = False
+        else:
+            self.move_to_pk = True
+        if num_goals is None:
+            self.go_to_pk = False
+        else:
+            self.go_to_pk = [False] * num_goals
+
         self.animation_paused = False
         self.lambda_p = 10
 
-    def evaluate(self, position):
-        dir_agent = position - self.agent.center_position
-        # print(f"position before gamma: {position}")
-        dist_agent = self.agent.get_gamma(position, in_global_frame=True, )
+    def evaluate(self, position, furniture_eval):
+        dir_agent = position - self.env[-1].center_position
+        dist_agent = self.env[-1].get_gamma(position, in_global_frame=True,)
 
         if dist_agent < 1:
             # raise Warning("attractor got run over :'(")
@@ -90,35 +111,154 @@ class AttractorDynamics(DynamicalSystem):
             # TODO: no theoretical value
             return np.zeros(self.dim)
 
-        unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
-        unit_lin_vel = self.agent.linear_velocity / np.linalg.norm(self.agent.linear_velocity)
-        max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
-        if max_repulsion <= 0.:
-            return np.zeros(self.dim)
+        if self.go_to_pk is False:
+            unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
+            unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
+            max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
+            if max_repulsion <= 0.:
+                return np.zeros(self.dim)
 
-        slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
-        offset = max_repulsion - (slope * self.min_dist)
-        repulsion_magnitude = (slope * dist_agent) + offset
-        if repulsion_magnitude <= 0.:
-            return np.zeros(self.dim)
-        vect_agent = repulsion_magnitude * unit_dir_agent
+            slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
+            offset = max_repulsion - (slope * self.min_dist)
+            repulsion_magnitude = (slope * dist_agent) + offset
+            if repulsion_magnitude <= 0.:
+                return np.zeros(self.dim)
+            vect_agent = repulsion_magnitude * unit_dir_agent
 
-        perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
-        basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
-        lambda_p = 10
-        basis_d = np.eye(self.dim)
-        basis_d[1] *= self.lambda_p
-        new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
+            perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
+            basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
+            lambda_p = 10
+            basis_d = np.eye(self.dim)
+            basis_d[1] *= self.lambda_p
+            new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
 
-        return new_vect
+        else:
+            gamma_list = np.zeros(len(self.parking_zone))
+            for ii, pos in enumerate(self.parking_zone):
+                gamma_list[ii] = self.env[furniture_eval].get_gamma(pos, in_global_frame=True,)
+
+            parking_zone_index = np.argmin(gamma_list)
+            dir_parking_zone = self.parking_zone[parking_zone_index] - position
+            norm_parking_zone = np.linalg.norm(dir_parking_zone)
+            if norm_parking_zone > 1:
+                new_vect = dir_parking_zone / norm_parking_zone
+            else:
+                new_vect = dir_parking_zone
+
+        if furniture_eval is not None:
+            temp_env = self.env[0:furniture_eval] + self.env[furniture_eval + 1:-1]
+        else:
+            temp_env = self.env[:-1]
+
+        mod_vel = self.avoid(position, new_vect, temp_env)
+        # return new_vect
+        return mod_vel
+
+    def avoid(
+            self,
+            position: np.ndarray,
+            initial_velocity: np.ndarray,
+            env,
+            const_speed: bool = True,
+    ) -> np.ndarray:
+
+        vel = obs_avoidance_interpolation_moving(
+            position=position, initial_velocity=initial_velocity, obs=env
+        )
+
+        if const_speed:
+            vel_mag = LA.norm(vel)
+            if vel_mag:
+                vel = vel / vel_mag * LA.norm(initial_velocity)
+
+        # elif self.maximum_speed is not None:
+        #     vel_mag = LA.norm(vel)
+        #     if vel_mag > self.maximum_speed:
+        #         vel = vel / vel_mag * self.maximum_speed
+
+        return vel
 
     def set_lambda(self, lambda_p):
         self.lambda_p = lambda_p
 
+    def get_gamma_product_attractor(self, position, env, gamma_type=GammaType.EUCLEDIAN):
+        if not len(env):
+            # Very large number
+            return 1e20
+        gamma_list = np.zeros(len(env))
+        for ii, obs in enumerate(env):
+            # gamma_type needs to be implemented for all obstacles
+            gamma_list[ii] = obs.get_gamma(
+                position, in_global_frame=True, gamma_type=gamma_type
+            )
+
+        n_obs = len(gamma_list)
+        # Total gamma [1, infinity]
+        # Take root of order 'n_obs' to make up for the obstacle multiple
+        if any(gamma_list < 1):
+            warnings.warn("Collision detected.")
+            # breakpoint()
+            return 0
+
+        gamma = np.min(gamma_list)
+
+        if np.isnan(gamma):
+            breakpoint()
+        return gamma
+
+    def get_weights_attractors(self, attractor_points, furniture_eval, gamma_type=GammaType.EUCLEDIAN):
+        num_attractors = attractor_points.shape[0]
+
+        temp_env = self.env[0:furniture_eval] + self.env[furniture_eval + 1:]
+
+        gamma_list = np.zeros(num_attractors)
+        # for the moment only take into account the person/qolo/agent
+        for ii in range(num_attractors):
+            # gamma_list[ii] = self.agent.get_gamma(
+            #     attractor_points[ii, :], in_global_frame=True, gamma_type=gamma_type
+            # )
+            gamma_list[ii] = self.get_gamma_product_attractor(attractor_points[ii, :], temp_env)
+
+        attractor_weights = np.zeros(gamma_list.shape)
+        ind_nonzero = gamma_list < self.cutoff_dist
+        if not any(ind_nonzero):
+            attractor_weights = np.full(num_attractors, 1/num_attractors)
+            return attractor_weights
+
+        attractor_weights[ind_nonzero] = get_weight_from_gamma(
+            gamma_list[ind_nonzero],
+            cutoff_gamma=self.cutoff_dist,
+            n_points=num_attractors
+        )
+
+        attractor_weights_sum = np.sum(attractor_weights)
+        if attractor_weights_sum > 1:
+            attractor_weights = attractor_weights / attractor_weights_sum
+        else:
+            attractor_weights[-1] = 1 - attractor_weights_sum
+
+        return attractor_weights
+
+    def get_goal_velocity(self, attractor_pos, attractor_velocities, attractor_weights, furniture_eval):
+        num_attractors = attractor_weights.shape[0]
+        lin_vel = np.zeros(2)
+        for ii in range(num_attractors):
+            lin_vel += attractor_weights[ii] * attractor_velocities[ii, :]
+
+        angular_vel = np.zeros(num_attractors)
+        for attractor in range(num_attractors):
+            angular_vel[attractor] = attractor_weights[attractor] * np.cross(
+                (self.env[furniture_eval].center_position - attractor_pos[attractor, :]),
+                (attractor_velocities[attractor, :] - lin_vel)
+            )
+        angular_vel_sum = angular_vel.sum()
+
+        return lin_vel, angular_vel_sum
+
 
 def main():
     obs_env = ObstacleContainer()
-    pos = np.array([0., 0.])
+    pos = np.array([[0., 0.], [2., 2.]])
     vel = np.array([1., 0.])
     # u_vel = vel / np.linalg.norm(vel)
     theta = np.deg2rad(10)
@@ -127,15 +267,27 @@ def main():
 
     obstacle_environment = Ellipse(
         axes_length=[0.6, 0.6],
-        center_position=pos,
-        margin_absolut=0.2,
+        center_position=pos[0],
+        margin_absolut=0.,
         orientation=0,
         tail_effect=False,
         repulsion_coeff=1,
         linear_velocity=vel,
     )
+    obs_env.append(
+        Cuboid(
+            axes_length=[1.6, 0.6],
+            center_position=pos[1],
+            margin_absolut=0.,
+            orientation=0,
+            tail_effect=False,
+            repulsion_coeff=1,
+            linear_velocity=vel,
+        )
+    )
     obs_env.append(obstacle_environment)
-    my_dynamics = AttractorDynamics(obstacle_environment)
+
+    my_dynamics = AttractorDynamics(obs_env)
     x_lim = [-5, 5]
     y_lim = x_lim
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -149,14 +301,19 @@ def main():
 
         ax.clear()
         # my_dynamics.set_lambda(ii+1)
-        plot_dynamical_system(n_resolution=61, dynamical_system=my_dynamics, x_lim=x_lim, y_lim=y_lim,
+        plot_dynamical_system(n_resolution=16, dynamical_system=my_dynamics, x_lim=x_lim, y_lim=y_lim,
                               fig_ax_handle=[fig, ax])
         plot_obstacles(ax, obs_env, x_lim, y_lim, showLabel=False, drawVelArrow=False)
-        plt.arrow(pos[0], pos[1], vel[0], vel[1], head_width=0.05, head_length=0.1, fc='k', ec='k')
+        plt.arrow(pos[0, 0], pos[0, 1], vel[0], vel[1], head_width=0.05, head_length=0.1, fc='k', ec='k')
         vel = np.dot(rot, vel)
         obstacle_environment.linear_velocity = vel
+        obs_env[-1].linear_velocity = vel
         plt.pause(0.5)
         ii += 1
+
+        if not plt.fignum_exists(fig.number):
+            print("Stopped animation on closing of the figure..")
+            break
 
 
 if __name__ == "__main__":
