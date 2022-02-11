@@ -147,6 +147,70 @@ def generate_launch_description():
     )
     h_bed_6_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_6_description_content}
 
+    wall_1_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            " ",
+            "prefix:=wall_1_ ",
+            "fixed:='1' ",
+            "connected_to:='odom' ",
+            "xyz:='0 5 1' ",
+            "rpy:='0 0 0' ",
+            "dim:='12 0.1 2' ",
+        ]
+    )
+    wall_1_description = {"use_sim_time": use_sim_time, "robot_description": wall_1_description_content}
+
+    wall_2_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            " ",
+            "prefix:=wall_2_ ",
+            "fixed:='1' ",
+            "connected_to:='odom' ",
+            "xyz:='6 0 0.5' ",
+            "rpy:='0 0 0' ",
+            "dim:='0.1 10 1' ",
+        ]
+    )
+    wall_2_description = {"use_sim_time": use_sim_time, "robot_description": wall_2_description_content}
+
+    wall_3_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            " ",
+            "prefix:=wall_3_ ",
+            "fixed:='1' ",
+            "connected_to:='odom' ",
+            "xyz:='0 -5 0.5' ",
+            "rpy:='0 0 0' ",
+            "dim:='12 0.1 1' ",
+        ]
+    )
+    wall_3_description = {"use_sim_time": use_sim_time, "robot_description": wall_3_description_content}
+
+    wall_4_description_content = Command(
+        [
+            PathJoinSubstitution([FindExecutable(name="xacro")]),
+            " ",
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            " ",
+            "prefix:=wall_4_ ",
+            "fixed:='1' ",
+            "connected_to:='odom' ",
+            "xyz:='-6 0 1' ",
+            "rpy:='0 0 0' ",
+            "dim:='0.1 10 2' ",
+        ]
+    )
+    wall_4_description = {"use_sim_time": use_sim_time, "robot_description": wall_4_description_content}
+
     table_state_pub_node = Node(
         package="robot_state_publisher",
         namespace="table",
@@ -227,11 +291,43 @@ def generate_launch_description():
         parameters=[h_bed_6_description],
     )
 
+    wall_1_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="wall_1_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[wall_1_description],
+    )
+
+    wall_2_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="wall_2_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[wall_2_description],
+    )
+
+    wall_3_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="wall_3_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[wall_3_description],
+    )
+
+    wall_4_state_pub_node = Node(
+        package="robot_state_publisher",
+        namespace="wall_4_",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[wall_4_description],
+    )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/move_multiple_ds.rviz"])],
+        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/full_env_ds.rviz"])],
         output="log",
     )
 
@@ -251,8 +347,12 @@ def generate_launch_description():
         h_bed_2_state_pub_node,
         h_bed_3_state_pub_node,
         h_bed_4_state_pub_node,
-        h_bed_5_state_pub_node,
-        h_bed_6_state_pub_node,
+        # h_bed_5_state_pub_node,
+        # h_bed_6_state_pub_node,
+        wall_1_state_pub_node,
+        wall_2_state_pub_node,
+        wall_3_state_pub_node,
+        wall_4_state_pub_node,
         rviz_node,
     ]
 

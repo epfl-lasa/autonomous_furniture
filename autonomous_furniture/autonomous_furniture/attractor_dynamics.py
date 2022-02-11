@@ -93,11 +93,8 @@ class AttractorDynamics(DynamicalSystem):
             self.move_to_pk = False
         else:
             self.move_to_pk = True
-        if num_goals is None:
-            self.go_to_pk = False
-        else:
-            self.go_to_pk = [False] * num_goals
-
+        self.go_to_pk = [False] * len(self.parking_zone)
+        self.state = ["idle"] * len(self.parking_zone)
         self.animation_paused = False
         self.lambda_p = 10
 
@@ -111,48 +108,129 @@ class AttractorDynamics(DynamicalSystem):
             # TODO: no theoretical value
             return np.zeros(self.dim)
 
-        if self.go_to_pk is False:
-            unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
-            unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
-            max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
-            if max_repulsion <= 0.:
-                return np.zeros(self.dim)
-
-            slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
-            offset = max_repulsion - (slope * self.min_dist)
-            repulsion_magnitude = (slope * dist_agent) + offset
-            if repulsion_magnitude <= 0.:
-                return np.zeros(self.dim)
-            vect_agent = repulsion_magnitude * unit_dir_agent
-
-            perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
-            basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
-            lambda_p = 10
-            basis_d = np.eye(self.dim)
-            basis_d[1] *= self.lambda_p
-            new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
-
-        else:
-            gamma_list = np.zeros(len(self.parking_zone))
-            for ii, pos in enumerate(self.parking_zone):
-                gamma_list[ii] = self.env[furniture_eval].get_gamma(pos, in_global_frame=True,)
-
-            parking_zone_index = np.argmin(gamma_list)
-            dir_parking_zone = self.parking_zone[parking_zone_index] - position
-            norm_parking_zone = np.linalg.norm(dir_parking_zone)
-            if norm_parking_zone > 1:
-                new_vect = dir_parking_zone / norm_parking_zone
-            else:
-                new_vect = dir_parking_zone
-
         if furniture_eval is not None:
             temp_env = self.env[0:furniture_eval] + self.env[furniture_eval + 1:-1]
         else:
             temp_env = self.env[:-1]
 
-        mod_vel = self.avoid(position, new_vect, temp_env)
+        unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
+        unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
+        max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
+
+        if self.state[furniture_eval] == "idle":
+
+            if max_repulsion <= 0.:
+                self.state[furniture_eval] = "idle"
+                return np.zeros(self.dim), self.go_to_pk
+
+            slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
+            offset = max_repulsion - (slope * self.min_dist)
+            repulsion_magnitude = (slope * dist_agent) + offset
+
+            if repulsion_magnitude <= 0.:
+                self.state[furniture_eval] = "idle"
+                return np.zeros(self.dim), self.go_to_pk
+            else:
+                self.state[furniture_eval] = "avoiding"
+
+            vect_agent = repulsion_magnitude * unit_dir_agent
+            perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
+            basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
+            basis_d = np.eye(self.dim)
+            basis_d[1] *= self.lambda_p
+            new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
+            mod_vel = self.avoid(position, new_vect, temp_env)
+            self.go_to_pk[furniture_eval] = False
+            # mod_vel = np.zeros(self.dim)
+
+        elif self.state[furniture_eval] == "avoiding":
+            # unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
+            # unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
+            # max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
+
+            if max_repulsion <= 0.:
+                self.state[furniture_eval] = "parking"
+                return np.zeros(self.dim), self.go_to_pk
+
+            slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
+            offset = max_repulsion - (slope * self.min_dist)
+            repulsion_magnitude = (slope * dist_agent) + offset
+
+            if max_repulsion <= 0.:
+                self.state[furniture_eval] = "parking"
+                return np.zeros(self.dim), self.go_to_pk
+
+            vect_agent = repulsion_magnitude * unit_dir_agent
+            perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
+            basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
+            basis_d = np.eye(self.dim)
+            basis_d[1] *= self.lambda_p
+            new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
+            mod_vel = self.avoid(position, new_vect, temp_env)
+            self.go_to_pk[furniture_eval] = False
+
+        elif self.state[furniture_eval] == "parking":
+            mod_vel = np.zeros(self.dim)
+            self.go_to_pk[furniture_eval] = True
+
+        else:
+            mod_vel = np.zeros(self.dim)
+            self.go_to_pk[furniture_eval] = False
+
+        # if self.go_to_pk is False:
+        #     unit_dir_agent = dir_agent / np.linalg.norm(dir_agent)
+        #     unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
+        #     max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
+        #     if max_repulsion <= 0.:
+        #         self.state[furniture_eval] = "idle"
+        #         return np.zeros(self.dim)
+        #
+        #     slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
+        #     offset = max_repulsion - (slope * self.min_dist)
+        #     repulsion_magnitude = (slope * dist_agent) + offset
+        #     if repulsion_magnitude <= 0.:
+        #         self.state[furniture_eval] = "idle"
+        #         return np.zeros(self.dim)
+        #     vect_agent = repulsion_magnitude * unit_dir_agent
+        #     self.state[furniture_eval] = "avoiding"
+        #     perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
+        #     basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
+        #     lambda_p = 10
+        #     basis_d = np.eye(self.dim)
+        #     basis_d[1] *= self.lambda_p
+        #     new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
+        #     mod_vel = self.avoid(position, new_vect, temp_env)
+
+        # elif self.go_to_pk is True:
+        #     gamma_list = np.zeros(len(self.parking_zone))
+        #     for ii, pk in enumerate(self.parking_zone):
+        #         gamma_list[ii] = self.env[furniture_eval].get_gamma(pk.center_position, in_global_frame=True,)
+        #
+        #     parking_zone_index = np.argmin(gamma_list)
+        #     mod_vel = self.parking_zone[parking_zone_index].center_position - self.env[furniture_eval].center_position
+
+        # else:   # WTF ?
+        #     gamma_list = np.zeros(len(self.parking_zone))
+        #     for ii, pk in enumerate(self.parking_zone):
+        #         gamma_list[ii] = self.env[furniture_eval].get_gamma(pk.center_position, in_global_frame=True,)
+        #
+        #     parking_zone_index = np.argmin(gamma_list)
+        #     dir_parking_zone = self.parking_zone[parking_zone_index].center_position - position
+        #     norm_parking_zone = np.linalg.norm(dir_parking_zone)
+        #     if norm_parking_zone > 1:
+        #         new_vect = dir_parking_zone / norm_parking_zone
+        #     elif norm_parking_zone < 0.3:
+        #         new_vect = np.zeros(self.dim)
+        #     else:
+        #         new_vect = dir_parking_zone
+        #
+        #     mod_vel = self.avoid(position, new_vect, temp_env)
+
         # return new_vect
-        return mod_vel
+        return mod_vel, self.go_to_pk
+
+    def print_state(self, index):
+        print(f"state of fur {index}: {self.state[index]}")
 
     def avoid(
             self,
@@ -254,6 +332,12 @@ class AttractorDynamics(DynamicalSystem):
         angular_vel_sum = angular_vel.sum()
 
         return lin_vel, angular_vel_sum
+
+    def get_gamma_at_attractor(self, attractor, obstacle):
+        gamma_values = np.zeros(attractor.shape[0])
+        for ii in range(attractor.shape[0]):
+            gamma_values[ii] = self.get_gamma_product_attractor(attractor[ii, :], obstacle)
+        return gamma_values
 
 
 def main():
