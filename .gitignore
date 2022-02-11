@@ -22,6 +22,8 @@ devel_isolated/
 /cfg/*.py
 
 # Ignore generated docs
+*.mp4
+data/
 *.dox
 *.wikidoc
 
