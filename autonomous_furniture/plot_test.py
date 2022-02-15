@@ -20,11 +20,11 @@ ax_min = min(axis)
 ax_max = max(axis)
 div = ax_max / (num_ctl + 1)
 radius = math.sqrt(((ax_min / 2) ** 2) + (div ** 2))
-rectangle = Polygon([[-div, -(ax_min / 2)], [-div + ax_max, -(ax_min / 2)], [-div + ax_max, -(ax_min / 2) + ax_min],
-                     [-div, -(ax_min / 2) + ax_min], [-div, -(ax_min / 2)]])
+rectangle = Polygon([[0, -(ax_min / 2)], [0 + ax_max, -(ax_min / 2)], [0 + ax_max, -(ax_min / 2) + ax_min],
+                     [0, -(ax_min / 2) + ax_min], [0, -(ax_min / 2)]])
 shapes = []
 for i in range(num_ctl):
-    shapes.append(Point(div * i, 0).buffer(radius))
+    shapes.append(Point(div * (i + 1), 0).buffer(radius))
 
 # Here are your input shapes (circles A, B, C)
 # A = Point(3, 6).buffer(4)
@@ -50,7 +50,7 @@ for geom in nonoverlap.geoms:
     xs, ys = geom.exterior.xy
     ax.fill(xs, ys, alpha=0.5)
 for i in range(num_ctl):
-    plt.plot(div * i, 0, "o", color="g")
+    plt.plot(div * (i + 1), 0, "o", color="g")
 
 area_circ = nonoverlap.area
 print(f"Radius: {radius}")

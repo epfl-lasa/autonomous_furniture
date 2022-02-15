@@ -116,11 +116,11 @@ class DynamicalSystemAnimation(Animator):
             wall_margin = 0.
 
         x_offset = 1.5
-        y_offset = -1.
-        parking_zone_cp = np.array([[1. + x_offset, -.5 + y_offset],
-                                    [-1. + x_offset, -.5 + y_offset],
-                                    [1. + x_offset, .5 + y_offset],
-                                    [-1 + x_offset, .5 + y_offset],
+        y_offset = 1.
+        parking_zone_cp = np.array([[1. + x_offset, -.42 + y_offset],
+                                    [-1. + x_offset, -.42 + y_offset],
+                                    [1. + x_offset, .42 + y_offset],
+                                    [-1 + x_offset, .42 + y_offset],
                                     [0. + x_offset, 0. + y_offset]])
         parking_zone_or = [pi,
                            0.,
@@ -141,7 +141,7 @@ class DynamicalSystemAnimation(Animator):
                 )
             )
 
-        self.attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=2, parking_zone=parking_zone)
+        self.attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=1.8, parking_zone=parking_zone)
         self.dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment,
                                                    obs_multi_agent=obs_w_multi_agent)
         self.position_list = np.zeros((num_agent, dim, self.it_max))
@@ -342,7 +342,7 @@ def run_multiple_furniture_avoiding_person():
     max_ax_len = max(axis)
     min_ax_len = min(axis)
     tot_ctl_pts = 10
-    obstacle_pos = np.array([[1, -0.5], [-1, -0.5], [1., 0.5], [-1, 0.5], [0, 0], [2.5, -.4]])
+    obstacle_pos = np.array([[1, -0.42], [-1, -0.42], [1., 0.42], [-1, 0.42], [0, 0], [3., -.4]])
     obstacle_or = [pi, 0., pi, 0., pi / 2]
 
     rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
@@ -370,7 +370,7 @@ def run_multiple_furniture_avoiding_person():
         Cuboid(
             axes_length=[1.6, 0.7],
             center_position=obstacle_pos[-2],
-            margin_absolut=radius,
+            margin_absolut=radius / 1.1,
             orientation=obstacle_or[-1],
             tail_effect=False,
             repulsion_coeff=1,
@@ -449,10 +449,10 @@ def run_multiple_furniture_avoiding_person():
 
     # this
     my_animation = DynamicalSystemAnimation(
-        it_max=550,
+        it_max=560,
         dt_simulation=0.05,
         dt_sleep=0.01,
-        animation_name="ass_env_rec",
+        animation_name="ass_env_rec_2",
     )
 
     my_animation.setup(
@@ -463,8 +463,8 @@ def run_multiple_furniture_avoiding_person():
         tot_rel_agent_pos,
         attractor_env,
         True,
-        x_lim=[-5, 5],
-        y_lim=[-4, 4],
+        x_lim=[-4.5, 4.5],
+        y_lim=[-3.5, 3.5],
     )
 
     # code from Lukas

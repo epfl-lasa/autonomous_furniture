@@ -36,7 +36,7 @@ def rotate_vector(vector, angle):
 
 class DynamicalSystemRviz(Node):
     def __init__(self):
-        self.animation_paused = False
+        self.animation_paused = True
         rclpy.init()
         super().__init__('DS_state_publisher')
         qos_profile = QoSProfile(depth=10)
@@ -167,21 +167,12 @@ class DynamicalSystemRviz(Node):
         else:
             wall_margin = 0.
 
-        max_axis = max(goals[0].axes_length)
-        min_axis = min(goals[0].axes_length)
-        offset = 0.5
-        wall_thickness = 0.3
-        # parking_zone_cp = np.array([[x_lim[1] - (wall_margin + wall_thickness), y_lim[0] + (offset + max_axis / 2)],
-        #                             [x_lim[1] - (wall_margin + wall_thickness + min_axis + offset), y_lim[0] + (offset + max_axis / 2)],
-        #                             [x_lim[1] - (wall_margin + wall_thickness + 2 * (min_axis + offset)), y_lim[0] + (offset + max_axis / 2)],
-        #                             [x_lim[1] - (wall_margin + wall_thickness + 3 * (min_axis + offset)), y_lim[0] + (offset + max_axis / 2)],
-        #                             [x_lim[1] - (wall_margin + wall_thickness + 4 * (min_axis + offset)), y_lim[0] + (offset + max_axis / 2)]])
         x_offset = 1.5
-        y_offset = -1.
-        parking_zone_cp = np.array([[1. + x_offset, -.5 + y_offset],
-                                    [-1. + x_offset, -.5 + y_offset],
-                                    [1. + x_offset, .5 + y_offset],
-                                    [-1 + x_offset, .5 + y_offset],
+        y_offset = 1.
+        parking_zone_cp = np.array([[1. + x_offset, -.42 + y_offset],
+                                    [-1. + x_offset, -.42 + y_offset],
+                                    [1. + x_offset, .42 + y_offset],
+                                    [-1 + x_offset, .42 + y_offset],
                                     [0. + x_offset, 0. + y_offset]])
         parking_zone_or = [pi,
                            0.,
@@ -385,9 +376,7 @@ def main():
 
     rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
     rel_agent_pos_table, radius_table = calculate_relative_position(num_agent, 1.6, 0.7)
-    obstacle_pos = np.array([[-1.5, 1.2], [-1.5, -1.2], [0, 1.6], [0, -0.8], [1.5, 0.8], [1.5, -1.6], [4.5, -1.2]])
-    obstacle_pos = np.array([[-1.5, 1.5], [-1.5, -1.5], [0, 1.5], [0, -1.5], [1.5, 1.5], [1.5, -1.5], [4.5, -1.2]])
-    obstacle_pos = np.array([[1, -0.5], [-1, -0.5], [1., 0.5], [-1, 0.5], [0, 0], [2.5, -.4]])
+    obstacle_pos = np.array([[1, -0.42], [-1, -0.42], [1., 0.42], [-1, 0.42], [0, 0], [3., -.4]])
     agent_pos = np.zeros((tot_num_agent, 2))
 
     attractor_pos = np.zeros((tot_num_agent, 2))
@@ -566,8 +555,8 @@ def main():
         tot_rel_agent_pos,
         attractor_env,
         True,
-        x_lim=[-5, 5],
-        y_lim=[-4, 4],
+        x_lim=[-4.5, 4.5],
+        y_lim=[-3.5, 3.5],
         dt_step=0.03,
         dt_sleep=0.01,
     )

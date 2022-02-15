@@ -102,9 +102,9 @@ def generate_launch_description():
             "prefix:=wall_1_ ",
             "fixed:='1' ",
             "connected_to:='odom' ",
-            "xyz:='0 4 1' ",
+            "xyz:='0 3.5 1' ",
             "rpy:='0 0 0' ",
-            "dim:='10 0.1 2' ",
+            "dim:='9 0.1 2' ",
         ]
     )
     wall_1_description = {"use_sim_time": use_sim_time, "robot_description": wall_1_description_content}
@@ -118,9 +118,9 @@ def generate_launch_description():
             "prefix:=wall_2_ ",
             "fixed:='1' ",
             "connected_to:='odom' ",
-            "xyz:='5 0 0.5' ",
+            "xyz:='4.5 0 0.5' ",
             "rpy:='0 0 0' ",
-            "dim:='0.1 8 1' ",
+            "dim:='0.1 7 1' ",
         ]
     )
     wall_2_description = {"use_sim_time": use_sim_time, "robot_description": wall_2_description_content}
@@ -134,9 +134,9 @@ def generate_launch_description():
             "prefix:=wall_3_ ",
             "fixed:='1' ",
             "connected_to:='odom' ",
-            "xyz:='0 -4 0.5' ",
+            "xyz:='0 -3.5 0.5' ",
             "rpy:='0 0 0' ",
-            "dim:='10 0.1 1' ",
+            "dim:='9 0.1 1' ",
         ]
     )
     wall_3_description = {"use_sim_time": use_sim_time, "robot_description": wall_3_description_content}
@@ -150,9 +150,9 @@ def generate_launch_description():
             "prefix:=wall_4_ ",
             "fixed:='1' ",
             "connected_to:='odom' ",
-            "xyz:='-5 0 1' ",
+            "xyz:='-4.5 0 1' ",
             "rpy:='0 0 0' ",
-            "dim:='0.1 8 2' ",
+            "dim:='0.1 7 2' ",
         ]
     )
     wall_4_description = {"use_sim_time": use_sim_time, "robot_description": wall_4_description_content}

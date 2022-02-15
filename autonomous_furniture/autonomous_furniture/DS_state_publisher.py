@@ -37,7 +37,7 @@ def rotate_vector(vector, angle):
 class DynamicalSystemRviz(Node):
     def __init__(self):
         print("line 30")
-        self.animation_paused = False
+        self.animation_paused = True
         rclpy.init()
         super().__init__('DS_state_publisher')
         qos_profile = QoSProfile(depth=10)
@@ -584,6 +584,7 @@ def main():
         True,
         x_lim=[-6, 6],
         y_lim=[-5, 5],
+        it_max=1500,
         dt_step=0.03,
         dt_sleep=0.01,
     )
