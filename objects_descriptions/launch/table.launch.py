@@ -14,7 +14,7 @@ def generate_launch_description():
             " ",
             "prefix:=table_ ",
             "connected_to:='' ",
-            "xyz:='1 1 0' ",
+            "xyz:='0 -0.2 0' ",
             "rpy:='0 0 0' ",
             "fixed:='1' ",
         ]
