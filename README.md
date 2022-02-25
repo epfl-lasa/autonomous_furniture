@@ -19,6 +19,15 @@ if you forgot to add the "--recurse-submodules" flag, you can fetch the submodul
 ```
 git submodule update --init --recursive
 ```
+Be sure your directory structure looks like this:
+```bash
+.
+└── workspace
+    └──src
+        ├── autonomous_furniture
+        └── objects_descriptions
+```
+if not ROS2 will fail to build and through mising package errors.
 ### Python Install
 Go to file directory:
 ```shell
@@ -35,7 +44,7 @@ pipenv shell
 ```
 Setup the obstacle avoidance and various tools libraries:
 ```shell
-cd libraries/
+cd libraries/dynamic_obstacle_avoidance/
 python setup.py develop
 cd lib/various_tools/
 python setup.py develop
