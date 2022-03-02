@@ -53,7 +53,7 @@ class DynamicalSystemAnimation(Animator):
         if num_agent > 1:
             velocity = np.zeros((num_agent, self.dim))
         else:
-            velocity = np.zeros((2, self.dim))
+            velocity = np.zeros((2, self.dim))  # TODO : The 2 has to be changed to represent the number of agent-control point per obstacle
         if relative_attractor_position is None:
             relative_attractor_position = np.array([0., 0.])
         if goals is None:
