@@ -36,6 +36,18 @@ class DynamicalSystemAnimation(Animator):
         x_lim=None,
         y_lim=None,
     ):
+        """
+        setup the 2D environment for sthe simulation
+        param initial_dynamics :
+        param obstacle_environment : list of the obstacle ObstacleContainer()
+        param obs_w_multi_agent : iterator to select all the agent=control point per obstacle
+        param start_position : starting position of the agent in map frame
+        param_attractor_position : position of the attractor relatively to the frame of their assigned obstacle
+        param goals : goal of the furniture / Stable position 
+        param walls : list of obstacle that will delimitate the arena
+        param x_lim : x lenght of the arena
+        param y_lim : y lenght of the arena
+        """
         num_obs = len(obstacle_environment)
         if start_position.ndim > 1:
             num_agent = len(start_position)
@@ -342,7 +354,7 @@ def main():
     tot_ctl_pts = 8 # total number of Control point that will have to be treated i.e. num_agent*numb_cuboid_obstacle()
     obstacle_pos = np.array([[-1.5, 1.5], [-1.5, -1.5], [1.5, 1.5], [1.5, -1.5], [4.5, -1.2]])
 
-    rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
+    rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len) # rel_agent_pos will be used to place the attractor
 
     ## Creation of obstacles in the env : 
     obstacle_environment = ObstacleContainer()
@@ -376,7 +388,7 @@ def main():
                                                                                     # by the num_agent i.e. number of control point per obstacle
 
     attractor_env = ObstacleContainer()
-    for i in range(len(obstacle_pos) - 1): # the cuboid obstacles are also added in an attractor env
+    for i in range(len(obstacle_pos) - 1): # the cuboid obstacles are also added in an attractor env but not the goal (I)
         attractor_env.append(
             Cuboid(
                 axes_length=[max_ax_len, min_ax_len],
@@ -403,7 +415,9 @@ def main():
             )
         )
     
-    obs_multi_agent = {0: [0, 1], 1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: []} # what is this dictionnary is used for ?
+    obs_multi_agent = {0: [0, 1], 1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: []} # what is this dictionnary is used for ? sort of an interator \
+                                                                                 # to select the right agent=control point per obstacle
+                                                                                 # TODO can be changed to be automated
 
     my_animation = DynamicalSystemAnimation( # See with Lukas how it's working and all
         it_max=900,
