@@ -405,23 +405,11 @@ def main():
     
     obs_multi_agent = {0: [0, 1], 1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: []} # what is this dictionnary is used for ?
 
-    my_animation = DynamicalSystemAnimation(
+    my_animation = DynamicalSystemAnimation( # See with Lukas how it's working and all
         it_max=900,
         dt_simulation=0.05,
         dt_sleep=0.01,
         animation_name="full_env_rec",
-    )
-
-    my_animation.setup(
-        initial_dynamics,
-        obstacle_environment,
-        obs_multi_agent,
-        agent_pos,
-        rel_agent_pos,
-        attractor_env,
-        True,
-        x_lim=[-6, 6],
-        y_lim=[-5, 5],
     )
 
     my_animation.setup(
