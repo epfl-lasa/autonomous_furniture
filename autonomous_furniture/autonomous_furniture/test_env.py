@@ -82,7 +82,7 @@ class DynamicalSystemAnimation(Animator):
             walls_center_position = np.array([[0., y_lim[0]], [x_lim[0], 0.], [0., y_lim[1]], [x_lim[1], 0.]])
             x_length = x_lim[1] - x_lim[0]
             y_length = y_lim[1] - y_lim[0]
-            wall_margin = obstacle_environment[-1].margin_absolut
+            wall_margin = obstacle_environment[-1].margin_absolut  # obstacle_environment[-1] : is the obstacle of the person/robot
             walls_cont = [
                 Cuboid(
                     axes_length=[x_length, 0.1],  # [x_length, y_length],
