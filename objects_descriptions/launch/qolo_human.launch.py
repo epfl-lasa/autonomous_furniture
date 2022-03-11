@@ -10,9 +10,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]),
             " ",
-            "prefix:=qolo_ ",
+            "prefix:=qolo_human_ ",
             "connected_to:='' ",
             "xyz:='1 0 0.2' ",
             "rpy:='0 0 0' ",
