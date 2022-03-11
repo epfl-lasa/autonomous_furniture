@@ -85,10 +85,22 @@ pipenv shell
 python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
 ```
 
+## Known Errors
+You may encounter as few errors at first a few of those are the following:
+* ROS2 doesn't build --> check file struct mentioned in Setup
+* Missing packages when launching ROS2 launch files --> check ros setup
+* Missing packages when launching python files --> this may be due to detached submodules
+  * Reattach submodules:
+```shell
+cd workspace/src/autonomous_furniture/libraries/dynamic_obstacle_avoidance/
+git checkout feat/mobilerobot
+cd lib/various_tools/
+git pull origin main
+```
 
 **References**     
-> [1] Huber, Lukas, Aude Billard, and Jean-Jacques E. Slotine. "Avoidance of Convex and Concave Obstacles with Convergence ensured through Contraction." IEEE Robotics and Automation Letters (2019).
+> [1] Lukas Huber, Aude Billard, and Jean-Jacques E. Slotine. "Avoidance of Convex and Concave Obstacles with Convergence ensured through Contraction." IEEE Robotics and Automation Letters (2019).
 > 
-> [2] Huber, Lukas, and Slotine Aude Billard. "Avoiding Dense and Dynamic Obstacles in Enclosed Spaces: Application to Moving in a Simulated Crowd." arXiv preprint arXiv:2105.11743 (2021).
+> [2] Lukas Huber, Jean-Jacques E. Slotine, and Aude Billard. "Avoiding Dense and Dynamic Obstacles in Enclosed Spaces: Application to Moving in a Simulated Crowd." arXiv preprint arXiv:2105.11743 (2021).
 > 
-> [3] Add reference if my paper gets published
+> [3] Federico M. Conzelmann, Lukas Huber, Diego Paez-Granados, Anastasia Bolotnikova, Auke Ijspeert, and Aude Billard "A Dynamical System Approach to Decentralized Collision-free Autonomous Coordination of a Mobile Assistive Furniture Swarm"
