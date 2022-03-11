@@ -16,7 +16,7 @@ from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-from calc_time import calculate_relative_position, relative2global, global2relative
+from analysis.calc_time import calculate_relative_position, relative2global, global2relative
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
 
 
@@ -86,9 +86,6 @@ class DynamicalSystemRviz(Node):
             dt_sleep=0.1
     ):
         loop_rate = self.create_rate(30)
-
-        degree = pi / 180.0
-        angle = 0.
 
         num_obs = len(obstacle_environment)
         if start_position.ndim > 1:
@@ -199,20 +196,12 @@ class DynamicalSystemRviz(Node):
         time_list = np.zeros((num_obs, it_max))
         relative_agent_pos = np.zeros((num_agent, dim))
 
-        # for obs, (name, clt_pts) in enumerate(obs_w_multi_agent.items()):
-        #     relative_agent_pos = - (obstacle_environment[name].center_position - start_position)
-
         for obs in range(num_obs):
             relative_agent_pos[obs_w_multi_agent[obs], :] = global2relative(start_position[obs_w_multi_agent[obs]],
                                                                             obstacle_environment[obs])
-            # for agent in obs_w_multi_agent[obs]:
-            #     if start_position.ndim > 1:
-            #         relative_agent_pos[agent, :] = - (obstacle_environment[obs].center_position - start_position[agent, :])
-            #     else:
-            #         relative_agent_pos = - (obstacle_environment[obs].center_position - start_position)
 
         obs_name = ["h_bed_1_", "h_bed_2_", "h_bed_3_", "h_bed_4_", "qolo_"]
-        obs_name = ["chair_1_", "chair_2_", "chair_3_", "chair_4_", "table_", "qolo_"]
+        obs_name = ["chair_1_", "chair_2_", "chair_3_", "chair_4_", "table_", "qolo_human_"]
         position_list[:, :, 0] = start_position
 
         fig, ax = plt.subplots()  # figsize=(10, 8)
@@ -236,17 +225,13 @@ class DynamicalSystemRviz(Node):
 
             # Here come the main calculation part
             weights = dynamic_avoider.get_influence_weight_at_ctl_points(position_list[:, :, ii-1], 3)
-            # print(f"weights: {weights}")
 
-            # if ii % 2 == 0:
             for jj, goal in enumerate(goals):
-                # print(f"     goal: {goal}")              # make a class instead of the dictionary
                 num_attractor = len(obs_w_multi_agent[jj])
                 global_attractor_pos = relative2global(relative_attractor_position[jj*2:(jj*2)+2], goal)
                 attractor_vel = np.zeros((num_attractor, dim))
                 for attractor in range(num_attractor):
                     attractor_vel[attractor, :], state = attractor_dynamic.evaluate(global_attractor_pos[attractor, :], jj)
-                # attractor_vel = attractor_dynamic.evaluate(goal.center_position)
                 attractor_weights = attractor_dynamic.get_weights_attractors(global_attractor_pos, jj)
                 goal_vel, goal_rot = attractor_dynamic.get_goal_velocity(global_attractor_pos, attractor_vel, attractor_weights, jj)
 
@@ -257,24 +242,17 @@ class DynamicalSystemRviz(Node):
                     new_goal_pos = parking_zone[jj].center_position
                     new_goal_ori = parking_zone[jj].orientation
 
-                # new_goal_pos = attractor_vel * dt_step + goal.center_position
                 goal.center_position = new_goal_pos
                 goal.orientation = new_goal_ori
                 global_attractor_pos = relative2global(relative_attractor_position[jj*2:(jj*2)+2], goal)
                 for k in obs_w_multi_agent[jj]:
                     dynamic_avoider.set_attractor_position(global_attractor_pos[k - (jj * 2), :], k)
-                # breakpoint()
 
             for obs in range(num_obs):
                 start_time = time.time()
                 num_agents_in_obs = len(obs_w_multi_agent[obs])
-                # weights = 1 / len(obs_w_multi_agent)
                 for agent in obs_w_multi_agent[obs]:
-                    # temp_env = obstacle_environment[0:obs] + obstacle_environment[obs + 1:]
                     temp_env = dynamic_avoider.env_slicer(obs)
-                    # if (ii % 10) == 0 and ii <= 100:
-                    #     attractor_pos = dynamic_avoider.get_attractor_position(agent)
-                    #     dynamic_avoider.set_attractor_position(attractor_pos+np.array([0.0, 0.05]), agent)
                     velocity[agent, :] = dynamic_avoider.evaluate_for_crowd_agent(position_list[agent, :, ii - 1],
                                                                                   agent, temp_env)
                     velocity[agent, :] = velocity[agent, :] * weights[obs][agent - (obs * 2)]
@@ -308,22 +286,14 @@ class DynamicalSystemRviz(Node):
 
             for obs in range(num_obs):
                 if obs == num_obs - 1:
-                    # speed_vec = np.array([0., 0.5])
-                    # x_pos = cos(angle) * 2
-                    # y_pos = sin(angle) * 2
-                    # qolo_dir = angle + pi / 2
-                    # obstacle_environment[obs].center_position = np.array([x_pos, y_pos])
-                    # obstacle_environment[obs].linear_velocity = speed_vec
                     u_obs_vel = obs_vel / np.linalg.norm(obs_vel)
                     x_vec = np.array([1, 0])
                     dot_prod = np.dot(x_vec, u_obs_vel)
                     qolo_dir = np.arccos(dot_prod)
                     self.update_state_publisher(obs_name[obs], obstacle_environment[-1].center_position, qolo_dir)
-                    # angle += degree / 4
                 else:
                     self.update_state_publisher(obs_name[obs], obstacle_environment[obs].center_position,
                                                 obstacle_environment[obs].orientation)
-                    # pass
 
             loop_rate.sleep()
 
@@ -332,12 +302,29 @@ class DynamicalSystemRviz(Node):
 
             # Drawing and adjusting of the axis
             for agent in range(num_agent):
-                plt.plot(position_list[agent, 0, :ii], position_list[agent, 1, :ii], ':',
-                         color='#135e08')
-                plt.plot(position_list[agent, 0, ii], position_list[agent, 1, ii],
-                         'o', color='#135e08', markersize=12, )
-                plt.arrow(position_list[agent, 0, ii], position_list[agent, 1, ii], velocity[agent, 0],
-                          velocity[agent, 1], head_width=0.05, head_length=0.1, fc='k', ec='k')
+                plt.plot(
+                    position_list[agent, 0, :ii],
+                    position_list[agent, 1, :ii],
+                    ':',
+                    color='#135e08',
+                )
+                plt.plot(
+                    position_list[agent, 0, ii],
+                    position_list[agent, 1, ii],
+                    'o',
+                    color='#135e08',
+                    markersize=12,
+                )
+                plt.arrow(
+                    position_list[agent, 0, ii],
+                    position_list[agent, 1, ii],
+                    velocity[agent, 0],
+                    velocity[agent, 1],
+                    head_width=0.05,
+                    head_length=0.1,
+                    fc='k',
+                    ec='k',
+                )
 
             ax.set_xlim(x_lim)
             ax.set_ylim(y_lim)
@@ -345,21 +332,17 @@ class DynamicalSystemRviz(Node):
             plot_obstacles(ax, obstacle_environment, x_lim, y_lim, showLabel=False)
 
             for agent in range(num_agent):
-                ax.plot(initial_dynamics[agent].attractor_position[0],
-                        initial_dynamics[agent].attractor_position[1], 'k*', markersize=8, )
+                ax.plot(
+                    initial_dynamics[agent].attractor_position[0],
+                    initial_dynamics[agent].attractor_position[1],
+                    'k*',
+                    markersize=8,
+                )
             ax.grid()
 
             ax.set_aspect('equal', adjustable='box')
-            # breakpoiont()
 
-            # Check convergence
-            # if np.sum(np.abs(velocity)) < 1e-2:
-            #     print(f"Converged at it={ii}")
-            #     break
-
-            # print("i am before the sleep")
             plt.pause(dt_sleep)
-            # print("i passed the sleep")
             if not plt.fignum_exists(fig.number):
                 print("Stopped animation on closing of the figure..")
                 break
@@ -388,17 +371,6 @@ def main():
     tot_rel_agent_pos = np.append(tot_rel_agent_pos, rel_agent_pos_table, axis=0)
 
     obstacle_environment = ObstacleContainer()
-    # for i in range(len(obstacle_pos)-2):
-    #     obstacle_environment.append(
-    #         Cuboid(
-    #             axes_length=[max_ax_len, min_ax_len],
-    #             center_position=obstacle_pos[i],
-    #             margin_absolut=radius_table,
-    #             orientation=math.pi / 2,
-    #             tail_effect=False,
-    #             repulsion_coeff=1,
-    #         )
-    #     )
     obstacle_environment.append(
         Cuboid(
             axes_length=[max_ax_len, min_ax_len],
@@ -463,18 +435,6 @@ def main():
     agent_pos[tot_num_agent-2:tot_num_agent, :] = relative2global(rel_agent_pos_table, obstacle_environment[-2])
 
     attractor_env = ObstacleContainer()
-    # for i in range(len(obstacle_pos)-2):
-    #     attractor_env.append(
-    #         Cuboid(
-    #             axes_length=[max_ax_len, min_ax_len],
-    #             center_position=obstacle_pos[i],
-    #             margin_absolut=0.,
-    #             orientation=math.pi / 2,
-    #             tail_effect=False,
-    #             repulsion_coeff=1,
-    #             linear_velocity=np.array([0., 0.]),
-    #         )
-    #     )
     attractor_env.append(
         Cuboid(
             axes_length=[max_ax_len, min_ax_len],

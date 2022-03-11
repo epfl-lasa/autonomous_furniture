@@ -85,9 +85,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]),
             " ",
-            "prefix:=qolo_ ",
+            "prefix:=qolo_human_ ",
             "fixed:='0' ",
         ]
     )
@@ -199,7 +199,7 @@ def generate_launch_description():
 
     qolo_state_pub_node = Node(
         package="robot_state_publisher",
-        namespace="qolo",
+        namespace="qolo_human",
         executable="robot_state_publisher",
         output="both",
         parameters=[qolo_description],

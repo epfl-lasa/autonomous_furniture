@@ -9,61 +9,13 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    table_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/table.urdf.xacro"]),
-            " ",
-            "prefix:=table_ ",
-            "fixed:='0' ",
-        ]
-    )
-    table_description = {"use_sim_time": use_sim_time, "robot_description": table_description_content}
-
-    chair1_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
-            " ",
-            "prefix:=chair_1_ ",
-            "fixed:='0' ",
-        ]
-    )
-    chair1_description = {"use_sim_time": use_sim_time, "robot_description": chair1_description_content}
-
-    chair2_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/chair.urdf.xacro"]),
-            " ",
-            "prefix:=chair_2_ ",
-            "fixed:='0' ",
-        ]
-    )
-    chair2_description = {"use_sim_time": use_sim_time, "robot_description": chair2_description_content}
-
-    wheelchair_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wheelchair.urdf.xacro"]),
-            " ",
-            "prefix:=wheelchair_ ",
-            "fixed:='0' ",
-        ]
-    )
-    wheelchair_description = {"use_sim_time": use_sim_time, "robot_description": wheelchair_description_content}
-
     qolo_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]),
             " ",
-            "prefix:=qolo_ ",
+            "prefix:=qolo_human_ ",
             "fixed:='0' ",
         ]
     )
@@ -211,33 +163,9 @@ def generate_launch_description():
     )
     wall_4_description = {"use_sim_time": use_sim_time, "robot_description": wall_4_description_content}
 
-    table_state_pub_node = Node(
-        package="robot_state_publisher",
-        namespace="table",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[table_description],
-    )
-
-    chair1_state_pub_node = Node(
-        package="robot_state_publisher",
-        namespace="chair1",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[chair1_description],
-    )
-
-    chair2_state_pub_node = Node(
-        package="robot_state_publisher",
-        namespace="chair2",
-        executable="robot_state_publisher",
-        output="both",
-        parameters=[chair2_description],
-    )
-
     qolo_state_pub_node = Node(
         package="robot_state_publisher",
-        namespace="qolo",
+        namespace="qolo_human",
         executable="robot_state_publisher",
         output="both",
         parameters=[qolo_description],
@@ -327,7 +255,7 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/full_env_ds.rviz"])],
+        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/hos_env.rviz"])],
         output="log",
     )
 
@@ -339,9 +267,6 @@ def generate_launch_description():
 
     nodes = [
         sim_arg,
-        # table_state_pub_node,
-        # chair1_state_pub_node,
-        # chair2_state_pub_node,
         qolo_state_pub_node,
         h_bed_1_state_pub_node,
         h_bed_2_state_pub_node,
