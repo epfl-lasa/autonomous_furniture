@@ -74,11 +74,16 @@ pipenv shell
 ```
 The run the corresponding python publisher:
 ```shell
-python autonomous_furniture/<env of choice>_state_publisher.py
+python furniture_publisher/<env of choice>_state_publisher.py
 ```
 
 ## Running 2D Environment
-You can run any of the record files and set the "save_animation" flag to "False"
+You can run any of the record files in Scenarios and set the "save_animation" flag to "False", should be False by default:
+```shell
+cd workspace/src/autonomous_furniture/
+pipenv shell
+python Scenarios/rec_anim_<script of choice>.py
+```
 
 
 **References**     
