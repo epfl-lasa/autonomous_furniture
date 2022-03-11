@@ -78,11 +78,11 @@ python furniture_publisher/<env of choice>_state_publisher.py
 ```
 
 ## Running 2D Environment
-You can run any of the record files in Scenarios and set the "save_animation" flag to "False", should be False by default:
+You can run any of the record files in Scenarios and set the "rec" flag to "False", should be False by default:
 ```shell
 cd workspace/src/autonomous_furniture/
 pipenv shell
-python Scenarios/rec_anim_<script of choice>.py
+python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
 ```
 
 
