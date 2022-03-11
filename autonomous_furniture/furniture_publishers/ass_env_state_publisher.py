@@ -193,7 +193,7 @@ class DynamicalSystemRviz(Node):
                 )
             )
 
-        attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=2, parking_zone=parking_zone)
+        attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=1.8, parking_zone=parking_zone)
         dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment, obs_multi_agent=obs_w_multi_agent)
         position_list = np.zeros((num_agent, dim, it_max))
         time_list = np.zeros((num_obs, it_max))
@@ -442,7 +442,7 @@ def main():
     obstacle_environment.append(Cuboid(
         axes_length=[1.6, 0.7],
         center_position=obstacle_pos[-2],
-        margin_absolut=radius,
+        margin_absolut=radius / 1.1,
         orientation=math.pi / 2,
         tail_effect=False,
         repulsion_coeff=1,

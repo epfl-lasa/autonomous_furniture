@@ -396,7 +396,7 @@ def main():
             Cuboid(
                 axes_length=[max_ax_len, min_ax_len],
                 center_position=obstacle_pos[i],
-                margin_absolut=radius / 1.8,
+                margin_absolut=radius / 1.1,
                 orientation=math.pi / 2,
                 tail_effect=False,
                 repulsion_coeff=1,

@@ -27,7 +27,7 @@ setup(
             'chair_state_publisher = autonomous_furniture.chair_state_publisher:main',
             'table_state_publisher = autonomous_furniture.table_state_publisher:main',
             'qolo_state_publisher = autonomous_furniture.qolo_state_publisher:main',
-            "DS_state_publisher = autonomous_furniture.DS_state_publisher.py:main",
+            "hos_env_publisher = autonomous_furniture.hos_env_publisher.py:main",
         ],
     },
 )
