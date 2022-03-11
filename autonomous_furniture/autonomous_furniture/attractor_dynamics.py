@@ -10,7 +10,7 @@ from vartools.dynamical_systems import plot_dynamical_system_quiver, plot_dynami
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from dynamic_obstacle_avoidance.avoidance.modulation import obs_avoidance_interpolation_moving
 
-pause = False
+pause = True
 
 
 def onclick(event):
@@ -28,9 +28,16 @@ def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma
 
 
 def plot_dynamical_system(
-        dynamical_system=None, x_lim=None, y_lim=None, n_resolution=15,
-        figsize=(10, 7), plottype='quiver', axes_equal=True, fig_ax_handle=None,
-        DynamicalSystem=None):
+        dynamical_system=None,
+        x_lim=None,
+        y_lim=None,
+        n_resolution=15,
+        figsize=(10, 7),
+        plottype='quiver',
+        axes_equal=True,
+        fig_ax_handle=None,
+        DynamicalSystem=None,
+        label=None,):
     """ Evaluate the dynamics of the dynamical system. """
     if DynamicalSystem is not None:
         raise Exception("'DynamicalSystem' -> Argument depreciated,"
@@ -62,7 +69,7 @@ def plot_dynamical_system(
 
     if plottype == 'quiver':
         ax.quiver(positions[0, index_nonzero], positions[1, index_nonzero],
-                  velocities[0, index_nonzero], velocities[1, index_nonzero], color="blue")
+                  velocities[0, index_nonzero], velocities[1, index_nonzero], color="#9673A6", label=label)
     elif plottype == 'streamplot':
         ax.streamplot(
             x_vals, y_vals,
@@ -94,6 +101,7 @@ class AttractorDynamics(DynamicalSystem):
         else:
             self.move_to_pk = True
         self.go_to_pk = [False] * len(self.parking_zone)
+        # self.go_to_pk = False
         self.state = ["idle"] * len(self.parking_zone)
         self.animation_paused = False
         self.lambda_p = 10
@@ -182,17 +190,17 @@ class AttractorDynamics(DynamicalSystem):
         #     unit_lin_vel = self.env[-1].linear_velocity / np.linalg.norm(self.env[-1].linear_velocity)
         #     max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
         #     if max_repulsion <= 0.:
-        #         self.state[furniture_eval] = "idle"
+        #         # self.state[furniture_eval] = "idle"
         #         return np.zeros(self.dim)
         #
         #     slope = (-max_repulsion) / (self.cutoff_dist - self.min_dist)
         #     offset = max_repulsion - (slope * self.min_dist)
         #     repulsion_magnitude = (slope * dist_agent) + offset
         #     if repulsion_magnitude <= 0.:
-        #         self.state[furniture_eval] = "idle"
+        #         # self.state[furniture_eval] = "idle"
         #         return np.zeros(self.dim)
         #     vect_agent = repulsion_magnitude * unit_dir_agent
-        #     self.state[furniture_eval] = "avoiding"
+        #     # self.state[furniture_eval] = "avoiding"
         #     perpendicular_vect_agent = np.array([-unit_lin_vel[1], unit_lin_vel[0]])
         #     basis_e = np.array([unit_lin_vel, perpendicular_vect_agent])
         #     lambda_p = 10
@@ -200,7 +208,7 @@ class AttractorDynamics(DynamicalSystem):
         #     basis_d[1] *= self.lambda_p
         #     new_vect = basis_e.T @ basis_d @ basis_e @ vect_agent
         #     mod_vel = self.avoid(position, new_vect, temp_env)
-
+        #
         # elif self.go_to_pk is True:
         #     gamma_list = np.zeros(len(self.parking_zone))
         #     for ii, pk in enumerate(self.parking_zone):
@@ -226,7 +234,7 @@ class AttractorDynamics(DynamicalSystem):
         #
         #     mod_vel = self.avoid(position, new_vect, temp_env)
 
-        # return new_vect
+        # return mod_vel
         return mod_vel, self.go_to_pk
 
     def print_state(self, index):
@@ -371,13 +379,31 @@ def main():
     )
     obs_env.append(obstacle_environment)
 
-    my_dynamics = AttractorDynamics(obs_env)
+    parking_zone_cp = np.array([[1., 1.]])
+    parking_zone = ObstacleContainer()
+    for pk in range(len(parking_zone_cp)):
+        parking_zone.append(
+            Cuboid(
+                axes_length=obs_env[pk].axes_length,
+                center_position=parking_zone_cp[pk],
+                margin_absolut=0,
+                orientation=0.,
+                tail_effect=False,
+                repulsion_coeff=1,
+                linear_velocity=np.array([0., 0.]),
+            )
+        )
+
+    my_dynamics = AttractorDynamics(obs_env, parking_zone=parking_zone)
     x_lim = [-5, 5]
     y_lim = x_lim
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots()
+
+    label_qui = ("$v^a$")
+    label_arr = ("$v^p$")
 
     ii = 0
-    while ii < 37:
+    while ii < 9:
         fig.canvas.mpl_connect('button_press_event', onclick)
         if pause:
             plt.pause(0.1)
@@ -386,9 +412,10 @@ def main():
         ax.clear()
         # my_dynamics.set_lambda(ii+1)
         plot_dynamical_system(n_resolution=16, dynamical_system=my_dynamics, x_lim=x_lim, y_lim=y_lim,
-                              fig_ax_handle=[fig, ax])
+                              fig_ax_handle=[fig, ax], label=label_qui)
         plot_obstacles(ax, obs_env, x_lim, y_lim, showLabel=False, drawVelArrow=False)
-        plt.arrow(pos[0, 0], pos[0, 1], vel[0], vel[1], head_width=0.05, head_length=0.1, fc='k', ec='k')
+        plt.arrow(pos[0, 0], pos[0, 1], vel[0], vel[1], linewidth=3, head_width=0.1, head_length=0.1, fc="#6C8EBF", ec="#6C8EBF", color="#6C8EBF", label=label_arr)
+        plt.legend()
         vel = np.dot(rot, vel)
         obstacle_environment.linear_velocity = vel
         obs_env[-1].linear_velocity = vel
