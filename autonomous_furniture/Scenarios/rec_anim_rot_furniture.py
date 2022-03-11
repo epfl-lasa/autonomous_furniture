@@ -1,18 +1,12 @@
-import time
-import os
-import datetime
 from math import pi, cos, sin, sqrt
 
 import numpy as np
 
 import matplotlib.pyplot as plt
-import matplotlib
-from matplotlib import animation
 
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
@@ -20,6 +14,13 @@ from vartools.animator import Animator
 
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
+
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--rec", action="store", default=False, help="Record flag")
+args = parser.parse_args()
 
 
 class DynamicalSystemAnimation(Animator):
@@ -117,16 +118,7 @@ class DynamicalSystemAnimation(Animator):
 
         x_offset = 1.5
         y_offset = 1.
-        parking_zone_cp = np.array([[1. + x_offset, -.42 + y_offset],
-                                    [-1. + x_offset, -.42 + y_offset],
-                                    [1. + x_offset, .42 + y_offset],
-                                    [-1 + x_offset, .42 + y_offset],
-                                    [0. + x_offset, 0. + y_offset]])
-        parking_zone_or = [pi,
-                           0.,
-                           pi,
-                           0.,
-                           pi / 2]
+        parking_zone_cp = np.array([[1., 1.]])
         parking_zone = ObstacleContainer()
         for pk in range(len(parking_zone_cp)):
             parking_zone.append(
@@ -134,7 +126,7 @@ class DynamicalSystemAnimation(Animator):
                     axes_length=goals[pk].axes_length,
                     center_position=parking_zone_cp[pk],
                     margin_absolut=0,
-                    orientation=parking_zone_or[pk],
+                    orientation=0.,
                     tail_effect=False,
                     repulsion_coeff=1,
                     linear_velocity=np.array([0., 0.]),
@@ -168,15 +160,7 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_environment = obstacle_environment
         self.initial_dynamics = initial_dynamics
 
-        # self.dynamic_avoider = DynamicModulationAvoider(
-        #     initial_dynamics=self.initial_dynamics,
-        #     environment=self.obstacle_environment,
-        # )
-
-        # self.position_list = np.zeros((self.dim, self.it_max))
-        # self.position_list[:, 0] = start_position
-
-        self.fig, self.ax = plt.subplots(figsize=(10, 8))
+        self.fig, self.ax = plt.subplots()
 
     def update_step(self, ii):
         if not ii % 10:
@@ -184,36 +168,30 @@ class DynamicalSystemAnimation(Animator):
 
         weights = self.dynamic_avoider.get_influence_weight_at_ctl_points(self.position_list[:, :, ii], 3)
 
-        for jj, goal in enumerate(self.goals):
-            att_start_time = time.time()
-            num_attractor = len(self.obs_w_multi_agent[jj])
-            global_attractor_pos = relative2global(self.relative_attractor_position[jj*2:(jj*2)+2], goal)
-            attractor_vel = np.zeros((num_attractor, self.dim))
-            for attractor in range(num_attractor):
-                attractor_vel[attractor, :], state = self.attractor_dynamic.evaluate(global_attractor_pos[attractor, :], jj)
-            attractor_weights = self.attractor_dynamic.get_weights_attractors(global_attractor_pos, jj)
-            goal_vel, goal_rot = self.attractor_dynamic.get_goal_velocity(global_attractor_pos, attractor_vel,
-                                                                          attractor_weights, jj)
-            if state[jj] is False:
-                new_goal_pos = goal_vel * self.dt_simulation + goal.center_position
-                new_goal_ori = -(1 * goal_rot * self.dt_simulation) + goal.orientation
-            else:
-                new_goal_pos = self.parking_zone[jj].center_position
-                new_goal_ori = self.parking_zone[jj].orientation
-            goal.center_position = new_goal_pos
-            goal.orientation = new_goal_ori
-
-            global_attractor_pos = relative2global(self.relative_attractor_position[jj*2:(jj*2)+2], goal)
-            for i in self.obs_w_multi_agent[jj]:
-                self.dynamic_avoider.set_attractor_position(global_attractor_pos[i - (jj * 2)], i)
-            att_stop_time = time.time()
-            att_tot_time = att_stop_time - att_start_time
-            # print(f"Current time of attractor moving: {att_tot_time} for goal: {jj}")
+        # for jj, goal in enumerate(self.goals):
+        #     num_attractor = len(self.obs_w_multi_agent[jj])
+        #     global_attractor_pos = relative2global(self.relative_attractor_position[jj*2:(jj*2)+2], goal)
+        #     attractor_vel = np.zeros((num_attractor, self.dim))
+        #     for attractor in range(num_attractor):
+        #         attractor_vel[attractor, :], state = self.attractor_dynamic.evaluate(global_attractor_pos[attractor, :], jj)
+        #     attractor_weights = self.attractor_dynamic.get_weights_attractors(global_attractor_pos, jj)
+        #     goal_vel, goal_rot = self.attractor_dynamic.get_goal_velocity(global_attractor_pos, attractor_vel,
+        #                                                                   attractor_weights, jj)
+        #     # if state[jj] is False:
+        #     new_goal_pos = goal_vel * self.dt_simulation + goal.center_position
+        #     new_goal_ori = -(1 * goal_rot * self.dt_simulation) + goal.orientation
+        #     # else:
+        #     #     new_goal_pos = self.parking_zone[jj].center_position
+        #     #     new_goal_ori = self.parking_zone[jj].orientation
+        #     goal.center_position = new_goal_pos
+        #     goal.orientation = new_goal_ori
+        #
+        #     global_attractor_pos = relative2global(self.relative_attractor_position[jj*2:(jj*2)+2], goal)
+        #     for i in self.obs_w_multi_agent[jj]:
+        #         self.dynamic_avoider.set_attractor_position(global_attractor_pos[i - (jj * 2)], i)
 
         for obs in range(self.num_obs):
-            start_time = time.time()
             num_agents_in_obs = len(self.obs_w_multi_agent[obs])
-            # weights = 1 / len(obs_w_multi_agent)
             for agent in self.obs_w_multi_agent[obs]:
                 temp_env = self.dynamic_avoider.env_slicer(obs)
                 self.velocity[agent, :] = self.dynamic_avoider.evaluate_for_crowd_agent(self.position_list[agent, :, ii],
@@ -234,37 +212,22 @@ class DynamicalSystemAnimation(Animator):
                     (self.velocity[agent, :] - obs_vel))
 
             angular_vel_obs = angular_vel.sum()
-            if obs + 1 != self.num_obs:
-                self.obstacle_environment[obs].linear_velocity = obs_vel
-                self.obstacle_environment[obs].angular_velocity = -2 * angular_vel_obs
-                self.obstacle_environment[obs].do_velocity_step(self.dt_simulation)
-            else:
-                self.obstacle_environment[-1].do_velocity_step(self.dt_simulation)
+            self.obstacle_environment[obs].linear_velocity = obs_vel
+            self.obstacle_environment[obs].angular_velocity = -2 * angular_vel_obs
+            self.obstacle_environment[obs].do_velocity_step(self.dt_simulation)
             for agent in self.obs_w_multi_agent[obs]:
                 self.position_list[agent, :, ii + 1] = self.obstacle_environment[obs].transform_relative2global(
                     self.relative_agent_pos[agent, :])
-
-            stop_time = time.time()
-            self.time_list[obs, ii] = stop_time - start_time
-
-            # print(f"Max time: {max(time_list[obs, :])}, mean time: {sum(time_list[obs, :])/ii}, for obs: {obs}, with {len(obs_w_multi_agent[obs])} control points")
-
-        # Here come the main calculation part
-        # velocity = self.dynamic_avoider.evaluate(self.position_list[:, ii - 1])
-        # self.position_list[:, ii] = (
-        #     velocity * self.dt_simulation + self.position_list[:, ii - 1]
-        # )
-        # print(
-
-        # Update obstacles
-        # self.obstacle_environment.do_velocity_step(delta_time=self.dt_simulation)
 
         self.ax.clear()
 
         # Drawing and adjusting of the axis
         for agent in range(self.num_agent):
             self.ax.plot(
-                self.position_list[agent, 0, :ii + 1], self.position_list[agent, 1, :ii + 1], ":", color="#135e08"
+                self.position_list[agent, 0, :ii + 1],
+                self.position_list[agent, 1, :ii + 1],
+                ":",
+                color="#135e08"
             )
             self.ax.plot(
                 self.position_list[agent, 0, ii + 1],
@@ -282,13 +245,22 @@ class DynamicalSystemAnimation(Animator):
         )
 
         for agent in range(self.num_agent):
+            plt.arrow(self.position_list[agent, 0, ii + 1],
+                      self.position_list[agent, 1, ii + 1],
+                      self.velocity[agent, 0],
+                      self.velocity[agent, 1],
+                      head_width=0.05,
+                      head_length=0.1,
+                      fc='k',
+                      ec='k')
+
             self.ax.plot(
                 self.initial_dynamics[agent].attractor_position[0],
                 self.initial_dynamics[agent].attractor_position[1],
                 "k*",
                 markersize=8,
             )
-        self.ax.grid()
+        # self.ax.grid()
         self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self, ii) -> bool:
@@ -310,16 +282,13 @@ def calculate_relative_position(num_agent, max_ax, min_ax):
 def relative2global(relative_pos, obstacle):
     angle = obstacle.orientation
     obs_pos = obstacle.center_position
-    # print(f"obs pos: {obs_pos}")
     global_pos = np.zeros_like(relative_pos)
-    # print(f"rel: {relative_pos}")
     rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
 
     for i in range(relative_pos.shape[0]):
         rot_rel_pos = np.dot(rot, relative_pos[i, :])
         global_pos[i, :] = obs_pos + rot_rel_pos
 
-    # print(f"glob: {global_pos}")
     return global_pos
 
 
@@ -336,86 +305,49 @@ def global2relative(global_pos, obstacle):
     return relative_pos
 
 
-def run_multiple_furniture_avoiding_person():
+def run_single_furniture_rotating():
     num_agent = 2
-    axis = [0.6, 0.5]
+    axis = [2.2, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-    tot_ctl_pts = 10
-    obstacle_pos = np.array([[1, -0.42], [-1, -0.42], [1., 0.42], [-1, 0.42], [0, 0], [3., -.4]])
-    obstacle_or = [pi, 0., pi, 0., pi / 2]
+    tot_ctl_pts = 2
+    obstacle_pos = np.array([[-1., 0.], [3., -.4]])
+    attractor_cp_pos = np.array([[1, 0], [0, 1]])
 
     rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
-    rel_agent_pos_table, radius_table = calculate_relative_position(num_agent, 1.6, 0.7)
 
     tot_rel_agent_pos = rel_agent_pos
-    for i in range(len(obstacle_pos) - 3):
-        tot_rel_agent_pos = np.append(tot_rel_agent_pos, rel_agent_pos, axis=0)
-
-    tot_rel_agent_pos = np.append(tot_rel_agent_pos, rel_agent_pos_table, axis=0)
 
     obstacle_environment = ObstacleContainer()
-    for i in range(len(obstacle_pos) - 2):
+    for i in range(len(obstacle_pos) - 1):
         obstacle_environment.append(
             Cuboid(
                 axes_length=[max_ax_len, min_ax_len],
                 center_position=obstacle_pos[i],
-                margin_absolut=radius_table / 1.2,
-                orientation=obstacle_or[i],
+                margin_absolut=0.,
+                orientation=0,
                 tail_effect=False,
                 repulsion_coeff=1,
             )
         )
-    obstacle_environment.append(
-        Cuboid(
-            axes_length=[1.6, 0.7],
-            center_position=obstacle_pos[-2],
-            margin_absolut=radius / 1.1,
-            orientation=obstacle_or[-1],
-            tail_effect=False,
-            repulsion_coeff=1,
-        )
-    )
-    obstacle_environment.append(
-        Ellipse(
-            axes_length=[0.5, 0.5],
-            center_position=obstacle_pos[-1],
-            margin_absolut=radius_table,
-            orientation=0,
-            tail_effect=False,
-            repulsion_coeff=1,
-            linear_velocity=np.array([-0.3, 0.]),
-        )
-    )
 
     agent_pos = np.zeros((tot_ctl_pts, 2))
     for i in range(len(obstacle_pos) - 1):
         agent_pos[(i * 2):(i * 2) + 2] = relative2global(tot_rel_agent_pos[i * 2: (i * 2) + 2], obstacle_environment[i])
 
     attractor_env = ObstacleContainer()
-    for i in range(len(obstacle_pos) - 2):
+    for i in range(len(obstacle_pos) - 1):
         attractor_env.append(
             Cuboid(
                 axes_length=[max_ax_len, min_ax_len],
-                center_position=obstacle_pos[i],
+                center_position=attractor_cp_pos[i],
                 margin_absolut=0.,
-                orientation=obstacle_or[i],
+                orientation=pi / 2,
                 tail_effect=False,
                 repulsion_coeff=1,
                 linear_velocity=np.array([0., 0.]),
             )
         )
-    attractor_env.append(
-        Cuboid(
-            axes_length=[1.6, 0.7],
-            center_position=obstacle_pos[-2],
-            margin_absolut=0.,
-            orientation=obstacle_or[-1],
-            tail_effect=False,
-            repulsion_coeff=1,
-            linear_velocity=np.array([0., 0.]),
-        )
-    )
 
     attractor_pos = np.zeros((tot_ctl_pts, 2))
     for i in range(len(obstacle_pos) - 1):
@@ -426,33 +358,18 @@ def run_multiple_furniture_avoiding_person():
         initial_dynamics.append(
             LinearSystem(
                 attractor_position=attractor_pos[i],
-                maximum_velocity=1, distance_decrease=0.3
+                maximum_velocity=1,
+                distance_decrease=0.3
             )
         )
 
-    obs_multi_agent = {0: [0, 1], 1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [8, 9], 5: []}
+    obs_multi_agent = {0: [0, 1]}
 
-    # replace this with
-    # DynamicalSystemAnimation().run(
-    #     initial_dynamics,
-    #     obstacle_environment,
-    #     obs_multi_agent,
-    #     agent_pos,
-    #     rel_agent_pos,
-    #     attractor_env,
-    #     True,
-    #     x_lim=[-6, 6],
-    #     y_lim=[-5, 5],
-    #     dt_step=0.03,
-    #     dt_sleep=0.01,
-    # )
-
-    # this
     my_animation = DynamicalSystemAnimation(
-        it_max=560,
+        it_max=450,
         dt_simulation=0.05,
         dt_sleep=0.01,
-        animation_name="ass_env_rec_2",
+        animation_name="rotating_agent",
     )
 
     my_animation.setup(
@@ -462,49 +379,16 @@ def run_multiple_furniture_avoiding_person():
         agent_pos,
         tot_rel_agent_pos,
         attractor_env,
-        True,
-        x_lim=[-4.5, 4.5],
-        y_lim=[-3.5, 3.5],
+        False,
+        x_lim=[-3, 3],
+        y_lim=[-2, 2],
     )
 
-    # code from Lukas
-    # obstacle_environment = ObstacleContainer()
-    # obstacle_environment.append(
-    #     Ellipse(
-    #         axes_length=[0.5, 0.5],
-    #         # center_position=np.array([-3.0, 0.2]),
-    #         center_position=np.array([-1.0, 0.2]),
-    #         margin_absolut=0.5,
-    #         orientation=0,
-    #         linear_velocity=np.array([0.5, 0.0]),
-    #         tail_effect=False,
-    #     )
-    # )
-    #
-    # initial_dynamics = LinearSystem(
-    #     attractor_position=np.array([0.0, 0.0]),
-    #     maximum_velocity=1,
-    #     distance_decrease=0.3,
-    # )
-    #
-    # my_animation = DynamicalSystemAnimation(
-    #     dt_simulation=0.05,
-    #     dt_sleep=0.01,
-    # )
-    #
-    # my_animation.setup(
-    #     initial_dynamics,
-    #     obstacle_environment,
-    #     x_lim=[-3, 3],
-    #     y_lim=[-2.1, 2.1],
-    # )
-
-    my_animation.run(save_animation=True)
+    my_animation.run(save_animation=args.rec)
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    # simple_point_robot()
-    run_multiple_furniture_avoiding_person()
+    run_single_furniture_rotating()

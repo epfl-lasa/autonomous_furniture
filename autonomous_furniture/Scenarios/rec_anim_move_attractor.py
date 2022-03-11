@@ -1,18 +1,13 @@
 import time
-import os
-import datetime
 from math import pi, cos, sin, sqrt
 
 import numpy as np
 
 import matplotlib.pyplot as plt
-import matplotlib
-from matplotlib import animation
 
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
@@ -20,6 +15,13 @@ from vartools.animator import Animator
 
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
+
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--rec", action="store", default=False, help="Record flag")
+args = parser.parse_args()
 
 
 class DynamicalSystemAnimation(Animator):
@@ -159,14 +161,6 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_environment = obstacle_environment
         self.initial_dynamics = initial_dynamics
 
-        # self.dynamic_avoider = DynamicModulationAvoider(
-        #     initial_dynamics=self.initial_dynamics,
-        #     environment=self.obstacle_environment,
-        # )
-
-        # self.position_list = np.zeros((self.dim, self.it_max))
-        # self.position_list[:, 0] = start_position
-
         self.fig, self.ax = plt.subplots(figsize=(10, 8))
 
     def update_step(self, ii):
@@ -204,7 +198,6 @@ class DynamicalSystemAnimation(Animator):
         for obs in range(self.num_obs):
             start_time = time.time()
             num_agents_in_obs = len(self.obs_w_multi_agent[obs])
-            # weights = 1 / len(obs_w_multi_agent)
             for agent in self.obs_w_multi_agent[obs]:
                 temp_env = self.dynamic_avoider.env_slicer(obs)
                 self.velocity[agent, :] = self.dynamic_avoider.evaluate_for_crowd_agent(self.position_list[agent, :, ii],
@@ -239,16 +232,6 @@ class DynamicalSystemAnimation(Animator):
             self.time_list[obs, ii] = stop_time - start_time
 
             # print(f"Max time: {max(time_list[obs, :])}, mean time: {sum(time_list[obs, :])/ii}, for obs: {obs}, with {len(obs_w_multi_agent[obs])} control points")
-
-        # Here come the main calculation part
-        # velocity = self.dynamic_avoider.evaluate(self.position_list[:, ii - 1])
-        # self.position_list[:, ii] = (
-        #     velocity * self.dt_simulation + self.position_list[:, ii - 1]
-        # )
-        # print(
-
-        # Update obstacles
-        # self.obstacle_environment.do_velocity_step(delta_time=self.dt_simulation)
 
         self.ax.clear()
 
@@ -301,16 +284,13 @@ def calculate_relative_position(num_agent, max_ax, min_ax):
 def relative2global(relative_pos, obstacle):
     angle = obstacle.orientation
     obs_pos = obstacle.center_position
-    # print(f"obs pos: {obs_pos}")
     global_pos = np.zeros_like(relative_pos)
-    # print(f"rel: {relative_pos}")
     rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
 
     for i in range(relative_pos.shape[0]):
         rot_rel_pos = np.dot(rot, relative_pos[i, :])
         global_pos[i, :] = obs_pos + rot_rel_pos
 
-    # print(f"glob: {global_pos}")
     return global_pos
 
 
@@ -327,7 +307,7 @@ def global2relative(global_pos, obstacle):
     return relative_pos
 
 
-def run_multiple_furniture_avoiding_person():
+def run_single_furniture_avoiding_person():
     num_agent = 2
     axis = [2.2, 1.1]
     max_ax_len = max(axis)
@@ -338,8 +318,6 @@ def run_multiple_furniture_avoiding_person():
     rel_agent_pos, radius = calculate_relative_position(num_agent, max_ax_len, min_ax_len)
 
     tot_rel_agent_pos = rel_agent_pos
-    # for i in range(len(obstacle_pos) - 3):
-    #     tot_rel_agent_pos = np.append(tot_rel_agent_pos, rel_agent_pos, axis=0)
 
     obstacle_environment = ObstacleContainer()
     for i in range(len(obstacle_pos) - 1):
@@ -398,22 +376,6 @@ def run_multiple_furniture_avoiding_person():
 
     obs_multi_agent = {0: [0, 1], 1: []}
 
-    # replace this with
-    # DynamicalSystemAnimation().run(
-    #     initial_dynamics,
-    #     obstacle_environment,
-    #     obs_multi_agent,
-    #     agent_pos,
-    #     rel_agent_pos,
-    #     attractor_env,
-    #     True,
-    #     x_lim=[-6, 6],
-    #     y_lim=[-5, 5],
-    #     dt_step=0.03,
-    #     dt_sleep=0.01,
-    # )
-
-    # this
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
@@ -433,44 +395,11 @@ def run_multiple_furniture_avoiding_person():
         y_lim=[-4, 4],
     )
 
-    # code from Lukas
-    # obstacle_environment = ObstacleContainer()
-    # obstacle_environment.append(
-    #     Ellipse(
-    #         axes_length=[0.5, 0.5],
-    #         # center_position=np.array([-3.0, 0.2]),
-    #         center_position=np.array([-1.0, 0.2]),
-    #         margin_absolut=0.5,
-    #         orientation=0,
-    #         linear_velocity=np.array([0.5, 0.0]),
-    #         tail_effect=False,
-    #     )
-    # )
-    #
-    # initial_dynamics = LinearSystem(
-    #     attractor_position=np.array([0.0, 0.0]),
-    #     maximum_velocity=1,
-    #     distance_decrease=0.3,
-    # )
-    #
-    # my_animation = DynamicalSystemAnimation(
-    #     dt_simulation=0.05,
-    #     dt_sleep=0.01,
-    # )
-    #
-    # my_animation.setup(
-    #     initial_dynamics,
-    #     obstacle_environment,
-    #     x_lim=[-3, 3],
-    #     y_lim=[-2.1, 2.1],
-    # )
-
-    my_animation.run(save_animation=True)
+    my_animation.run(save_animation=args.rec)
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    # simple_point_robot()
-    run_multiple_furniture_avoiding_person()
+    run_single_furniture_avoiding_person()
