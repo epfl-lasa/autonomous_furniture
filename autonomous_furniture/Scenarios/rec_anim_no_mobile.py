@@ -9,14 +9,7 @@ from animator_class import DynamicalSystemAnimation
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
-from dynamic_obstacle_avoidance.visualization import plot_obstacles
-
 from vartools.dynamical_systems import LinearSystem
-from vartools.animator import Animator
-
-from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
-from autonomous_furniture.attractor_dynamics import AttractorDynamics
 
 import argparse
 
