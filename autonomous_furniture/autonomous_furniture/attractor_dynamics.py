@@ -275,7 +275,8 @@ class AttractorDynamics(DynamicalSystem):
         for ii, obs in enumerate(env):
             # gamma_type needs to be implemented for all obstacles
             gamma_list[ii] = obs.get_gamma(
-                position, in_global_frame=True, gamma_type=gamma_type
+                position, in_global_frame=True
+                # , gamma_type=gamma_type
             )
 
         n_obs = len(gamma_list)

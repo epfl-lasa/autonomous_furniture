@@ -55,6 +55,8 @@ def global2relative(global_pos, obstacle):
 
     return relative_pos
 
+def energyComputation():
+    pass
 
 def run_person_avoiding_multiple_furniture():
     axis = [2.2, 1.1]
@@ -115,8 +117,6 @@ def run_person_avoiding_multiple_furniture():
         maximum_velocity=1,
         distance_decrease=0.3
     )
-
-    obs_multi_agent = {4: [0]}
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,
