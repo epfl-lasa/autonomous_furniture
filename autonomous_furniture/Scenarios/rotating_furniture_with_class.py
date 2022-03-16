@@ -16,7 +16,7 @@ from vartools.animator import Animator
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
 
-from autonomous_furniture.agent import Furniture
+from autonomous_furniture.agent import Furniture, Person
 
 import argparse
 
@@ -135,19 +135,23 @@ def run_single_furniture_rotating():
     axis = [2.2, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-    my_shape = Cuboid(axes_length=[max_ax_len, min_ax_len],
-                center_position=np.array([0, 0]),
-                margin_absolut=0.,
-                orientation=0,
-                tail_effect=False,)
+    my_shape = [Cuboid(axes_length=[max_ax_len, min_ax_len],
+                        center_position=np.array([0, 0]),
+                        margin_absolut=0.,
+                        orientation=0,
+                        tail_effect=False),
+                Ellipse( center_position=np.array([0, 0]),
+                        margin_absolut=0,
+                        orientation=0,
+                        tail_effect=False)]
 
     obstacle_environment = ObstacleContainer()
     obstacle_environment.append(my_shape) # TODO Factory class, remove the use of private attribuete
     control_points = np.array([ [0.4, 0], [-0.4, 0]])
-    goal = ObjectPose(position = np.array([3, 0]), orientation = 1.6)
+    goal = ObjectPose(position = np.array([3, 3]), orientation = 1.6)
 
-    my_furniture = Furniture(shape= my_shape, obstacle_environment = obstacle_environment, control_points = control_points, 
-                            goal_pose = goal)
+    my_furniture = [Furniture(shape= my_shape[0], obstacle_environment = obstacle_environment, control_points = control_points, 
+                            goal_pose = goal), Person()]
     
 
     my_animation = DynamicalSystemAnimation(

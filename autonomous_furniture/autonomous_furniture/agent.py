@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from asyncio import get_running_loop
 import warnings 
 import numpy as np
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from vartools.states import ObjectPose, ObjectTwist
 from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles import Ellipse
 from vartools.dynamical_systems import LinearSystem
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
@@ -11,7 +13,7 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 # from vartools.states
 
 class BaseAgent(ABC):
-    def __init__(self, shape : Obstacle, priority_value: float = 1, control_points : np.array = None, parking_pose : ObjectPose = None,
+    def __init__(self, shape : Obstacle = None, priority_value: float = 1, control_points : np.array = None, parking_pose : ObjectPose = None,
                 goal_pose :ObjectPose = None, obstacle_environment : ObstacleContainer = None) -> None:
         super().__init__()
         self._shape = shape
@@ -166,8 +168,26 @@ class Furniture(BaseAgent):
         # TODO : Make it for the angular velocity
 
 class Person(BaseAgent):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)  
+    def __init__(self, priority : int = 1 , person_radius : float = 0.6,  **kwargs) -> None:
+        super().__init__(**kwargs)
+        self._shape = Ellipse(axes_length=[person_radius, person_radius])
+        breakpoint()
+        self._priority_value = priority
 
+        self._control_points = np.array([0, 0]) # Only one control point at the center when dealing with a Person
+    
+    def update_velocity(self):
+        environment_without_me = self.get_obstacles_without_me()
+        
+        global_control_points = self.get_global_control_points()
+        global_goal_control_points = self.get_goal_control_points()
+
+        velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        angular_vel = np.zeros((1,self._control_points.shape[1])) #TODO : Do we want to enable rotation along other axis in the futur ?
+
+        self.linear_velocity = np.array([0, 0])
+        self.angular_velocity = 0.1
+
+   
 
 
