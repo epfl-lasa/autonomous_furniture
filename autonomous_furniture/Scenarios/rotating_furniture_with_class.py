@@ -135,25 +135,13 @@ def run_single_furniture_rotating():
     axis = [2.2, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-    my_shape = [Cuboid(axes_length=[max_ax_len, min_ax_len],
-                        center_position=np.array([0, 0]),
-                        margin_absolut=0.,
-                        orientation=0,
-                        tail_effect=False),
-                Ellipse( center_position=np.array([0, 0]),
-                        margin_absolut=0,
-                        orientation=0,
-                        tail_effect=False)]
 
     obstacle_environment = ObstacleContainer()
-    obstacle_environment.append(my_shape) # TODO Factory class, remove the use of private attribuete
     control_points = np.array([ [0.4, 0], [-0.4, 0]])
     goal = ObjectPose(position = np.array([3, 3]), orientation = 1.6)
 
-    my_furniture = [Furniture(shape= my_shape[0], obstacle_environment = obstacle_environment, control_points = control_points, 
-                            goal_pose = goal), Person()]
-    
-
+    my_furniture = Person(center_position = [1,5], 
+                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal)
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,

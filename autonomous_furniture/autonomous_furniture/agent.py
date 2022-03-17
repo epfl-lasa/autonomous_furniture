@@ -3,6 +3,7 @@ from asyncio import get_running_loop
 import warnings 
 import numpy as np
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
+from vartools.dynamical_systems.linear import ConstantValue
 from vartools.states import ObjectPose, ObjectTwist
 from dynamic_obstacle_avoidance.obstacles import Obstacle
 from dynamic_obstacle_avoidance.obstacles import Ellipse
@@ -13,8 +14,8 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 # from vartools.states
 
 class BaseAgent(ABC):
-    def __init__(self, shape : Obstacle = None, priority_value: float = 1, control_points : np.array = None, parking_pose : ObjectPose = None,
-                goal_pose :ObjectPose = None, obstacle_environment : ObstacleContainer = None) -> None:
+    def __init__(self, shape : Obstacle, obstacle_environment : ObstacleContainer, priority_value: float = 1, control_points : np.array = None, parking_pose : ObjectPose = None,
+                goal_pose :ObjectPose = None) -> None:
         super().__init__()
         self._shape = shape
         self._priority_value = priority_value
@@ -22,6 +23,8 @@ class BaseAgent(ABC):
         self._control_points = control_points
         self._parking_pose = parking_pose
         self._goal_pose = goal_pose
+        # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
+        self._obstacle_environment.append(self._shape) 
 
     @property
     def position(self):
@@ -79,7 +82,6 @@ class BaseAgent(ABC):
         # Take root of order 'n_obs' to make up for the obstacle multiple
         if any(gamma_list < 1):
             warnings.warn("Collision detected.")
-            # breakpoint()
             return 0
 
         # gamma = np.prod(gamma_list-1)**(1.0/n_obs) + 1
@@ -168,25 +170,24 @@ class Furniture(BaseAgent):
         # TODO : Make it for the angular velocity
 
 class Person(BaseAgent):
-    def __init__(self, priority : int = 1 , person_radius : float = 0.6,  **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._shape = Ellipse(axes_length=[person_radius, person_radius])
-        breakpoint()
-        self._priority_value = priority
-
-        self._control_points = np.array([0, 0]) # Only one control point at the center when dealing with a Person
+    def __init__(self, priority_value: float = 2, center_position = None, radius = 0.5, **kwargs) -> None:
+        _shape = Ellipse(center_position=np.array(center_position),
+                        margin_absolut=0,
+                        orientation=0,
+                        tail_effect=False,
+                        axes_length=np.array([radius, radius]))
+        
+        super().__init__(shape=_shape, priority_value = priority_value, control_points=np.array([0, 0]), **kwargs)
     
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
         
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
+        #velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        #angular_vel = np.zeros((1,self._control_points.shape[1])) #TODO : Do we want to enable rotation along other axis in the futur ?
 
-        velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-        angular_vel = np.zeros((1,self._control_points.shape[1])) #TODO : Do we want to enable rotation along other axis in the futur ?
-
-        self.linear_velocity = np.array([0, 0])
-        self.angular_velocity = 0.1
+        self.linear_velocity = np.array([0.5, 0.25])
 
    
 
