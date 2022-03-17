@@ -1,4 +1,5 @@
 from math import pi, cos, sin, sqrt
+from turtle import shape
 
 import numpy as np
 
@@ -140,9 +141,14 @@ def run_single_furniture_rotating():
     control_points = np.array([ [0.4, 0], [-0.4, 0]])
     goal = ObjectPose(position = np.array([3, 3]), orientation = 1.6)
 
+    table_shape = Cuboid(axes_length=[max_ax_len, min_ax_len],
+                        margin_absolut=0.,
+                        orientation=0,
+                        center_position=np.array([0, 0]),
+                        tail_effect=False)
+    control_points = np.array([ [0.4, 0], [-0.4, 0]])
     my_furniture = [Person(center_position = [1,5], 
-                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal), Person(center_position = [5,1], 
-                            radius=0.3, obstacle_environment=obstacle_environment, goal_pose= goal)]
+                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal), Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points = control_points, goal_pose= goal)]
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,
