@@ -27,8 +27,6 @@ args = parser.parse_args()
 
 
 class DynamicalSystemAnimation(Animator):
-    dim = 2
-
     def setup(
         self,
         obstacle_environment,
@@ -38,6 +36,7 @@ class DynamicalSystemAnimation(Animator):
     ):
 
         dim = 2
+        self.number_agent = len(agent)
 
         if y_lim is None:
             y_lim = [-3., 8.]
@@ -49,8 +48,7 @@ class DynamicalSystemAnimation(Animator):
         #                                           obs_multi_agent=obs_w_multi_agent)
         self.position_list = np.zeros((dim, self.it_max))
         self.time_list = np.zeros((self.it_max))
-
-        self.position_list[:, 0] = agent.position
+        self.position_list= [agent[ii].position for ii in range(self.number_agent)]
         self.agent = agent
         self.x_lim = x_lim
         self.y_lim = y_lim
@@ -62,8 +60,7 @@ class DynamicalSystemAnimation(Animator):
     def update_step(self, ii):
         if not ii % 10:
             print(f"it={ii}")
-        self.agent.update_velocity()
-        self.agent.do_velocity_step(self.dt_simulation)
+
 
         self.ax.clear()
 
@@ -90,11 +87,14 @@ class DynamicalSystemAnimation(Animator):
             self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
         )
 
-        global_crontrol_points = self.agent.get_global_control_points()
-        self.ax.plot(global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
+        for jj in range(self.number_agent):
+            self.agent[jj].update_velocity()
+            self.agent[jj].do_velocity_step(self.dt_simulation)
+            global_crontrol_points = self.agent[jj].get_global_control_points()
+            self.ax.plot(global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
 
-        goal_crontrol_points = self.agent.get_goal_control_points()
-        self.ax.plot(goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
+            goal_crontrol_points = self.agent[jj].get_goal_control_points()
+            self.ax.plot(goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
 
         # for agent in range(self.num_agent):
         #     plt.arrow(self.position_list[agent, 0, ii + 1],
@@ -140,8 +140,10 @@ def run_single_furniture_rotating():
     control_points = np.array([ [0.4, 0], [-0.4, 0]])
     goal = ObjectPose(position = np.array([3, 3]), orientation = 1.6)
 
-    my_furniture = Person(center_position = [1,5], 
-                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal)
+    my_furniture = [Person(center_position = [1,5], 
+                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal), Person(center_position = [5,1], 
+                            radius=0.3, obstacle_environment=obstacle_environment, goal_pose= goal)]
+
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
