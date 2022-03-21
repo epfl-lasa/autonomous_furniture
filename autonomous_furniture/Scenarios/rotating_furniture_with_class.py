@@ -4,6 +4,7 @@ from turtle import shape
 import numpy as np
 
 import matplotlib.pyplot as plt
+from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from vartools.states import ObjectPose
 
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
@@ -43,13 +44,14 @@ class DynamicalSystemAnimation(Animator):
             y_lim = [-3., 8.]
         if x_lim is None:
             x_lim = [-3., 8.]
-       
+
         # self.attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=1.8, parking_zone=parking_zone)
         # self.dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment,
         #                                           obs_multi_agent=obs_w_multi_agent)
         self.position_list = np.zeros((dim, self.it_max))
         self.time_list = np.zeros((self.it_max))
-        self.position_list= [agent[ii].position for ii in range(self.number_agent)]
+        self.position_list = [
+            agent[ii].position for ii in range(self.number_agent)]
         self.agent = agent
         self.x_lim = x_lim
         self.y_lim = y_lim
@@ -61,7 +63,6 @@ class DynamicalSystemAnimation(Animator):
     def update_step(self, ii):
         if not ii % 10:
             print(f"it={ii}")
-
 
         self.ax.clear()
 
@@ -92,10 +93,12 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].update_velocity()
             self.agent[jj].do_velocity_step(self.dt_simulation)
             global_crontrol_points = self.agent[jj].get_global_control_points()
-            self.ax.plot(global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
+            self.ax.plot(
+                global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
 
             goal_crontrol_points = self.agent[jj].get_goal_control_points()
-            self.ax.plot(goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
+            self.ax.plot(
+                goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
 
         # for agent in range(self.num_agent):
         #     plt.arrow(self.position_list[agent, 0, ii + 1],
@@ -138,17 +141,17 @@ def run_single_furniture_rotating():
     min_ax_len = min(axis)
 
     obstacle_environment = ObstacleContainer()
-    control_points = np.array([ [0.4, 0], [-0.4, 0]])
-    goal = ObjectPose(position = np.array([3, 3]), orientation = 1.6)
+    control_points = np.array([[0.4, 0], [-0.4, 0]])
+    goal = ObjectPose(position=np.array([3, 3]))  # , orientation = 1.6)
+    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
+                           center_position=np.array([3, 3]),
+                           margin_absolut=0.6,
+                           orientation=0,
+                           tail_effect=False,)
 
-    table_shape = Cuboid(axes_length=[max_ax_len, min_ax_len],
-                        margin_absolut=0.,
-                        orientation=0,
-                        center_position=np.array([0, 0]),
-                        tail_effect=False)
-    control_points = np.array([ [0.4, 0], [-0.4, 0]])
-    my_furniture = [Person(center_position = [1,5], 
-                            radius=0.5, obstacle_environment=obstacle_environment, goal_pose= goal), Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points = control_points, goal_pose= goal)]
+    my_furniture = [Person(center_position=[2, 0],
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal), Furniture(shape=table_shape,
+                                                                                                             obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal)]
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,
@@ -159,7 +162,7 @@ def run_single_furniture_rotating():
 
     my_animation.setup(
         obstacle_environment,
-        agent = my_furniture,
+        agent=my_furniture,
         x_lim=[-3, 8],
         y_lim=[-2, 7],
     )
