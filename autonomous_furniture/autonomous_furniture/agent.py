@@ -21,7 +21,8 @@ class BaseAgent(ABC):
                  goal_pose: ObjectPose = None) -> None:
         super().__init__()
         self._shape = shape
-        self._priority_value = priority_value
+        breakpoint()
+        self.priority = priority_value
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
@@ -61,7 +62,7 @@ class BaseAgent(ABC):
     @priority.setter
     def priority(self,value):
         self._shape.reactivity = value
-        
+
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
 
@@ -169,7 +170,7 @@ class Furniture(BaseAgent):
             self._dynamics.attractor_position = global_goal_control_points[:, ii]
             initial_velocity = self._dynamics.evaluate(ctp)
             velocities[:, ii] = obs_avoidance_interpolation_moving(
-                position=ctp, initial_velocity=initial_velocity, obs=environment_without_me)
+                position=ctp, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
@@ -196,7 +197,7 @@ class Furniture(BaseAgent):
 
 
 class Person(BaseAgent):
-    def __init__(self, priority_value: float = 2, center_position=None, radius=0.5, **kwargs) -> None:
+    def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
         _shape = EllipseWithAxes(center_position=np.array(center_position),
                                  margin_absolut=1,
                                  orientation=0,
@@ -213,13 +214,13 @@ class Person(BaseAgent):
         environment_without_me = self.get_obstacles_without_me()
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
-
+        breakpoint()
         # Person only holds one control point, thus modulation is simplified
         ctp = global_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
         self._dynamics.attractor_position = global_goal_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
         initial_velocity = self._dynamics.evaluate(ctp)
         velocity = obs_avoidance_interpolation_moving(
-              position=ctp, initial_velocity=initial_velocity, obs=environment_without_me)
+              position=ctp, initial_velocity=initial_velocity, obs=environment_without_me,self_priority=self.priority)
 
         self.linear_velocity = velocity
         # self.linear_velocity = np.array([0, 0.25])
