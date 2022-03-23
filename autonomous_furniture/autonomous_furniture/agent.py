@@ -190,7 +190,7 @@ class Furniture(BaseAgent):
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 2, center_position=None, radius=0.5, **kwargs) -> None:
         _shape = EllipseWithAxes(center_position=np.array(center_position),
-                                 margin_absolut=0.5,
+                                 margin_absolut=1,
                                  orientation=0,
                                  tail_effect=False,
                                  axes_length=np.array([radius, radius]))
@@ -208,7 +208,7 @@ class Person(BaseAgent):
 
         # Person only holds one control point, thus modulation is simplified
         ctp = global_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
-        self._dynamics.attractor_position = global_goal_control_points[:,0]
+        self._dynamics.attractor_position = global_goal_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
         initial_velocity = self._dynamics.evaluate(ctp)
         velocity = obs_avoidance_interpolation_moving(
               position=ctp, initial_velocity=initial_velocity, obs=environment_without_me)

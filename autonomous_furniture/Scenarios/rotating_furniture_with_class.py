@@ -141,9 +141,12 @@ def run_single_furniture_rotating():
     min_ax_len = min(axis)
 
     obstacle_environment = ObstacleContainer()
-    control_points = np.array([[0.4, 0], [-0.4, 0]])
-    goal = ObjectPose(position=np.array([3, 3]))  # , orientation = 1.6)
-    goal2 = ObjectPose(position=np.array([2,6]))
+    
+    control_points = np.array([[0.4, 0], [-0.4, 0]]) # control_points for the cuboid
+
+    goal = ObjectPose(position=np.array([3, 3]))  # , orientation = 1.6) Goal of the CuboidXd
+    goal2 = ObjectPose(position=np.array([2,6]))  # Goal of the person
+    
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=np.array([3, 3]),
                            margin_absolut=0.6,
