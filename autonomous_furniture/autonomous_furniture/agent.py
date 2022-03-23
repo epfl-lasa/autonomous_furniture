@@ -54,6 +54,14 @@ class BaseAgent(ABC):
     def angular_velocity(self, value):
         self._shape.twist.angular = value
 
+    @property
+    def priority(self):
+        self._shape.reactivity
+    
+    @priority.setter
+    def priority(self,value):
+        self._shape.reactivity = value
+        
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
 
