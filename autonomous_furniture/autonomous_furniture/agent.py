@@ -22,7 +22,6 @@ class BaseAgent(ABC):
         super().__init__()
         self._shape = shape
         self.priority = priority_value
-        # self._shape.reactivity = priority_value
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
