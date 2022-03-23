@@ -196,22 +196,22 @@ class Person(BaseAgent):
                                  axes_length=np.array([radius, radius]))
 
         super().__init__(shape=_shape, priority_value=priority_value,
-                         control_points=np.array([0, 0]), **kwargs)
+                         control_points=np.array([[0, 0]]), **kwargs) # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
 
         self._dynamics = LinearSystem(attractor_position=self.position,
                                       maximum_velocity=1)
 
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
-        breakpoint()
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
-        print("Coucou")
-        breakpoint()
-        # Person only holds one control point, thus modulation is simplified
-        # self._dynamics.attractor_position = global_goal_control_points
-        # initial_velocity = self._dynamics.evaluate(global_control_points)
-        # self.linear_velocity = obs_avoidance_interpolation_moving(
-        #     position=global_control_points, initial_velocity=initial_velocity, obs=environment_without_me)
 
-        self.linear_velocity = np.array([0, 0.25])
+        # Person only holds one control point, thus modulation is simplified
+        ctp = global_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
+        self._dynamics.attractor_position = global_goal_control_points[:,0]
+        initial_velocity = self._dynamics.evaluate(ctp)
+        velocity = obs_avoidance_interpolation_moving(
+              position=ctp, initial_velocity=initial_velocity, obs=environment_without_me)
+
+        self.linear_velocity = velocity
+        # self.linear_velocity = np.array([0, 0.25])

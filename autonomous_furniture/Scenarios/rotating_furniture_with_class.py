@@ -143,6 +143,7 @@ def run_single_furniture_rotating():
     obstacle_environment = ObstacleContainer()
     control_points = np.array([[0.4, 0], [-0.4, 0]])
     goal = ObjectPose(position=np.array([3, 3]))  # , orientation = 1.6)
+    goal2 = ObjectPose(position=np.array([2,6]))
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=np.array([3, 3]),
                            margin_absolut=0.6,
@@ -150,7 +151,7 @@ def run_single_furniture_rotating():
                            tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 0],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal), Furniture(shape=table_shape,
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2), Furniture(shape=table_shape,
                                                                                                              obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal)]
 
     my_animation = DynamicalSystemAnimation(
