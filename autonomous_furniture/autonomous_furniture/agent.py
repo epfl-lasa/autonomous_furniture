@@ -113,7 +113,7 @@ class BaseAgent(ABC):
 
         ctl_point_weight = np.zeros(gamma_values.shape)
         ind_nonzero = gamma_values < cutoff_gamma
-        if not any(ind_nonzero):
+        if not any(ind_nonzero): # TODO Case he there is ind_nonzero
             # ctl_point_weight[-1] = 1
             ctl_point_weight = np.full(
                 gamma_values.shape, 1/control_points.shape[1])
@@ -203,10 +203,11 @@ class Person(BaseAgent):
 
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
-
+        breakpoint()
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
-
+        print("Coucou")
+        breakpoint()
         # Person only holds one control point, thus modulation is simplified
         # self._dynamics.attractor_position = global_goal_control_points
         # initial_velocity = self._dynamics.evaluate(global_control_points)
