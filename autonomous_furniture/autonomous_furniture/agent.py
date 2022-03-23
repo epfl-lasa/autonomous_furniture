@@ -17,12 +17,12 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 
 
 class BaseAgent(ABC):
-    def __init__(self, shape: Obstacle, obstacle_environment: ObstacleContainer, priority_value: float = 1, control_points: np.array = None, parking_pose: ObjectPose = None,
+    def __init__(self, shape: Obstacle, obstacle_environment: ObstacleContainer, priority_value: float = 1., control_points: np.array = None, parking_pose: ObjectPose = None,
                  goal_pose: ObjectPose = None) -> None:
         super().__init__()
         self._shape = shape
-        breakpoint()
         self.priority = priority_value
+        # self._shape.reactivity = priority_value
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
@@ -57,7 +57,7 @@ class BaseAgent(ABC):
 
     @property
     def priority(self):
-        self._shape.reactivity
+        return self._shape.reactivity
     
     @priority.setter
     def priority(self,value):
@@ -214,7 +214,6 @@ class Person(BaseAgent):
         environment_without_me = self.get_obstacles_without_me()
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
-        breakpoint()
         # Person only holds one control point, thus modulation is simplified
         ctp = global_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
         self._dynamics.attractor_position = global_goal_control_points[:,0] # 0 hardcoded because we assume in person, we will have only one control point
