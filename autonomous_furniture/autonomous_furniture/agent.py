@@ -180,20 +180,6 @@ class Furniture(BaseAgent):
         # TODO : Remove the hard coded 2
         self.angular_velocity = -2*np.sum(angular_vel)
 
-        # for agent in self.obs_w_multi_agent[obs]:
-        #         angular_vel[agent - (obs * 2)] = weights[obs][agent - (obs * 2)] * np.cross(
-        #             (self.obstacle_environment[obs].center_position - self.position_list[agent, :, ii]),
-        #             (self.velocity[agent, :] - obs_vel))
-
-        # angular_vel_obs = angular_vel.sum()
-        # self.obstacle_environment[obs].linear_velocity = obs_vel
-        # self.obstacle_environment[obs].angular_velocity = -2 * angular_vel_obs
-        # self.obstacle_environment[obs].do_velocity_step(self.dt_simulation)
-        # for agent in self.obs_w_multi_agent[obs]:
-        #     self.position_list[agent, :, ii + 1] = self.obstacle_environment[obs].transform_relative2global(
-        #         self.relative_agent_pos[agent, :])
-        # TODO : Make it for the angular velocity
-
 
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
@@ -221,4 +207,3 @@ class Person(BaseAgent):
               position=ctp, initial_velocity=initial_velocity, obs=environment_without_me,self_priority=self.priority)
 
         self.linear_velocity = velocity
-        # self.linear_velocity = np.array([0, 0.25])
