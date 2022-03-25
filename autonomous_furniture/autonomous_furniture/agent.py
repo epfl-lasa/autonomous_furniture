@@ -179,6 +179,14 @@ class Furniture(BaseAgent):
                                                       velocities[:, ii]-self.linear_velocity)
         # TODO : Remove the hard coded 2
         self.angular_velocity = -2*np.sum(angular_vel)
+    
+    def is_inside(self, position): # TODO This method only works with cuboid, maybe consider adding to cuboid
+        position = self._shape.pose.transform_position_from_reference_to_local(position)
+        
+        if np.abs(position[0]/self._shape.semiaxes[0]) <= 1 and np.abs(position[1]/self._shape.semiaxes[1]) <= 1:
+            return True
+        else:
+            return False
 
 
 class Person(BaseAgent):
