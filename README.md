@@ -28,6 +28,23 @@ Be sure your directory structure looks like this:
         └── objects_descriptions
 ```
 if not ROS2 will fail to build and through mising package errors.
+### ROS2 Setup
+For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy and galactic.
+With the basic version of ROS2 there are a few missing packages needed to properly run the code.
+First install rosdep:
+```shell
+sudo apt install python3-rosdep2
+rosdep update
+```
+Install colcon:
+https://colcon.readthedocs.io/en/released/user/installation.html
+
+Add the remaining missing packages:
+```shell
+sudo apt install ros-<ros2-distro>-joint-state-publisher-gui
+sudo apt install ros-<ros2-distro>-joint-state-publisher
+sudo apt install ros-<ros2-distro>-xacro
+```
 ### Python Install
 Go to file directory:
 ```shell
@@ -88,7 +105,7 @@ python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
 ## Known Errors
 You may encounter as few errors at first a few of those are the following:
 * ROS2 doesn't build --> check file struct mentioned in Setup
-* Missing packages when launching ROS2 launch files --> check ros setup
+* Missing packages when launching ROS2 launch files --> check ROS2 Setup
 * Missing packages when launching python files --> this may be due to detached submodules
   * Reattach submodules:
 ```shell
