@@ -1,5 +1,5 @@
 import numpy as np
-import math
+from math import pi
 import matplotlib.pyplot as plt
 from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
@@ -50,7 +50,7 @@ class DynamicFurniture:
         if relative_attractor_position is None:
             relative_attractor_position = np.array([0., 0.])
         if goals is None:
-            goals = Ellipse(
+            goals = Cuboid(
                 axes_length=[0.6, 0.6],
                 center_position=np.array([0., 0.]),
                 margin_absolut=0,
@@ -195,7 +195,7 @@ def multiple_robots():
         axes_length=[max_ax_len, min_ax_len],
         center_position=obstacle_pos[0],
         margin_absolut=0,
-        orientation=math.pi/2,
+        orientation=pi/2,
         tail_effect=False,
         repulsion_coeff=1,
     ))
@@ -216,7 +216,7 @@ def multiple_robots():
         axes_length=[max_ax_len, min_ax_len],
         center_position=obstacle_pos[0],
         margin_absolut=0.,
-        orientation=math.pi/2,
+        orientation=pi/2,
         tail_effect=False,
         repulsion_coeff=1,
         linear_velocity=np.array([0., 0.]),
@@ -256,10 +256,10 @@ def multiple_robots():
                 [max_ax_len, min_ax_len],
                 "Cuboid",
                 obstacle_pos[i],
-                math.pi/2,
+                pi/2,
                 np.array([0., 0.]),
                 obstacle_pos[i],
-                math.pi/2,
+                pi/2,
             )
         )
 
