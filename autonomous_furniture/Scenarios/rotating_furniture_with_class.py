@@ -123,24 +123,12 @@ class DynamicalSystemAnimation(Animator):
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
         return False
 
-
-def calculate_relative_position(num_agent, max_ax, min_ax):
-    div = max_ax / (num_agent + 1)
-    radius = sqrt(((min_ax / 2) ** 2) + (div ** 2))
-    rel_agent_pos = np.zeros((num_agent, 2))
-
-    for i in range(num_agent):
-        rel_agent_pos[i, 0] = (div * (i + 1)) - (max_ax / 2)
-
-    return rel_agent_pos, radius
-
-
 def run_single_furniture_rotating():
     axis = [2.2, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
 
-    obstacle_environment = ObstacleContainer()
+    obstacle_environment = ObstacleContainer() # List of environment shared by all the furniture/agent
     
     control_points = np.array([[0.4, 0], [-0.4, 0]]) # control_points for the cuboid
 
