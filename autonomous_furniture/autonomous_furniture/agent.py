@@ -180,6 +180,9 @@ class Furniture(BaseAgent):
         # TODO : Remove the hard coded 2
         self.angular_velocity = -2*np.sum(angular_vel)
 
+    def area_covered(self):
+        delta_t = 0.1
+        velocity_in_local_frame = self._shape.pose.transform_position_from_reference_to_local(position=self.position+self.linear_velocity)
 
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
