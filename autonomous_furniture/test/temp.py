@@ -63,11 +63,16 @@ class DynamicalSystemAnimation(Animator):
 
         self.obstacle_environment = obstacle_environment
 
+        self._gridii = Grid(x_lim=x_lim, y_lim=y_lim, furnitures=agent, resolution=[20,20])
+
         self.fig, self.ax = plt.subplots()
 
     def update_step(self, ii):
         if not ii % 10:
             print(f"it={ii}")
+            
+            if ii > 10 :
+                print(f"area = {self._gridii.area_obj_dict[id(self.agent[0])]._total_area_covered}")
 
         self.ax.clear()
 
@@ -105,23 +110,8 @@ class DynamicalSystemAnimation(Animator):
             self.ax.plot(
                 goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
 
-        # for agent in range(self.num_agent):
-        #     plt.arrow(self.position_list[agent, 0, ii + 1],
-        #               self.position_list[agent, 1, ii + 1],
-        #               self.velocity[agent, 0],
-        #               self.velocity[agent, 1],
-        #               head_width=0.05,
-        #               head_length=0.1,
-        #               fc='k',
-        #               ec='k')
+        self._gridii.calculate_area(furnitures=self.agent)
 
-        #     self.ax.plot(
-        #         self.initial_dynamics[agent].attractor_position[0],
-        #         self.initial_dynamics[agent].attractor_position[1],
-        #         "k*",
-        #         markersize=8,
-        #     )
-        # self.ax.grid()
         self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self, ii) -> bool:
@@ -140,24 +130,17 @@ def main():
     goal = ObjectPose(position=np.array([3, 3]) , orientation = 3.14/2) # Goal of the CuboidXd
     
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=goal.position,
+                           center_position=[5, 6],
                            margin_absolut=0.6,
-                           orientation=goal.orientation,
+                           orientation=3.14,
                            tail_effect=False,)
-    point = np.array([4,5])
+
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal)]
-
-    nouvelle_pos = my_furniture[0]._shape.pose.transform_position_from_reference_to_local(point)
-
-    print(my_furniture[0].is_inside(point))
-
-    gridii = Grid(x_lim=[-3, 8], y_lim=[-2, 7], furnitures=my_furniture, resolution=[20,20])
 
     # cmap = mpl.colors.ListedColormap(['white','blue'])
     # bounds=[False, True]
     # norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
-
-    mpl.pyplot.imshow(gridii.area_obj_dict[id(my_furniture[0])].old_cell_list.T, vmin=0, vmax=255, cmap="gray", origin="lower") # lower and .T to go from matrix python way to scan to regular x-y axis
+    # mpl.pyplot.imshow(gridii.area_obj_dict[id(my_furniture[0])].old_cell_list.T, vmin=0, vmax=255, cmap="gray", origin="lower") # lower and .T to go from matrix python way to scan to regular x-y axis
 
     pyplot.show()
 

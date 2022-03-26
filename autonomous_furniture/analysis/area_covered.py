@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib as mpl
+from matplotlib import pyplot
 
 class Grid:
     def __init__(self, x_lim, y_lim, furnitures,resolution = [20,20]) -> None:
@@ -25,13 +27,20 @@ class Grid:
                         self.area_obj_dict[id(furniture)].old_cell_list[ii,jj] = 255
 
     def calculate_area(self, furnitures):
-        nb_furniture = len(furnitures)
-
+        list_new_cell = np.zeros((self._grid.shape[0], self._grid.shape[1])) # Only for visiualization to delete after
         for ii in range(self._grid.shape[0]):
             for jj in range(self._grid.shape[1]): # Scanning through of each cell center point
                 for obj in furnitures:
                     if obj.is_inside(self._grid[ii,jj]): # If the point is inside one of the furniture
-                        pass
+                        if self.area_obj_dict[id(obj)].old_cell_list[ii,jj] == 0:
+                            self.area_obj_dict[id(obj)].old_cell_list[ii,jj] = 255 # A new cell is covered by the furniture
+                            self.area_obj_dict[id(obj)]._total_area_covered += self._step_x*self._step_y # TODO: Maybe we can precompute this line
+                            list_new_cell[ii,jj] = 255
+                    else :
+                        self.area_obj_dict[id(obj)].old_cell_list[ii,jj] = 0
+        cmap = mpl.colors.ListedColormap(['white','blue'])
+        pyplot.figure(3)
+        mpl.pyplot.imshow(list_new_cell.T, vmin=0, vmax=255, cmap=cmap, origin="lower") # lower and .T to go from matrix python way to scan to regular x-y axis
 
     def scan(self):
         pass
@@ -39,6 +48,7 @@ class ObjectArea:
     def __init__(self, furniture, resolution) -> None:
         self._furniture = furniture
         self.old_cell_list = np.full(resolution, 0)
+        self._total_area_covered = 0 # Total area covered during the simulation
 
     def init(self, grid):
         
