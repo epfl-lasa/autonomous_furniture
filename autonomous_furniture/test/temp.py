@@ -140,9 +140,9 @@ def main():
     goal = ObjectPose(position=np.array([3, 3]) , orientation = 3.14/2) # Goal of the CuboidXd
     
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([3, 3]),
+                           center_position=goal.position,
                            margin_absolut=0.6,
-                           orientation=np.pi/2,
+                           orientation=goal.orientation,
                            tail_effect=False,)
     point = np.array([4,5])
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal)]
@@ -157,7 +157,7 @@ def main():
     # bounds=[False, True]
     # norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
 
-    mpl.pyplot.imshow(gridii.area_obj_dict[id(my_furniture[0])].old_cell_list, vmin=0, vmax=255, cmap="gray")
+    mpl.pyplot.imshow(gridii.area_obj_dict[id(my_furniture[0])].old_cell_list.T, vmin=0, vmax=255, cmap="gray", origin="lower") # lower and .T to go from matrix python way to scan to regular x-y axis
 
     pyplot.show()
 
