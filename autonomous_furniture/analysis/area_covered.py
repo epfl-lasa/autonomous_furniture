@@ -8,21 +8,27 @@ class Grid:
         self.area_obj_dict = {}
 
         self.create_grid(x_lim, y_lim, resolution)
+        self.create_object_area_struc(furnitures=furnitures, resolution=resolution)
 
     def create_grid(self, x_lim, y_lim, resolution):
         for ii in range(resolution[0]):
             for jj in range(resolution[1]):
                 self._grid[ii,jj] = [(min(y_lim) + ii*self._step_y) + self._step_y/2, (min(x_lim)+ jj*self._step_x + self._step_x/2 ) ] # we store the middle coordinate of each cell in the grid list
 
-    def create_object_area_struc(self, furniture):
-        for ii in len(furniture):
-            self.area_obj_dict[id(furniture)] = ObjectArea(furniture, self._grid)
+    def create_object_area_struc(self, furnitures, resolution):
+        for furniture in furnitures:
+            self.area_obj_dict[id(furniture)] = ObjectArea(furniture, resolution)
+
+            for ii in range(self._grid.shape[0]):
+                for jj in range(self._grid.shape[1]): # Scanning through of each cell center point
+                    if furniture.is_inside(self._grid[ii,jj]): # If the point is inside one of the furniture
+                        self.area_obj_dict[id(furniture)].old_cell_list[ii,jj] = 255
 
     def calculate_area(self, furnitures):
         nb_furniture = len(furnitures)
 
-        for ii in self._grid.shape[0]:
-            for jj in self._grid.shape[1]: # Scanning through of each cell center point
+        for ii in range(self._grid.shape[0]):
+            for jj in range(self._grid.shape[1]): # Scanning through of each cell center point
                 for obj in furnitures:
                     if obj.is_inside(self._grid[ii,jj]): # If the point is inside one of the furniture
                         pass
@@ -30,9 +36,9 @@ class Grid:
     def scan(self):
         pass
 class ObjectArea:
-    def __init__(self, furniture) -> None:
+    def __init__(self, furniture, resolution) -> None:
         self._furniture = furniture
-        self.old_cells_list = None
+        self.old_cell_list = np.full(resolution, 0)
 
     def init(self, grid):
         
