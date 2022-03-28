@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from asyncio import get_running_loop
 import warnings
 import numpy as np
+from numpy import linalg as LA
+
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from vartools.dynamical_systems.linear import ConstantValue
 from vartools.states import ObjectPose, ObjectTwist
@@ -187,6 +189,9 @@ class Furniture(BaseAgent):
             return True
         else:
             return False
+    
+    def energy(self):
+        pass
 
 
 class Person(BaseAgent):
@@ -202,6 +207,8 @@ class Person(BaseAgent):
 
         self._dynamics = LinearSystem(attractor_position=self.position,
                                       maximum_velocity=1)
+        self._old_velocity = None
+        self._energy = 0
 
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
@@ -215,3 +222,14 @@ class Person(BaseAgent):
               position=ctp, initial_velocity=initial_velocity, obs=environment_without_me,self_priority=self.priority)
 
         self.linear_velocity = velocity
+    
+    def energy(self):
+        if self._old_velocity is None:
+            self._old_velocity = self.linear_velocity
+        else:
+            norm_old = LA.norm(self._old_velocity)
+            unit_vec_old = self._old_velocity/norm_old
+            norm_current = LA.norm(self.linear_velocity)
+            unit_vec_current = self.linear_velocity/norm_current
+            angle_var = np.arccos(np.clip(np.dot(unit_vec_old, unit_vec_current), -1.0, 1.0))
+            self._energy += self.priority*angle_var**2 #+ (norm_current-norm_old)**2 # TODO Is that OK ? 
