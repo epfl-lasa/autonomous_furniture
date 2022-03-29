@@ -33,6 +33,9 @@ class BaseAgent(ABC):
     @property
     def position(self):
         return self._shape.pose.position
+    @property
+    def orientation(self):
+        return self._shape.pose.orientation
 
     @property
     def dimension(self):
@@ -164,10 +167,13 @@ class Furniture(BaseAgent):
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
 
+        self._dynamics.attractor_position = self._goal_pose.position
+        initial_velocity = self._dynamics.evaluate(self.position) # First we compute the initial velocity at the "center"
+
         for ii in range(self._control_points.shape[1]):
             ctp = global_control_points[:, ii]
-            self._dynamics.attractor_position = global_goal_control_points[:, ii]
-            initial_velocity = self._dynamics.evaluate(ctp)
+            # self._dynamics.attractor_position = global_goal_control_points[:, ii]
+            # initial_velocity = self._dynamics.evaluate(ctp)
             velocities[:, ii] = obs_avoidance_interpolation_moving(
                 position=ctp, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
 
@@ -178,7 +184,7 @@ class Furniture(BaseAgent):
             angular_vel[0, ii] = weights[ii]*np.cross(self._shape.center_position - self._control_points[ii],
                                                       velocities[:, ii]-self.linear_velocity)
         # TODO : Remove the hard coded 2
-        self.angular_velocity = -2*np.sum(angular_vel)
+        self.angular_velocity = -2*np.sum(angular_vel) + (self._goal_pose.orientation- self.orientation)
 
 
 class Person(BaseAgent):
