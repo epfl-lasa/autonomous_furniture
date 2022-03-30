@@ -191,8 +191,13 @@ class Furniture(BaseAgent):
     def controller(self, initial_velocity):
         distance_to_goal = LA.norm(self._goal_pose.position-self.position)
         min_dist_to_minimize_drag = 4
+        dist_to_goal_thr = 2
 
-        if distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
+        if distance_to_goal < dist_to_goal_thr:
+            self.minimize_drag = False
+            return self._goal_pose.orientation- self.orientation
+
+        elif distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
             self.minimize_drag = True
             goal_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
             
@@ -200,7 +205,8 @@ class Furniture(BaseAgent):
                 return goal_dir-self.orientation
             else:
                 return goal_dir-(self.orientation -np.pi)
-        else:
+
+        else:            
             return self._goal_pose.orientation- self.orientation
 
 class Person(BaseAgent):
