@@ -147,8 +147,7 @@ def run_single_furniture_rotating():
                            orientation=goal2.orientation,
                            tail_effect=False,)
     
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal),
-    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
+    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal,priority_value =1)]#,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
                     
     my_animation = DynamicalSystemAnimation(
         it_max=450,

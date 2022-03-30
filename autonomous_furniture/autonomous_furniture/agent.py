@@ -193,21 +193,25 @@ class Furniture(BaseAgent):
         min_dist_to_minimize_drag = 4
         dist_to_goal_thr = 2
 
-        if distance_to_goal < dist_to_goal_thr:
-            self.minimize_drag = False
-            return self._goal_pose.orientation- self.orientation
+        goal_angle = self._goal_pose.orientation- self.orientation
+        opti_drag_angle = np.arctan2(initial_velocity[1], initial_velocity[0])- self.orientation
+        
+        # if distance_to_goal < dist_to_goal_thr:
+        #     self.minimize_drag = False
+        #     return self._goal_pose.orientation- self.orientation
 
-        elif distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
-            self.minimize_drag = True
-            goal_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
+        # elif distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
+        #     self.minimize_drag = True
+        #     goal_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
             
-            if np.abs(goal_dir-self.orientation) < np.abs(goal_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
-                return goal_dir-self.orientation
-            else:
-                return goal_dir-(self.orientation -np.pi)
+        #     if np.abs(goal_dir-self.orientation) < np.abs(goal_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
+        #         return goal_dir-self.orientation
+        #     else:
+        #         return goal_dir-(self.orientation -np.pi)
 
-        else:            
-            return self._goal_pose.orientation- self.orientation
+        # else:            
+        #     return self._goal_pose.orientation- self.orientation
+
 
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
