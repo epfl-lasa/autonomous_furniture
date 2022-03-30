@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from asyncio import get_running_loop
 import warnings
 import numpy as np
+from numpy import linalg as LA
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from vartools.dynamical_systems.linear import ConstantValue
 from vartools.states import ObjectPose, ObjectTwist
@@ -152,6 +153,7 @@ class Furniture(BaseAgent):
                                       maximum_velocity=1)
 
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
+        self.minimize_drag : bool = False
 
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
@@ -184,8 +186,22 @@ class Furniture(BaseAgent):
             angular_vel[0, ii] = weights[ii]*np.cross(self._shape.center_position - self._control_points[ii],
                                                       velocities[:, ii]-self.linear_velocity)
         # TODO : Remove the hard coded 2
-        self.angular_velocity = -2*np.sum(angular_vel) + (self._goal_pose.orientation- self.orientation)
+        self.angular_velocity = -2*np.sum(angular_vel) + self.controller(initial_velocity)
+    
+    def controller(self, initial_velocity):
+        distance_to_goal = LA.norm(self._goal_pose.position-self.position)
+        min_dist_to_minimize_drag = 4
 
+        if distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
+            self.minimize_drag = True
+            goal_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
+            
+            if np.abs(goal_dir-self.orientation) < np.abs(goal_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
+                return goal_dir-self.orientation
+            else:
+                return goal_dir-(self.orientation -np.pi)
+        else:
+            return self._goal_pose.orientation- self.orientation
 
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
