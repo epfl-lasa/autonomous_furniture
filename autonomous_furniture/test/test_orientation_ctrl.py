@@ -139,12 +139,13 @@ def run_single_furniture_rotating():
                            margin_absolut=0.6,
                            orientation=np.pi/2,
                            tail_effect=False,)
+    
+    goal2 = ObjectPose(position=np.array([4, 4]), orientation=np.pi/2)
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([4, 5]),
+                           center_position=goal2.position,
                            margin_absolut=0.6,
-                           orientation=np.pi/2,
+                           orientation=goal2.orientation,
                            tail_effect=False,)
-    goal2 = ObjectPose(position=np.array([4, 5]), orientation=np.pi/2)
     
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal),
     Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
