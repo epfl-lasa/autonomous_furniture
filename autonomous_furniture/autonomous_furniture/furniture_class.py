@@ -14,7 +14,7 @@ from dynamic_obstacle_avoidance.avoidance.modulation import obs_avoidance_interp
 class FurnitureContainer(BaseContainer):
     def __getitem__(self, key):
         """List-like or dictionarry-like access to obstacle"""
-        if isinstance(key, (str)):
+        if isinstance(key, str):
             for ii in range(len(self._obstacle_list)):
                 if self._obstacle_list[ii].name == key:
                     return self._obstacle_list[ii]
@@ -37,7 +37,7 @@ class Furniture:
     def __init__(
             self,
             furniture_type: str = "furniture",
-            num_control_points: int = 0,
+            num_control_points=None,
             size=None,
             shape: str = "Cuboid",
             initial_position: np.ndarray = np.array([0, 0]),
@@ -61,7 +61,17 @@ class Furniture:
 
         self.furniture_container = self.generate_furniture_container()
 
-        self.num_control_points = num_control_points
+        if num_control_points is None:
+            self.num_control_points = 0
+        if isinstance(num_control_points, int):
+            self.num_control_points = num_control_points
+            self.control_points_axis_0 = num_control_points
+            self.control_points_axis_1 = 1
+        elif isinstance(num_control_points, tuple):
+            self.num_control_points = num_control_points[0] * num_control_points[1]
+            self.control_points_axis_0 = num_control_points[0]
+            self.control_points_axis_1 = num_control_points[1]
+
         if self.num_control_points > 0:
             self.goal_position = goal_position
             self.goal_orientation = goal_orientation
@@ -111,12 +121,17 @@ class Furniture:
         )
 
     def calculate_relative_position(self):
-        div = self.max_ax / (self.num_control_points + 1)
-        radius = sqrt(((self.min_ax / 2) ** 2) + (div ** 2))
+        div_max_ax = self.max_ax / (self.control_points_axis_0 + 1)
+        div_min_ax = self.min_ax / (self.control_points_axis_1 + 1)
+        radius = sqrt((div_max_ax ** 2) + (div_min_ax ** 2))
         relative_control_point_pos = np.zeros((self.num_control_points, 2))
 
-        for i in range(self.num_control_points):
-            relative_control_point_pos[i, 0] = (div * (i + 1)) - (self.max_ax / 2)
+        k = 0
+        for j in range(self.control_points_axis_1):
+            for i in range(self.control_points_axis_0):
+                relative_control_point_pos[k, 0] = (div_max_ax * (i + 1)) - (self.max_ax / 2)
+                relative_control_point_pos[k, 1] = (div_min_ax * (j + 1)) - (self.min_ax / 2)
+                k += 1
 
         return relative_control_point_pos, radius
 

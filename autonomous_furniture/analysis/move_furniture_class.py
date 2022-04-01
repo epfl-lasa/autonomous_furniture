@@ -220,13 +220,13 @@ class DynamicFurniture:
 
 def single_smart_furniture():
     furniture_type = ["furniture", "furniture", "furniture", "person"]
-    num_ctl_furniture = [3, 2, 2, 0]
+    num_ctl_furniture = [(3,2), 2, 2, 0]
     size_furniture = [[2, 1], [2, 1], [2, 1], [.4, .4]]
     shape_furniture = ["Cuboid", "Cuboid", "Cuboid", "Ellipse"]
     init_pos_furniture = [np.array([-2, 2]), np.array([-2, -2]), np.array([2, -2]), np.array([2, 2])]
     init_ori_furniture = [pi/2, pi/2, pi/2, 0.0]
     init_vel_furniture = [np.array([0, 0]), np.array([0, 0]), np.array([0, 0]), np.array([-0.5, -0.5])]
-    goal_pos_furniture = [np.array([1, 1]), np.array([1, -1]), np.array([-1, -1]), np.array([1, -1])]
+    goal_pos_furniture = [np.array([1, 1]), np.array([2, -1]), np.array([-1, -2]), np.array([1, -1])]
     goal_ori_furniture = [0.0, 0.0, 0.0, 0.0]
 
     mobile_furniture = FurnitureContainer()
