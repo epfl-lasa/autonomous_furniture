@@ -180,7 +180,6 @@ class Furniture(BaseAgent):
         w1 = w1_hat/(w1_hat + w2_hat)
         w2 = 1 - w1
 
-        print(w1)
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0]) # Direction (angle), of the linear_velocity in the global frame
 
         if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
@@ -195,12 +194,10 @@ class Furniture(BaseAgent):
         initial_angular_vel = K*(w1*drag_angle + w2*goal_angle) # Initial angular_velocity is computed
 
         for ii in range(self._control_points.shape[1]):
-            tang_vel = [-initial_angular_vel*initial_velocity[1], initial_angular_vel*initial_velocity[0]] # doing the cross product formula by "hand" than using the funct
+            tang_vel = [-initial_angular_vel*self._control_points[ii,1], initial_angular_vel*self._control_points[ii,0]] # doing the cross product formula by "hand" than using the funct
             init_velocities[:,ii] = initial_velocity/2 + tang_vel
 
             ctp = global_control_points[:, ii]
-            # self._dynamics.attractor_position = global_goal_control_points[:, ii]
-            # initial_velocity = self._dynamics.evaluate(ctp)
             velocities[:, ii] = obs_avoidance_interpolation_moving(
                 position=ctp, initial_velocity=init_velocities[:,ii], obs=environment_without_me, self_priority=self.priority)
 
