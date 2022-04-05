@@ -23,6 +23,7 @@ class BaseAgent(ABC):
         super().__init__()
         self._shape = shape
         self.priority = priority_value
+        self.virtual_drag = max(self._shape.axes_length)/min(self._shape.axes_length)
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
@@ -61,7 +62,7 @@ class BaseAgent(ABC):
     @property
     def priority(self):
         return self._shape.reactivity
-    
+
     @priority.setter
     def priority(self,value):
         self._shape.reactivity = value
@@ -156,9 +157,9 @@ class Furniture(BaseAgent):
         self.minimize_drag : bool = False
 
     def update_velocity(self):
+        initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
-
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
 
@@ -166,18 +167,42 @@ class Furniture(BaseAgent):
             global_control_points, environment_without_me)
 
         velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
 
         self._dynamics.attractor_position = self._goal_pose.position
-        initial_velocity = self._dynamics.evaluate(self.position) # First we compute the initial velocity at the "center"
+        initial_velocity = self._dynamics.evaluate(self.position) # First we compute the initial velocity at the "center", ugly
+        
+        # Computing the weights of the angle to reach
+        w1_hat = self.virtual_drag
+        w2_hat = self._dynamics.maximum_velocity/LA.norm(initial_velocity)-1
+        w1 = w1_hat/(w1_hat + w2_hat)
+        w2 = 1 - w1
+
+        print(w1)
+        lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0]) # Direction (angle), of the linear_velocity in the global frame
+
+        if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
+            drag_angle = lin_vel_dir-self.orientation
+        else:
+            drag_angle =  lin_vel_dir-(self.orientation -np.pi)
+        
+        goal_angle = self._goal_pose.orientation- self.orientation
+
+        # TODO Very clunky : Rather make a function out of it
+        K = 1 # K proportionnal parameter for the speed
+        initial_angular_vel = K*(w1*drag_angle + w2*goal_angle) # Initial angular_velocity is computed
 
         for ii in range(self._control_points.shape[1]):
+            tang_vel = [-initial_angular_vel*initial_velocity[1], initial_angular_vel*initial_velocity[0]] # doing the cross product formula by "hand" than using the funct
+            init_velocities[:,ii] = initial_velocity/2 + tang_vel
+
             ctp = global_control_points[:, ii]
             # self._dynamics.attractor_position = global_goal_control_points[:, ii]
             # initial_velocity = self._dynamics.evaluate(ctp)
             velocities[:, ii] = obs_avoidance_interpolation_moving(
-                position=ctp, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
+                position=ctp, initial_velocity=init_velocities[:,ii], obs=environment_without_me, self_priority=self.priority)
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
@@ -186,7 +211,7 @@ class Furniture(BaseAgent):
             angular_vel[0, ii] = weights[ii]*np.cross(self._shape.center_position - self._control_points[ii],
                                                       velocities[:, ii]-self.linear_velocity)
         # TODO : Remove the hard coded 2
-        self.angular_velocity = -2*np.sum(angular_vel) + self.controller(initial_velocity)
+        self.angular_velocity = -2*np.sum(angular_vel)
     
     def controller(self, initial_velocity):
         distance_to_goal = LA.norm(self._goal_pose.position-self.position)
