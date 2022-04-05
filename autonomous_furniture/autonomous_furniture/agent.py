@@ -195,7 +195,12 @@ class Furniture(BaseAgent):
 
         goal_angle = self._goal_pose.orientation- self.orientation
         opti_drag_angle = np.arctan2(initial_velocity[1], initial_velocity[0])- self.orientation
+
+        w1 = self.angular_velocity^2/self.linear_velocity^2
+        w2 = 1
+        weighted_angle = w1*goal_angle + w2*opti_drag_angle
         
+        return weighted_angle
         # if distance_to_goal < dist_to_goal_thr:
         #     self.minimize_drag = False
         #     return self._goal_pose.orientation- self.orientation
