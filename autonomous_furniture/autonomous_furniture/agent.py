@@ -203,7 +203,7 @@ class Furniture(BaseAgent):
         goal_angle = self._goal_pose.orientation- self.orientation
 
         # TODO Very clunky : Rather make a function out of it
-        K = 1 # K proportionnal parameter for the speed
+        K = 10 # K proportionnal parameter for the speed
         initial_angular_vel = K*(w1*drag_angle + w2*goal_angle) # Initial angular_velocity is computed
 
         for ii in range(self._control_points.shape[1]):
@@ -215,14 +215,16 @@ class Furniture(BaseAgent):
             velocities[:, ii] = obs_avoidance_interpolation_moving(
                 position=ctp, initial_velocity=init_velocities[:,ii], obs=environment_without_me, self_priority=self.priority)
             plt.arrow(ctp[0], ctp[1], init_velocities[0,ii], init_velocities[1,ii],head_width=0.1, head_length=0.2, color='g')
+            plt.arrow(ctp[0], ctp[1], velocities[0,ii], velocities[1,ii],head_width=0.1, head_length=0.2, color='m')
+
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
 
         for ii in range(self._control_points.shape[1]):
-            angular_vel[0, ii] = weights[ii]*np.cross(velocities[:, ii]-self.linear_velocity, self._control_points[ii]-self._shape.center_position)
+            angular_vel[0, ii] = weights[ii]*np.cross(global_control_points[:,ii]-self._shape.center_position, velocities[:, ii]-self.linear_velocity)
         # TODO : Remove the hard coded 2
-        self.angular_velocity = 2*np.sum(angular_vel)
+        self.angular_velocity = np.sum(angular_vel)
     
     def controller(self, initial_velocity):
         distance_to_goal = LA.norm(self._goal_pose.position-self.position)
