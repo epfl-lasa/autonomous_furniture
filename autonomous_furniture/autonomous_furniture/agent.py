@@ -180,8 +180,15 @@ class Furniture(BaseAgent):
         
         # Computing the weights of the angle to reach
         w1_hat = self.virtual_drag
-        w2_hat = self._dynamics.maximum_velocity/LA.norm(initial_velocity)-1
-        w1 = 0*w1_hat/(w1_hat + w2_hat)
+        w2_hat_max = 100000
+        if LA.norm(initial_velocity) != 0:
+            w2_hat = self._dynamics.maximum_velocity/LA.norm(initial_velocity)-1
+            if w2_hat > w2_hat_max:
+                w2_hat = w2_hat_max
+        else:
+            w2_hat = w2_hat_max   
+
+        w1 = w1_hat/(w1_hat + w2_hat)
         w2 = 1 - w1
 
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0]) # Direction (angle), of the linear_velocity in the global frame
@@ -191,7 +198,7 @@ class Furniture(BaseAgent):
         else:
             drag_angle =  lin_vel_dir-(self.orientation -np.pi)
         
-        drag_angle = lin_vel_dir-self.orientation
+        #drag_angle = lin_vel_dir-self.orientation
 
         goal_angle = self._goal_pose.orientation- self.orientation
 
@@ -213,10 +220,9 @@ class Furniture(BaseAgent):
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
 
         for ii in range(self._control_points.shape[1]):
-            angular_vel[0, ii] = weights[ii]*np.cross(self._shape.center_position - self._control_points[ii],
-                                                      velocities[:, ii]-self.linear_velocity)
+            angular_vel[0, ii] = weights[ii]*np.cross(velocities[:, ii]-self.linear_velocity, self._control_points[ii]-self._shape.center_position)
         # TODO : Remove the hard coded 2
-        self.angular_velocity = -2*np.sum(angular_vel)
+        self.angular_velocity = 2*np.sum(angular_vel)
     
     def controller(self, initial_velocity):
         distance_to_goal = LA.norm(self._goal_pose.position-self.position)
