@@ -132,22 +132,23 @@ def run_single_furniture_rotating():
     
     control_points = np.array([[0.4, 0], [-0.4, 0]]) # control_points for the cuboid
 
-    goal = ObjectPose(position=np.array([7, 5]), orientation=np.pi/2)  # , orientation = 1.6) Goal of the CuboidXd
+    goal = ObjectPose(position=np.array([7, 1.5]), orientation=np.pi/2)  # , orientation = 1.6) Goal of the CuboidXd
     
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([0, 3]),
+                           center_position=np.array([-2, 1]),
                            margin_absolut=0.6,
                            orientation=np.pi/2,
                            tail_effect=False,)
     
-    goal2 = ObjectPose(position=np.array([4, 4]), orientation=np.pi/2)
+    goal2 = ObjectPose(position=np.array([5, 0]), orientation=np.pi/2)
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=goal2.position,
                            margin_absolut=0.6,
                            orientation=goal2.orientation,
                            tail_effect=False,)
     
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal,priority_value =1)]#,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
+    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal,priority_value =1),
+    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2,priority_value =1)]#,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
                     
     my_animation = DynamicalSystemAnimation(
         it_max=450,

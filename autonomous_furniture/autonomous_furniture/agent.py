@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from asyncio import get_running_loop
 import warnings
 import numpy as np
+import matplotlib.pyplot as plt
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from vartools.dynamical_systems.linear import ConstantValue
@@ -75,6 +76,9 @@ class BaseAgent(ABC):
 
     def get_goal_control_points(self):
         return np.array([self._goal_pose.transform_position_from_local_to_reference(ctp) for ctp in self._control_points]).T
+
+    def get_veloctity_in_global_frame(self,velocity):
+        return self._shape.pose.transform_direction_from_local_to_reference(velocity)
 
     @staticmethod
     def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5):
@@ -177,7 +181,7 @@ class Furniture(BaseAgent):
         # Computing the weights of the angle to reach
         w1_hat = self.virtual_drag
         w2_hat = self._dynamics.maximum_velocity/LA.norm(initial_velocity)-1
-        w1 = w1_hat/(w1_hat + w2_hat)
+        w1 = 0*w1_hat/(w1_hat + w2_hat)
         w2 = 1 - w1
 
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0]) # Direction (angle), of the linear_velocity in the global frame
@@ -187,6 +191,8 @@ class Furniture(BaseAgent):
         else:
             drag_angle =  lin_vel_dir-(self.orientation -np.pi)
         
+        drag_angle = lin_vel_dir-self.orientation
+
         goal_angle = self._goal_pose.orientation- self.orientation
 
         # TODO Very clunky : Rather make a function out of it
@@ -195,11 +201,13 @@ class Furniture(BaseAgent):
 
         for ii in range(self._control_points.shape[1]):
             tang_vel = [-initial_angular_vel*self._control_points[ii,1], initial_angular_vel*self._control_points[ii,0]] # doing the cross product formula by "hand" than using the funct
-            init_velocities[:,ii] = initial_velocity/2 + tang_vel
+            tang_vel = self.get_veloctity_in_global_frame(tang_vel)
+            init_velocities[:,ii] = initial_velocity + tang_vel
 
             ctp = global_control_points[:, ii]
             velocities[:, ii] = obs_avoidance_interpolation_moving(
                 position=ctp, initial_velocity=init_velocities[:,ii], obs=environment_without_me, self_priority=self.priority)
+            plt.arrow(ctp[0], ctp[1], init_velocities[0,ii], init_velocities[1,ii],head_width=0.1, head_length=0.2, color='g')
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
