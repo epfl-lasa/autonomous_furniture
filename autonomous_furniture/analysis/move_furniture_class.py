@@ -9,7 +9,7 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
-from autonomous_furniture.furniture_class import Furniture, FurnitureDynamics, FurnitureContainer
+from autonomous_furniture.furniture_class import Furniture, FurnitureDynamics, FurnitureContainer, FurnitureAttractorDynamics
 from calc_time import calculate_relative_position, relative2global, global2relative
 
 
@@ -17,7 +17,7 @@ class DynamicFurniture:
     dim = 2
 
     def __init__(self):
-        self.animation_paused = False
+        self.animation_paused = True
 
     def on_click(self, event):
         self.animation_paused = not self.animation_paused
@@ -107,6 +107,7 @@ class DynamicFurniture:
             )
 
         furniture_avoider = FurnitureDynamics(furniture_env)
+        furniture_attractor_avoider = FurnitureAttractorDynamics(furniture_env, cutoff_distance=2.2)
         position_list = []
         velocity_list = []
 
@@ -141,6 +142,27 @@ class DynamicFurniture:
 
             weights = furniture_avoider.get_influence_weight_at_points(temp_pos, 3)
             # print(f"weights: {weights}")
+
+            for jj, furniture in enumerate(furniture_env):
+                if furniture.furniture_type == "person":
+                    continue
+
+                global_attractor_position = furniture.relative2global(furniture.rel_ctl_pts_pos, furniture.goal_container)
+                goal_velocity, goal_rotation = furniture_attractor_avoider.evaluate_furniture_attractor(global_attractor_position, jj)
+
+                # print(f"state of furn: \n {furniture.attractor_state} \n")
+
+                if furniture.attractor_state != "regroup":
+                    new_goal_position = goal_velocity * dt_step + furniture.goal_container.center_position
+                    new_goal_orientation = -(1 * goal_rotation * dt_step) + furniture.goal_container.orientation
+                else:
+                    new_goal_position = furniture.parking_zone_position
+                    new_goal_orientation = furniture.parking_zone_orientation
+
+                furniture.goal_container.center_position = new_goal_position
+                furniture.goal_container.orientation = new_goal_orientation
+                global_attractor_position = furniture.relative2global(furniture.rel_ctl_pts_pos, furniture.goal_container)
+                furniture_avoider.set_attractor_position(global_attractor_position, jj)
 
             for jj, furniture in enumerate(furniture_env):
                 velocity_list[jj][:, :, ii] = furniture_avoider.evaluate_furniture(position_list[jj][:, :, ii - 1], jj)
@@ -226,7 +248,7 @@ def single_smart_furniture():
     init_pos_furniture = [np.array([-2, 2]), np.array([-2, -2]), np.array([2, -2]), np.array([2, 2])]
     init_ori_furniture = [pi/2, pi/2, pi/2, 0.0]
     init_vel_furniture = [np.array([0, 0]), np.array([0, 0]), np.array([0, 0]), np.array([-0.5, -0.5])]
-    goal_pos_furniture = [np.array([1, 1]), np.array([2, -1]), np.array([-1, -2]), np.array([1, -1])]
+    goal_pos_furniture = [np.array([1, 1]), np.array([2, -0.9]), np.array([-1, -2]), np.array([1, -1])]
     goal_ori_furniture = [0.0, 0.0, 0.0, 0.0]
 
     mobile_furniture = FurnitureContainer()
