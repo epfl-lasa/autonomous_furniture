@@ -35,6 +35,28 @@ class FurnitureContainer(BaseContainer):
             obstacle_environment.append(value.furniture_container)
         return obstacle_environment
 
+    def extract_margin(self):
+        margin_list = []
+        for furniture in self._obstacle_list:
+            if furniture.furniture_type == "furniture":
+                margin_list.append(furniture.radius)
+        return margin_list
+
+    def assign_margin(self):
+        adjusting_factor = 1.2
+        margin_list = self.extract_margin()
+        index_max = np.argmax(margin_list)
+        reduced_margin_list = margin_list[:]
+        reduced_margin_list.pop(index_max)
+        for furniture in self._obstacle_list:
+            if furniture.furniture_type == "person":
+                furniture.furniture_container.margin_absolut = max(margin_list) / adjusting_factor
+            elif furniture.furniture_type == "furniture":
+                if furniture.radius != margin_list[index_max]:
+                    furniture.furniture_container.margin_absolut = margin_list[index_max] / adjusting_factor
+                else:
+                    furniture.furniture_container.margin_absolut = max(reduced_margin_list) / adjusting_factor
+
 
 class Furniture:
     def __init__(

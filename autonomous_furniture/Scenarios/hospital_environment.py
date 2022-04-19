@@ -6,7 +6,7 @@ from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
-from vartools.dynamical_systems import LinearSystem
+# from vartools.dynamical_systems import LinearSystem
 from autonomous_furniture.furniture_class import Furniture, FurnitureDynamics, FurnitureContainer, FurnitureAttractorDynamics
 
 
@@ -14,7 +14,7 @@ class DynamicFurniture:
     dim = 2
 
     def __init__(self):
-        self.animation_paused = True
+        self.animation_paused = False
 
     def on_click(self, event):
         self.animation_paused = not self.animation_paused
@@ -35,8 +35,6 @@ class DynamicFurniture:
         for furniture in furniture_env:
             total_ctl_pts += furniture.num_control_points
 
-        print(total_ctl_pts)
-
         if y_lim is None:
             y_lim = [-3., 3.]
         if x_lim is None:
@@ -46,8 +44,10 @@ class DynamicFurniture:
             x_length = x_lim[1] - x_lim[0]
             y_length = y_lim[1] - y_lim[0]
             walls_size = [[x_length, 0.1], [0.1, y_length], [x_length, 0.1], [0.1, y_length]]
-            walls_orientaion = [0, pi/2, 0, pi/2]
-            wall_margin = furniture_env[-1].get_margin()
+            walls_orientation = [0, pi/2, 0, pi/2]
+            for furniture in furniture_env:
+                if furniture.furniture_type == "person":
+                    wall_margin = furniture.get_margin()
             for ii in range(4):
                 furniture_env.append(
                     Furniture(
@@ -56,7 +56,7 @@ class DynamicFurniture:
                         walls_size[ii],
                         "Cuboid",
                         walls_center_position[ii],
-                        walls_orientaion[ii]
+                        walls_orientation[ii]
                     )
                 )
         else:
@@ -77,7 +77,7 @@ class DynamicFurniture:
             )
 
         furniture_avoider = FurnitureDynamics(furniture_env)
-        furniture_attractor_avoider = FurnitureAttractorDynamics(furniture_env, cutoff_distance=2.2)
+        furniture_attractor_avoider = FurnitureAttractorDynamics(furniture_env, cutoff_distance=2)
         position_list = []
         velocity_list = []
 
@@ -92,8 +92,6 @@ class DynamicFurniture:
         fig, ax = plt.subplots(figsize=(10, 8))  # figsize=(10, 8)
         ax.set_aspect(1.0)
         cid = fig.canvas.mpl_connect('button_press_event', self.on_click)
-
-        print(furniture_env)
 
         ii = 0
         while ii < it_max:
@@ -113,7 +111,6 @@ class DynamicFurniture:
                 temp_pos.append(position_list[jj][:, :, ii-1])
 
             weights = furniture_avoider.get_influence_weight_at_points(temp_pos, 3)
-            # print(f"weights: {weights}")
 
             for jj, furniture in enumerate(furniture_env):
                 if furniture.furniture_type == "person" or furniture.furniture_type == "wall":
@@ -121,10 +118,6 @@ class DynamicFurniture:
 
                 global_attractor_position = furniture.relative2global(furniture.rel_ctl_pts_pos, furniture.goal_container)
                 goal_velocity, goal_rotation = furniture_attractor_avoider.evaluate_furniture_attractor(global_attractor_position, jj)
-
-                if jj == 0:
-                    # print(f"state of furn: \n {furniture.attractor_state} \n")
-                    pass
 
                 if furniture.attractor_state != "regroup":
                     new_goal_position = goal_velocity * dt_step + furniture.goal_container.center_position
@@ -216,16 +209,16 @@ class DynamicFurniture:
                 break
 
 
-def single_smart_furniture():
-    furniture_type = ["furniture", "furniture", "furniture", "person"]
-    num_ctl_furniture = [(3,2), 2, 2, 0]
-    size_furniture = [[2, 1], [2, 1], [2, 1], [.4, .4]]
-    shape_furniture = ["Cuboid", "Cuboid", "Cuboid", "Ellipse"]
-    init_pos_furniture = [np.array([-2, 2]), np.array([-2, -2]), np.array([2, -2]), np.array([2, 2])]
-    init_ori_furniture = [pi/2, pi/2, pi/2, 0.0]
-    init_vel_furniture = [np.array([0, 0]), np.array([0, 0]), np.array([0, 0]), np.array([-0.5, -0.5])]
-    goal_pos_furniture = [np.array([1, 1]), np.array([2, -0.9]), np.array([-1, -2]), np.array([1, -1])]
-    goal_ori_furniture = [0.0, 0.0, 0.0, 0.0]
+def multiple_smart_furniture():
+    furniture_type = ["furniture", "furniture", "furniture", "furniture", "person"]
+    num_ctl_furniture = [2, 2, 2, 2, 0]
+    size_furniture = [[2.2, 1.1], [2.2, 1.1], [2.2, 1.1], [2.2, 1.1], [0.5, 0.5]]
+    shape_furniture = ["Cuboid", "Cuboid", "Cuboid", "Cuboid", "Ellipse"]
+    init_pos_furniture = [np.array([-1.5, 1.5]), np.array([-1.5, -1.5]), np.array([1.5, 1.5]), np.array([1.5, -1.5]), np.array([4.5, -1.2])]
+    init_ori_furniture = [pi/2, pi/2, pi/2, pi/2, 0]
+    init_vel_furniture = [np.array([0, 0]), np.array([0, 0]), np.array([0, 0]), np.array([0, 0]), np.array([-0.3, 0.1])]
+    goal_pos_furniture = [np.array([-1.5, 1.5]), np.array([-1.5, -1.5]), np.array([1.5, 1.5]), np.array([1.5, -1.5]), np.array([4.5, -1.2])]
+    goal_ori_furniture = [pi/2, pi/2, pi/2, pi/2, 0]
 
     mobile_furniture = FurnitureContainer()
 
@@ -244,17 +237,13 @@ def single_smart_furniture():
             )
         )
 
-    print(mobile_furniture)
-
-    margins = mobile_furniture.assign_margin()
-
-    print(margins)
+    mobile_furniture.assign_margin()
 
     DynamicFurniture().run(
         furniture_env=mobile_furniture,
         walls=True,
-        x_lim=[-5, 5],
-        y_lim=[-4, 4],
+        x_lim=[-6, 6],
+        y_lim=[-5, 5],
     )
 
 
@@ -262,4 +251,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    single_smart_furniture()
+    multiple_smart_furniture()
