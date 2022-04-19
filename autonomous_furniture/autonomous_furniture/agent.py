@@ -156,7 +156,7 @@ class Furniture(BaseAgent):
     def __init__(self,
                  **kwargs) -> None:
         super().__init__(**kwargs)
-        self._dynamics = LinearSystem(attractor_position=self.position,
+        self._dynamics = LinearSystem(attractor_position=self._goal_pose.position,
                                       maximum_velocity=1)
 
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
@@ -178,13 +178,15 @@ class Furniture(BaseAgent):
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
 
-        self._dynamics.attractor_position = self._goal_pose.position
+        # self._dynamics.attractor_position = self._goal_pose.position
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
 
+        initial_magnitude = LA.norm(initial_velocity)
+
         # Computing the weights of the angle to reach
         w1_hat = self.virtual_drag
-        w2_hat_max = 100000
+        w2_hat_max = 1000
         if LA.norm(initial_velocity) != 0:
             w2_hat = self._dynamics.maximum_velocity / \
                 LA.norm(initial_velocity)-1
@@ -205,7 +207,7 @@ class Furniture(BaseAgent):
         else:
             drag_angle = lin_vel_dir-(self.orientation - np.pi)
 
-        #drag_angle = lin_vel_dir-self.orientation
+        # drag_angle = lin_vel_dir-self.orientation
 
         goal_angle = self._goal_pose.orientation - self.orientation
 
@@ -231,6 +233,13 @@ class Furniture(BaseAgent):
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
+        print(f"linear velocity : {self.linear_velocity}")
+        # normalization to the initial velocity
+        self.linear_velocity = initial_magnitude * \
+            self.linear_velocity/LA.norm(self.linear_velocity)
+        plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+                  self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+        #print(f"Linear velocity :{initial_magnitude}")
 
         for ii in range(self._control_points.shape[1]):
             angular_vel[0, ii] = weights[ii]*np.cross(
