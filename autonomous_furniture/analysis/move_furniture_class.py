@@ -150,7 +150,9 @@ class DynamicFurniture:
                 global_attractor_position = furniture.relative2global(furniture.rel_ctl_pts_pos, furniture.goal_container)
                 goal_velocity, goal_rotation = furniture_attractor_avoider.evaluate_furniture_attractor(global_attractor_position, jj)
 
-                # print(f"state of furn: \n {furniture.attractor_state} \n")
+                if jj == 0:
+                    print(f"state of furn: \n {furniture.attractor_state} \n")
+                    pass
 
                 if furniture.attractor_state != "regroup":
                     new_goal_position = goal_velocity * dt_step + furniture.goal_container.center_position

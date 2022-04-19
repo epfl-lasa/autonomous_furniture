@@ -384,8 +384,11 @@ class FurnitureAttractorDynamics:
         self.cutoff_distance = cutoff_distance
         self.max_repulsion = max_repulsion
         self.lambda_p = 10
+        self.attractor_state = []
         self.reduced_env = self.furniture_env[:]
         for index, furniture in enumerate(self.furniture_env):
+            if furniture.num_control_points > 0:
+                self.attractor_state.append(["idle"] * furniture.num_control_points)
             if furniture.furniture_type == "person":
                 self.reduced_env.pop(index)
                 self.person_index = index
@@ -397,7 +400,7 @@ class FurnitureAttractorDynamics:
             environment.append(furniture.furniture_container)
         return environment
 
-    def evaluate_attractor(self, position: np.ndarray, selected_furniture) -> np.ndarray:
+    def evaluate_attractor(self, position: np.ndarray, selected_attractor, selected_furniture) -> np.ndarray:
         direction_vect = position - self.furniture_env[self.person_index].furniture_container.center_position
         distance_vect = self.furniture_env[self.person_index].furniture_container.get_gamma(position, in_global_frame=True)
 
@@ -412,7 +415,11 @@ class FurnitureAttractorDynamics:
         max_repulsion = np.dot(unit_direction_vect, unit_person_linear_velocity)
 
         if max_repulsion <= 0:
+            self.attractor_state[selected_furniture][selected_attractor] = "idle"
             return np.zeros(self.dim)
+        else:
+            self.attractor_state[selected_furniture][selected_attractor] = "avoid"
+            # pass
 
         slope = (-max_repulsion) / (self.cutoff_distance - self.min_dist)
         offset = max_repulsion - (slope * self.min_dist)
@@ -597,9 +604,22 @@ class FurnitureAttractorDynamics:
         attractor_velocities = np.zeros((self.furniture_env[selected_furniture].num_control_points, self.dim))
 
         for ii, attractor in enumerate(position_list):
-            attractor_velocities[ii, :] = self.evaluate_attractor(attractor, selected_furniture)
+            attractor_velocities[ii, :] = self.evaluate_attractor(attractor, ii, selected_furniture)
+            print(f"state of furniture {selected_furniture} and attractor {ii}: {self.attractor_state[selected_furniture][ii]} \n")
 
         attractor_weights = self.get_weights_attractors(position_list, selected_furniture)
         goal_velocity, goal_rotation = self.get_goal_velocity(position_list, attractor_velocities, attractor_weights, selected_furniture)
+        self.set_attractor_state(selected_furniture, goal_velocity, goal_rotation)
 
         return goal_velocity, goal_rotation
+
+    def set_attractor_state(self, selected_furniture, goal_velocity, goal_rotation):
+        current_state = self.furniture_env[selected_furniture].attractor_state
+        if "avoid" in self.attractor_state[selected_furniture]:
+            self.furniture_env[selected_furniture].attractor_state = "avoid"
+        elif "avoid" not in self.attractor_state[selected_furniture] and current_state == "avoid":
+            self.furniture_env[selected_furniture].attractor_state = "regroup"
+        elif current_state == "regroup":
+            if np.sum(np.abs(goal_velocity)) < 1e-2 and np.abs(goal_rotation) < 1e-2:
+                self.furniture_env[selected_furniture].attractor_state = "idle"
+
