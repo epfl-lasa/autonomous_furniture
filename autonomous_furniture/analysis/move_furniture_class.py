@@ -48,47 +48,20 @@ class DynamicFurniture:
             walls_center_position = np.array([[0., y_lim[0]], [x_lim[0], 0.], [0., y_lim[1]], [x_lim[1], 0.]])
             x_length = x_lim[1] - x_lim[0]
             y_length = y_lim[1] - y_lim[0]
+            walls_size = [[x_length, 0.1], [0.1, y_length], [x_length, 0.1], [0.1, y_length]]
+            walls_orientaion = [0, pi/2, 0, pi/2]
             wall_margin = furniture_env[-1].get_margin()
-            walls_cont = [
-                Cuboid(
-                    axes_length=[x_length, 0.1],  # [x_length, y_length],
-                    center_position=walls_center_position[0],  # np.array([0., 0.]),
-                    margin_absolut=wall_margin,
-                    orientation=0,
-                    tail_effect=False,
-                    repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
-                    is_boundary=False,
-                ),
-                Cuboid(
-                    axes_length=[0.1, y_length],
-                    center_position=walls_center_position[1],
-                    margin_absolut=wall_margin,
-                    orientation=0,
-                    tail_effect=False,
-                    repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
-                ),
-                Cuboid(
-                    axes_length=[x_length, 0.1],
-                    center_position=walls_center_position[2],
-                    margin_absolut=wall_margin,
-                    orientation=0,
-                    tail_effect=False,
-                    repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
-                ),
-                Cuboid(
-                    axes_length=[0.1, y_length],
-                    center_position=walls_center_position[3],
-                    margin_absolut=wall_margin,
-                    orientation=0,
-                    tail_effect=False,
-                    repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+            for ii in range(4):
+                furniture_env.append(
+                    Furniture(
+                        "wall",
+                        0,
+                        walls_size[ii],
+                        "Cuboid",
+                        walls_center_position[ii],
+                        walls_orientaion[ii]
+                    )
                 )
-            ]
-            furniture_env = furniture_env[:-1] + walls_cont + furniture_env[-1:]
         else:
             wall_margin = 0.
 
@@ -123,6 +96,8 @@ class DynamicFurniture:
         ax.set_aspect(1.0)
         cid = fig.canvas.mpl_connect('button_press_event', self.on_click)
 
+        print(furniture_env)
+
         ii = 0
         while ii < it_max:
             if self.animation_paused:
@@ -144,14 +119,14 @@ class DynamicFurniture:
             # print(f"weights: {weights}")
 
             for jj, furniture in enumerate(furniture_env):
-                if furniture.furniture_type == "person":
+                if furniture.furniture_type == "person" or furniture.furniture_type == "wall":
                     continue
 
                 global_attractor_position = furniture.relative2global(furniture.rel_ctl_pts_pos, furniture.goal_container)
                 goal_velocity, goal_rotation = furniture_attractor_avoider.evaluate_furniture_attractor(global_attractor_position, jj)
 
                 if jj == 0:
-                    print(f"state of furn: \n {furniture.attractor_state} \n")
+                    # print(f"state of furn: \n {furniture.attractor_state} \n")
                     pass
 
                 if furniture.attractor_state != "regroup":
@@ -167,6 +142,8 @@ class DynamicFurniture:
                 furniture_avoider.set_attractor_position(global_attractor_position, jj)
 
             for jj, furniture in enumerate(furniture_env):
+                if furniture.furniture_type == "wall":
+                    continue
                 velocity_list[jj][:, :, ii] = furniture_avoider.evaluate_furniture(position_list[jj][:, :, ii - 1], jj)
 
                 furniture_lin_vel = np.zeros(2)
@@ -274,7 +251,7 @@ def single_smart_furniture():
 
     DynamicFurniture().run(
         furniture_env=mobile_furniture,
-        walls=False,
+        walls=True,
         x_lim=[-5, 5],
         y_lim=[-4, 4],
     )

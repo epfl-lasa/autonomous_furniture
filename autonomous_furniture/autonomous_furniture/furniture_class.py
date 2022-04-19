@@ -26,6 +26,9 @@ class FurnitureContainer(BaseContainer):
         # Is this useful?
         self._obstacle_list[key] = value
 
+    # def append(self, value):  # Compatibility with normal list.
+    #     self._obstacle_list.append(value)
+
     def generate_obstacle_environment(self):
         obstacle_environment = ObstacleContainer()
         for value in self._obstacle_list:
@@ -605,7 +608,7 @@ class FurnitureAttractorDynamics:
 
         for ii, attractor in enumerate(position_list):
             attractor_velocities[ii, :] = self.evaluate_attractor(attractor, ii, selected_furniture)
-            print(f"state of furniture {selected_furniture} and attractor {ii}: {self.attractor_state[selected_furniture][ii]} \n")
+            # print(f"state of furniture {selected_furniture} and attractor {ii}: {self.attractor_state[selected_furniture][ii]} \n")
 
         attractor_weights = self.get_weights_attractors(position_list, selected_furniture)
         goal_velocity, goal_rotation = self.get_goal_velocity(position_list, attractor_velocities, attractor_weights, selected_furniture)
