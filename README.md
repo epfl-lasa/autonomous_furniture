@@ -102,8 +102,29 @@ pipenv shell
 python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
 ```
 
+## Updated Code
+I added a furniture class which is more elegant implementation of the smart furniture.
+New examples are provided as well as the corresponding ROS2 publishers.
+
+### Publishers
+
+assistive_environment_state_publisher.py
+
+hospital_environment_state_publisher.py
+
+The publishers are compatible with the current launch files
+
+### 2D Examples and Recorder
+
+assistive_environment.py
+
+hospital_environment.py
+
+record_hospital_environment.py
+
 ## Known Errors
 You may encounter as few errors at first a few of those are the following:
+* If the simulation crashed after a while with "Exception: Normal direciton is not pointing along reference.-> change the sign of the inequality", that means something got run over, might need to adjust the margins
 * ROS2 doesn't build --> check file struct mentioned in Setup
 * Missing packages when launching ROS2 launch files --> check ROS2 Setup
 * Missing packages when launching python files --> this may be due to detached submodules
