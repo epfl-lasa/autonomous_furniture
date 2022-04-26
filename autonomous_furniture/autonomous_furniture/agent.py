@@ -122,13 +122,13 @@ class BaseAgent(ABC):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
 
     def get_weight_of_control_points(self, control_points, environment_without_me):
-        cutoff_gamma = 1e-4
+        cutoff_gamma = 1e-4 # TODO : This value has to be big and not small
         # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
         gamma_values = np.zeros(control_points.shape[1])
 
         for ii in range(control_points.shape[1]):
             gamma_values[ii] = self.get_gamma_product_crowd(
-                control_points[ii, :], environment_without_me)
+                control_points[:, ii], environment_without_me)
 
         ctl_point_weight = np.zeros(gamma_values.shape)
         ind_nonzero = gamma_values < cutoff_gamma
@@ -195,7 +195,7 @@ class Furniture(BaseAgent):
         else:
             w2_hat = w2_hat_max
 
-        w1 = w1_hat/(w1_hat + w2_hat)
+        w1 = 0#w1_hat/(w1_hat + w2_hat)
         w2 = 1 - w1
 
         # Direction (angle), of the linear_velocity in the global frame
@@ -233,7 +233,7 @@ class Furniture(BaseAgent):
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
-        print(f"linear velocity : {self.linear_velocity}")
+
         # normalization to the initial velocity
         self.linear_velocity = initial_magnitude * \
             self.linear_velocity/LA.norm(self.linear_velocity)

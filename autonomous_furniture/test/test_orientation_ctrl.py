@@ -150,7 +150,7 @@ def run_single_furniture_rotating():
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                             center_position=np.array([7, 0.5]),
                             margin_absolut=0.6,
-                            orientation=goal2.orientation,
+                            orientation=0,
                             tail_effect=False,)
 
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1),
