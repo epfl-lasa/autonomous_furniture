@@ -304,3 +304,5 @@ class Person(BaseAgent):
             position=ctp, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
 
         self.linear_velocity = velocity
+        if self._name =="1":
+            self.linear_velocity = [0,0]
