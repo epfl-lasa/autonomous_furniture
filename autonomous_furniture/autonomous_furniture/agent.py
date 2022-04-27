@@ -20,7 +20,7 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 
 class BaseAgent(ABC):
     def __init__(self, shape: Obstacle, obstacle_environment: ObstacleContainer, priority_value: float = 1., control_points: np.array = None, parking_pose: ObjectPose = None,
-                 goal_pose: ObjectPose = None) -> None:
+                 goal_pose: ObjectPose = None, name: str ="no_name" ) -> None:
         super().__init__()
         self._shape = shape
         self.priority = priority_value
@@ -33,6 +33,8 @@ class BaseAgent(ABC):
         self._goal_pose = goal_pose
         # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
+        #name of the furniture, useful for debugging stuff
+        self._name = name
 
     @property
     def position(self):
@@ -200,14 +202,11 @@ class Furniture(BaseAgent):
 
         # Direction (angle), of the linear_velocity in the global frame
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
-
         # Make the smallest rotation- the furniture has to pi symetric
-        if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation - np.pi)):
+        if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation + np.pi)):
             drag_angle = lin_vel_dir-self.orientation
         else:
-            drag_angle = lin_vel_dir-(self.orientation - np.pi)
-
-        # drag_angle = lin_vel_dir-self.orientation
+            drag_angle = lin_vel_dir-(self.orientation + np.pi)
 
         goal_angle = self._goal_pose.orientation - self.orientation
 
@@ -239,12 +238,11 @@ class Furniture(BaseAgent):
             self.linear_velocity/LA.norm(self.linear_velocity)
         plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
                   self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
-        #print(f"Linear velocity :{initial_magnitude}")
 
         for ii in range(self._control_points.shape[1]):
             angular_vel[0, ii] = weights[ii]*np.cross(
                 global_control_points[:, ii]-self._shape.center_position, velocities[:, ii]-self.linear_velocity)
-        # TODO : Remove the hard coded 2
+
         self.angular_velocity = np.sum(angular_vel)
 
     def controller(self, initial_velocity):
