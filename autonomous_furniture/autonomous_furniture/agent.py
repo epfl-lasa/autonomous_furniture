@@ -195,7 +195,7 @@ class Furniture(BaseAgent):
         else:
             w2_hat = w2_hat_max
 
-        w1 = 0#w1_hat/(w1_hat + w2_hat)
+        w1 = w1_hat/(w1_hat + w2_hat)
         w2 = 1 - w1
 
         # Direction (angle), of the linear_velocity in the global frame
@@ -212,7 +212,7 @@ class Furniture(BaseAgent):
         goal_angle = self._goal_pose.orientation - self.orientation
 
         # TODO Very clunky : Rather make a function out of it
-        K = 2  # K proportionnal parameter for the speed
+        K = 3  # K proportionnal parameter for the speed
         # Initial angular_velocity is computed
         initial_angular_vel = K*(w1*drag_angle + w2*goal_angle)
 
