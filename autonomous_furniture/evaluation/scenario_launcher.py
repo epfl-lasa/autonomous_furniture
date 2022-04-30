@@ -3,13 +3,45 @@ from autonomous_furniture.agent import Furniture, Person
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from vartools.states import ObjectPose
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
-
+from evaluation.grid import Grid
 import numpy as np
 
 class ScenarioLauncher:
     def __init_(self, nb_sim = 5, nb_furniture = 5, record = False):
+        x_lim=[-3, 8]
+        y_lim=[-2, 7]
+        resolution = [20.20]
+
         self._nb_furniture = nb_furniture 
         self._nb_sim = nb_sim
+
+        self.init_pos_free_space = []
+        self.goal_pos_free_space = []
+
+        obstacle_environment = ObstacleContainer()
+        agents = []
+
+        self.grid = Grid(x_lim, y_lim, agents,resolution)
+
+    
+    def creation_scenario(self):
+        for ii in range(self._nb_furniture):
+            self.place_agent_randomly(self)
+            table_shape = CuboidXd(axes_length=[2, 1],
+                           center_position=np.array([-2, 1]),
+                           margin_absolut=0.6,
+                           orientation=np.pi/2,
+                           tail_effect=False,)
+            
+    def place_agent_randomly(self, free_space):
+        
+        pass
+
+    def check_overlaping(self):
+        pass
+
+    def update_freespace(self):
+        pass
 
     def run(self):
         pass    
