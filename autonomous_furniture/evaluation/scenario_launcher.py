@@ -1,6 +1,5 @@
-from random import random
+import random
 from turtle import position
-from test.test_orientation_ctrl import DynamicalSystemAnimation
 from autonomous_furniture.agent import Furniture, Person
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.obstacles import Obstacle
@@ -10,10 +9,10 @@ from evaluation.grid import Grid
 import numpy as np
 
 class ScenarioLauncher:
-    def __init_(self, nb_sim = 5, nb_furniture = 5, record = False):
+    def __init__(self, nb_sim = 5, nb_furniture = 5, furnitures :list =[] , obs_environment : ObstacleContainer = None, record = False):
         x_lim=[-3, 8]
         y_lim=[-2, 7]
-        resolution = [20, 20]
+        resolution = [40, 40]
 
         self._nb_furniture = nb_furniture 
         self._nb_sim = nb_sim
@@ -22,16 +21,18 @@ class ScenarioLauncher:
         self._init_index_occupied_space =[]
         self.goal_pos_free_space = []
 
-        self.obstacle_environment = ObstacleContainer()
-        agents = []
+        self.obstacle_environment = obs_environment
+        self.agents = furnitures
 
-        self.grid = Grid(x_lim, y_lim, agents,resolution)
+        self.grid = Grid(x_lim, y_lim, self.agents,resolution)
 
 
     
     def creation_scenario(self):
         new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
-        
+        #TODO change the fact that we have to copy to fill the "cells_fur_new"
+        copy_indx = self._init_index_free_space.copy() # If we don't copy the list is copied by reference
+
         for ii in range(self._nb_furniture):
             is_placed = False
             nb_tries = 1
@@ -48,24 +49,23 @@ class ScenarioLauncher:
                 
                 cells_new_fur =[] # List of tuple representing the coordinate of the cells occupied by the new furniture
 
-                for idx in self._init_index_free_space:
+                for idx in copy_indx:
                     position = self.grid._grid[idx]
                     
                     if fur_shape.is_inside(position): # Checking if the tuple position is inside the new furniture
-                        cells_new_fur.append(position) 
+                        cells_new_fur.append(idx)
 
                 if any(cell in cells_new_fur for cell in self._init_index_occupied_space):
                     nb_tries += 1
                     print(f"Failed to place one furniture (overlaping). Trying again(#{nb_tries}")
                 else:
-                    self._init_index_occupied_space.append(cells_new_fur)
-                    for pos in cells_new_fur:
-                        self._init_index_free_space.remove(pos) # A bug could appear if pos was not in _init_index_free_space but should not happen by construction
-                        self._init_index_occupied_space.append(pos)
+                    for cells in cells_new_fur:
+                        self._init_index_free_space.remove(cells) # A bug could appear if pos was not in _init_index_free_space but should not happen by construction
+                        self._init_index_occupied_space.append(cells)
                         
-                        is_placed = True # Ending condition to place a furniture
+                    is_placed = True # Ending condition to place a furniture
                     #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
-                    Furniture(shape=fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=fur_shape.pose.position)
+                    self.agents.append(Furniture(shape=fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=fur_shape.pose))
 
                 
 
