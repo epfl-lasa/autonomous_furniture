@@ -1,7 +1,9 @@
 from random import random
+from turtle import position
 from test.test_orientation_ctrl import DynamicalSystemAnimation
 from autonomous_furniture.agent import Furniture, Person
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
+from dynamic_obstacle_avoidance.obstacles import Obstacle
 from vartools.states import ObjectPose
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from evaluation.grid import Grid
@@ -20,26 +22,53 @@ class ScenarioLauncher:
         self._init_index_occupied_space =[]
         self.goal_pos_free_space = []
 
-        obstacle_environment = ObstacleContainer()
+        self.obstacle_environment = ObstacleContainer()
         agents = []
 
         self.grid = Grid(x_lim, y_lim, agents,resolution)
+
 
     
     def creation_scenario(self):
         new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
         
         for ii in range(self._nb_furniture):
-            index_pos = random.choice(self._init_index_free_space) # Chosing from the occupied list of cell a potential candidate/challenger
-            new_pose.position = self.grid._grid[index_pos] # index_pos is the tuple of the grid coordinate
-            new_pose.orientation = random.randint(np.floor(-np.pi*100), np.ceil(np.pi*100))/100 # Randomly choosing a pose between [-pi, pi]
+            is_placed = False
+            nb_tries = 1
+            while is_placed is not True:
+                index_pos = random.choice(self._init_index_free_space) # Chosing from the occupied list of cell a potential candidate/challenger
+                new_pose.position = self.grid._grid[index_pos] # index_pos is the tuple of the grid coordinate
+                new_pose.orientation = random.randint(np.floor(-np.pi*100), np.ceil(np.pi*100))/100 # Randomly choosing a pose between [-pi, pi]
 
-            table_shape = CuboidXd(axes_length=[2, 1],
-                           center_position=np.array([-2, 1]),
-                           margin_absolut=0.6,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
-            
+                fur_shape = CuboidXd(axes_length=[2, 1],   # TODO Remove from being it hardcoded
+                            center_position=new_pose.position,
+                            margin_absolut=0.6,
+                            orientation=new_pose.orientation,
+                            tail_effect=False,)
+                
+                cells_new_fur =[] # List of tuple representing the coordinate of the cells occupied by the new furniture
+
+                for idx in self._init_index_free_space:
+                    position = self.grid._grid[idx]
+                    
+                    if fur_shape.is_inside(position): # Checking if the tuple position is inside the new furniture
+                        cells_new_fur.append(position) 
+
+                if any(cell in cells_new_fur for cell in self._init_index_occupied_space):
+                    nb_tries += 1
+                    print(f"Failed to place one furniture (overlaping). Trying again(#{nb_tries}")
+                else:
+                    self._init_index_occupied_space.append(cells_new_fur)
+                    for pos in cells_new_fur:
+                        self._init_index_free_space.remove(pos) # A bug could appear if pos was not in _init_index_free_space but should not happen by construction
+                        self._init_index_occupied_space.append(pos)
+                        
+                        is_placed = True # Ending condition to place a furniture
+                    #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
+                    Furniture(shape=fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=fur_shape.pose.position)
+
+                
+
     def place_agent_randomly(self, free_space):
         
         pass
@@ -50,8 +79,7 @@ class ScenarioLauncher:
     def update_freespace(self):
         pass
     
-    def is_inside(self,position):
-        position = 0
+
 
     def run(self):
         pass    
