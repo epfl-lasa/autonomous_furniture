@@ -1,3 +1,4 @@
+from random import random
 from test.test_orientation_ctrl import DynamicalSystemAnimation
 from autonomous_furniture.agent import Furniture, Person
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
@@ -10,12 +11,13 @@ class ScenarioLauncher:
     def __init_(self, nb_sim = 5, nb_furniture = 5, record = False):
         x_lim=[-3, 8]
         y_lim=[-2, 7]
-        resolution = [20.20]
+        resolution = [20, 20]
 
         self._nb_furniture = nb_furniture 
         self._nb_sim = nb_sim
 
-        self.init_pos_free_space = []
+        self._init_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
+        self._init_index_occupied_space =[]
         self.goal_pos_free_space = []
 
         obstacle_environment = ObstacleContainer()
@@ -25,8 +27,13 @@ class ScenarioLauncher:
 
     
     def creation_scenario(self):
+        new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
+        
         for ii in range(self._nb_furniture):
-            self.place_agent_randomly(self)
+            index_pos = random.choice(self._init_index_free_space) # Chosing from the occupied list of cell a potential candidate/challenger
+            new_pose.position = self.grid._grid[index_pos] # index_pos is the tuple of the grid coordinate
+            new_pose.orientation = random.randint(np.floor(-np.pi*100), np.ceil(np.pi*100))/100 # Randomly choosing a pose between [-pi, pi]
+
             table_shape = CuboidXd(axes_length=[2, 1],
                            center_position=np.array([-2, 1]),
                            margin_absolut=0.6,
@@ -42,6 +49,9 @@ class ScenarioLauncher:
 
     def update_freespace(self):
         pass
+    
+    def is_inside(self,position):
+        position = 0
 
     def run(self):
         pass    
