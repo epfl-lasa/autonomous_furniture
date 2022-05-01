@@ -19,11 +19,18 @@ class ScenarioLauncher:
 
         self._init_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
         self._init_index_occupied_space =[]
-        self.goal_pos_free_space = []
+        
+        self._goal_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
+        self._goal_index_occupied_space =[]
 
         self.obstacle_environment = obs_environment
         self.agents = furnitures
 
+        self._fur_shape = CuboidXd(axes_length=[2, 1],   # TODO TEMPORARY Remove from being it hardcoded
+                        center_position=[0,0],
+                        margin_absolut=0.6,
+                        orientation=0,
+                        tail_effect=False,)
         self.grid = Grid(x_lim, y_lim, self.agents,resolution)
 
 
@@ -34,45 +41,58 @@ class ScenarioLauncher:
         copy_indx = self._init_index_free_space.copy() # If we don't copy the list is copied by reference
 
         for ii in range(self._nb_furniture):
-            is_placed = False
-            nb_tries = 1
-            while is_placed is not True:
-                index_pos = random.choice(self._init_index_free_space) # Chosing from the occupied list of cell a potential candidate/challenger
-                new_pose.position = self.grid._grid[index_pos] # index_pos is the tuple of the grid coordinate
-                new_pose.orientation = random.randint(np.floor(-np.pi*100), np.ceil(np.pi*100))/100 # Randomly choosing a pose between [-pi, pi]
+            # Finding the initial pose of the  furniture
+            init_pose = self.place_agent_randomly(self._init_index_free_space, self._init_index_occupied_space)
+            # Finding the goal pose of the furniture
+            goal_pose = self.place_agent_randomly(self._goal_index_free_space, self._goal_index_occupied_space)
 
-                fur_shape = CuboidXd(axes_length=[2, 1],   # TODO Remove from being it hardcoded
-                            center_position=new_pose.position,
-                            margin_absolut=0.6,
-                            orientation=new_pose.orientation,
-                            tail_effect=False,)
+            furniture = CuboidXd(axes_length=[2, 1],   # TODO TEMPORARY Remove from being it hardcoded
+                        center_position=init_pose.position,
+                        margin_absolut=0.6,
+                        orientation=init_pose.orientation,
+                        tail_effect=False,)
+            #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
+            self.agents.append(Furniture(shape=furniture, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=goal_pose))
+            print(f"Furniture #{ii} successfuly placed")
+                                                          
+    def place_agent_randomly(self, free_space : list = None, occupied_space : list = None)->ObjectPose:
+        new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
+        is_placed = False
+        nb_tries = 1
+
+        grid_coord = free_space.copy() # Only use for iteration during the filling of cells_new_fur
+
+        while is_placed is not True:
+            index_pos = random.choice(free_space) # Chosing from the occupied list of cell a potential candidate/challenger
+            new_pose.position = self.grid._grid[index_pos] # index_pos is the tuple of the grid coordinate
+            new_pose.orientation = random.randint(np.floor(-np.pi*100), np.ceil(np.pi*100))/100 # Randomly choosing a pose between [-pi, pi]
+
+            self._fur_shape = CuboidXd(axes_length=[2, 1],   # TODO Remove from being it hardcoded
+                        center_position=new_pose.position,
+                        margin_absolut=0.6,
+                        orientation=new_pose.orientation,
+                        tail_effect=False,)
+            
+            cells_new_fur =[] # reseted- List of tuple representing the coordinate of the cells occupied by the new furniture 
+
+            # Filling cells_new_fur with the tuple coordinate of the cells occupied by the candidate furniture in the grid
+            for idx in grid_coord:
+                position = self.grid._grid[idx]
                 
-                cells_new_fur =[] # List of tuple representing the coordinate of the cells occupied by the new furniture
+                if self._fur_shape.is_inside(position, margin = 1): # Checking if the tuple position is inside the new furniture
+                    cells_new_fur.append(idx)
 
-                for idx in copy_indx:
-                    position = self.grid._grid[idx]
+            if any(cell in cells_new_fur for cell in occupied_space):
+                nb_tries += 1
+                print(f"Failed to place the furniture (overlaping). Trying again(#{nb_tries}")
+            else:
+                for cells in cells_new_fur:
+                    free_space.remove(cells) # A bug could appear if pos was not in _init_index_free_space but should not happen by construction
+                    occupied_space.append(cells)
                     
-                    if fur_shape.is_inside(position, margin = 0.4): # Checking if the tuple position is inside the new furniture
-                        cells_new_fur.append(idx)
-
-                if any(cell in cells_new_fur for cell in self._init_index_occupied_space):
-                    nb_tries += 1
-                    print(f"Failed to place one furniture (overlaping). Trying again(#{nb_tries}")
-                else:
-                    for cells in cells_new_fur:
-                        self._init_index_free_space.remove(cells) # A bug could appear if pos was not in _init_index_free_space but should not happen by construction
-                        self._init_index_occupied_space.append(cells)
-                        
-                    is_placed = True # Ending condition to place a furniture
-                    #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
-                    self.agents.append(Furniture(shape=fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=fur_shape.pose))
-                    print(f"Furniture #{ii} successfuly placed")
-
-                
-
-    def place_agent_randomly(self, free_space):
+                is_placed = True # Ending condition to place a furniture 
         
-        pass
+        return new_pose
 
     def check_overlaping(self):
         pass
@@ -84,36 +104,3 @@ class ScenarioLauncher:
 
     def run(self):
         pass    
-
-def main():
-    axis = [2, 1]
-    max_ax_len = max(axis)
-    min_ax_len = min(axis)
-
-    # List of environment shared by all the furniture/agent
-    obstacle_environment = ObstacleContainer()
-
-    # control_points for the cuboid
-    control_points = np.array([[0.3, 0], [-0.3, 0]])
-
-    # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([7, 1]), orientation=np.pi/2)
-
-    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([-2, 1]),
-                           margin_absolut=0.6,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
-
-    goal2 = ObjectPose(position=np.array([-2, 0.5]), orientation=np.pi/2)
-    table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                            center_position=np.array([7, 0.5]),
-                            margin_absolut=0.6,
-                            orientation=0,
-                            tail_effect=False,)
-
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1),
-                    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2, priority_value=1)]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
-if __name__ == "__main__":
-    main()
-    
