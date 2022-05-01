@@ -52,7 +52,7 @@ class ScenarioLauncher:
                 for idx in copy_indx:
                     position = self.grid._grid[idx]
                     
-                    if fur_shape.is_inside(position): # Checking if the tuple position is inside the new furniture
+                    if fur_shape.is_inside(position, margin = 0.4): # Checking if the tuple position is inside the new furniture
                         cells_new_fur.append(idx)
 
                 if any(cell in cells_new_fur for cell in self._init_index_occupied_space):
@@ -66,6 +66,7 @@ class ScenarioLauncher:
                     is_placed = True # Ending condition to place a furniture
                     #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
                     self.agents.append(Furniture(shape=fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=fur_shape.pose))
+                    print(f"Furniture #{ii} successfuly placed")
 
                 
 
