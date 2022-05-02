@@ -63,7 +63,7 @@ class DynamicalSystemAnimation(Animator):
 
         self.fig, self.ax = plt.subplots()
 
-    def update_step(self, ii):
+    def update_step(self, ii, mini_drag : bool = True):
         if not ii % 10:
             print(f"it={ii}")
 
@@ -93,7 +93,7 @@ class DynamicalSystemAnimation(Animator):
         )
 
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity()
+            self.agent[jj].update_velocity(mini_drag=mini_drag)
             self.agent[jj].do_velocity_step(self.dt_simulation)
             global_crontrol_points = self.agent[jj].get_global_control_points()
             self.ax.plot(
@@ -129,28 +129,31 @@ class DynamicalSystemAnimation(Animator):
 
 def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
-    obstacle_environment = ObstacleContainer()
+    folds_number = 5
 
-    my_furniture = []
-
-    my_scenario = ScenarioLauncher(nb_furniture=4, furnitures=my_furniture, obs_environment = obstacle_environment)
-    my_scenario.creation_scenario()
+    my_scenario = ScenarioLauncher(nb_furniture=5)
 
     my_animation = DynamicalSystemAnimation(
-        it_max=450,
-        dt_simulation=0.04,
+        it_max=400,
+        dt_simulation=0.05,
         dt_sleep=0.02,
         animation_name=args.name,
     )
+    
+    for ii in range(folds_number):
+        my_scenario.creation()
 
-    my_animation.setup(
-        obstacle_environment,
-        agent=my_furniture,
-        x_lim=[-3, 8],
-        y_lim=[-2, 7],
-    )
+        for do_drag in [True, False] :
+            my_scenario.setup()
 
-    my_animation.run(save_animation=args.rec)
+            my_animation.setup(
+                my_scenario.obstacle_environment,
+                agent=my_scenario.agents,
+                x_lim=[-3, 8],
+                y_lim=[-2, 7],
+            )
+            print(f"Doing drag : {do_drag}")
+            my_animation.run(save_animation=args.rec, mini_drag=do_drag)
 
 
 if __name__ == "__main__":

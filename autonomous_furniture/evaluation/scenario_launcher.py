@@ -9,13 +9,12 @@ from evaluation.grid import Grid
 import numpy as np
 
 class ScenarioLauncher:
-    def __init__(self, nb_sim = 5, nb_furniture = 5, furnitures :list =[] , obs_environment : ObstacleContainer = None, record = False):
+    def __init__(self, nb_furniture = 5, record = False):
         x_lim=[-3, 8]
         y_lim=[-2, 7]
         resolution = [40, 40]
 
         self._nb_furniture = nb_furniture 
-        self._nb_sim = nb_sim
 
         self._init_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
         self._init_index_occupied_space =[]
@@ -23,22 +22,21 @@ class ScenarioLauncher:
         self._goal_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
         self._goal_index_occupied_space =[]
 
-        self.obstacle_environment = obs_environment
-        self.agents = furnitures
+        self._init_setup = [] # Stores all the starting position of the agents 
+        self._goal_setup = [] # Stores all the goal pose of the agents 
 
         self._fur_shape = CuboidXd(axes_length=[2, 1],   # TODO TEMPORARY Remove from being it hardcoded
                         center_position=[0,0],
                         margin_absolut=0.6,
                         orientation=0,
                         tail_effect=False,)
-        self.grid = Grid(x_lim, y_lim, self.agents,resolution)
+        self.grid = Grid(x_lim, y_lim, [],resolution) # TODO modifiy to remove the useless "[]"
 
 
     
-    def creation_scenario(self):
-        new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
-        #TODO change the fact that we have to copy to fill the "cells_fur_new"
-        copy_indx = self._init_index_free_space.copy() # If we don't copy the list is copied by reference
+    def creation(self): # Peut être mettre ça dans l'initialisation plutôt que dans une autre méthode
+        self._init_setup = [] # Stores all the starting position of the agents 
+        self._goal_setup = [] # Stores all the goal pose of the agents  
 
         for ii in range(self._nb_furniture):
             # Finding the initial pose of the  furniture
@@ -46,15 +44,11 @@ class ScenarioLauncher:
             # Finding the goal pose of the furniture
             goal_pose = self.place_agent_randomly(self._goal_index_free_space, self._goal_index_occupied_space)
 
-            furniture = CuboidXd(axes_length=[2, 1],   # TODO TEMPORARY Remove from being it hardcoded
-                        center_position=init_pose.position,
-                        margin_absolut=0.6,
-                        orientation=init_pose.orientation,
-                        tail_effect=False,)
             #TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
-            self.agents.append(Furniture(shape=furniture, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=goal_pose))
+            self._init_setup.append(init_pose)
+            self._goal_setup.append(goal_pose)
             print(f"Furniture #{ii} successfuly placed")
-                                                          
+        
     def place_agent_randomly(self, free_space : list = None, occupied_space : list = None)->ObjectPose:
         new_pose = ObjectPose() # Pose of the furniture that will be randomly placed in the arena 
         is_placed = False
@@ -94,13 +88,25 @@ class ScenarioLauncher:
         
         return new_pose
 
+    def setup(self):
+        self.agents=[]
+        self.obstacle_environment = ObstacleContainer()
+
+        for ii in range(self._nb_furniture):
+            self._fur_shape = CuboidXd(axes_length=[2, 1],   # TODO TEMPORARY Remove from being it hardcoded
+                        center_position=[0,0],
+                        margin_absolut=0.6,
+                        orientation=0,
+                        tail_effect=False,)
+            self._fur_shape.pose.position = self._init_setup[ii].position
+            self._fur_shape.pose.orientation = self._init_setup[ii].orientation
+            self.agents.append(Furniture(shape=self._fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=self._goal_setup[ii]))
+
     def check_overlaping(self):
         pass
 
     def update_freespace(self):
         pass
-    
-
 
     def run(self):
         pass    

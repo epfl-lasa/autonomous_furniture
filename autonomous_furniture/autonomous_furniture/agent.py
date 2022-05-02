@@ -164,7 +164,7 @@ class Furniture(BaseAgent):
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
         self.minimize_drag: bool = False
 
-    def update_velocity(self):
+    def update_velocity(self,mini_drag : bool = True):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -187,18 +187,23 @@ class Furniture(BaseAgent):
         initial_magnitude = LA.norm(initial_velocity)
 
         # Computing the weights of the angle to reach
-        w1_hat = self.virtual_drag
-        w2_hat_max = 1000
-        if LA.norm(initial_velocity) != 0:
-            w2_hat = self._dynamics.maximum_velocity / \
-                LA.norm(initial_velocity)-1
-            if w2_hat > w2_hat_max:
-                w2_hat = w2_hat_max
-        else:
-            w2_hat = w2_hat_max
+        if mini_drag :
 
-        w1 = w1_hat/(w1_hat + w2_hat)
-        w2 = 1 - w1
+            w1_hat = self.virtual_drag
+            w2_hat_max = 1000
+            if LA.norm(initial_velocity) != 0:
+                w2_hat = self._dynamics.maximum_velocity / \
+                    LA.norm(initial_velocity)-1
+                if w2_hat > w2_hat_max:
+                    w2_hat = w2_hat_max
+            else:
+                w2_hat = w2_hat_max
+
+            w1 = w1_hat/(w1_hat + w2_hat)
+            w2 = 1 - w1
+        else :
+            w1 = 0
+            w2 = 1
 
         # Direction (angle), of the linear_velocity in the global frame
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
