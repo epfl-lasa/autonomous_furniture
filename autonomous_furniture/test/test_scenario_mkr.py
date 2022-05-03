@@ -134,9 +134,9 @@ def run_single_furniture_rotating():
     my_scenario = ScenarioLauncher(nb_furniture=5)
 
     my_animation = DynamicalSystemAnimation(
-        it_max=400,
+        it_max=250,
         dt_simulation=0.05,
-        dt_sleep=0.02,
+        dt_sleep=0.05,
         animation_name=args.name,
     )
     

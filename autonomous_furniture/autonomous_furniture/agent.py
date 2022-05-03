@@ -208,12 +208,43 @@ class Furniture(BaseAgent):
         # Direction (angle), of the linear_velocity in the global frame
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
         # Make the smallest rotation- the furniture has to pi symetric
-        if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation + np.pi)):
-            drag_angle = lin_vel_dir-self.orientation
-        else:
-            drag_angle = lin_vel_dir-(self.orientation + np.pi)
+        # if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation + np.pi)):
+        #     drag_angle = lin_vel_dir-self.orientation
+        # else:
+        #     drag_angle = lin_vel_dir-(self.orientation + np.pi)
+        drag_angle = lin_vel_dir-self.orientation
+        # Case where there is no symetry in the furniture
+        if np.abs(drag_angle) > np.pi:
+            drag_angle = -1*(2*np.pi-drag_angle)
+        
+        # Case where we consider for instance PI-symetry for the furniture
+        if np.abs(drag_angle) > np.pi/2: # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+            if self.orientation > 0 :
+                orientation_sym = self.orientation -np.pi
+            else :
+                orientation_sym = self.orientation + np.pi
+        
+            drag_angle = lin_vel_dir - orientation_sym
+            if drag_angle > np.pi/2 : 
+                drag_angle = -1*(2*np.pi-drag_angle)
 
         goal_angle = self._goal_pose.orientation - self.orientation
+        if np.abs(goal_angle) > np.pi:
+            goal_angle = -1*(2*np.pi-goal_angle)
+
+        if np.abs(goal_angle) > np.pi/2: # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+            if self.orientation > 0 :
+                orientation_sym = self.orientation -np.pi
+            else :
+                orientation_sym = self.orientation + np.pi
+        
+            goal_angle = lin_vel_dir - orientation_sym
+            if goal_angle > np.pi/2 : 
+                goal_angle = -1*(2*np.pi-goal_angle)       
+
+        # if np.abs(self.orientation) > np.pi:
+        #     print("NOP")
+        #     breakpoint()
 
         # TODO Very clunky : Rather make a function out of it
         K = 3  # K proportionnal parameter for the speed
