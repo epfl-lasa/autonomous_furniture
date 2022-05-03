@@ -142,8 +142,11 @@ def run_single_furniture_rotating():
     
     for ii in range(folds_number):
         my_scenario.creation()
+        anim_name_pre = f"{args.name}_scen{ii}_"
 
         for do_drag in [True, False] :
+            anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+            my_animation.animation_name = anim_name
             my_scenario.setup()
 
             my_animation.setup(

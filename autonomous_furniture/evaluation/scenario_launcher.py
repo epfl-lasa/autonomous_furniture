@@ -10,16 +10,17 @@ import numpy as np
 
 class ScenarioLauncher:
     def __init__(self, nb_furniture = 5, record = False):
+        random.seed(10)
         x_lim=[-3, 8]
         y_lim=[-2, 7]
-        resolution = [40, 40]
+        self._resolution = [40, 40]
 
         self._nb_furniture = nb_furniture 
 
-        self._init_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
+        self._init_index_free_space = [ (i, j) for i in range(self._resolution[0]) for j in range(self._resolution[1])]
         self._init_index_occupied_space =[]
         
-        self._goal_index_free_space = [ (i, j) for i in range(resolution[0]) for j in range(resolution[1])]
+        self._goal_index_free_space = [ (i, j) for i in range(self._resolution[0]) for j in range(self._resolution[1])]
         self._goal_index_occupied_space =[]
 
         self._init_setup = [] # Stores all the starting position of the agents 
@@ -30,11 +31,12 @@ class ScenarioLauncher:
                         margin_absolut=0.6,
                         orientation=0,
                         tail_effect=False,)
-        self.grid = Grid(x_lim, y_lim, [],resolution) # TODO modifiy to remove the useless "[]"
+        self.grid = Grid(x_lim, y_lim, [],self._resolution) # TODO modifiy to remove the useless "[]"
 
 
     
     def creation(self): # Peut être mettre ça dans l'initialisation plutôt que dans une autre méthode
+        self.reset_index() # Reset the list othe tuple representing the coordianates of free and occupied space
         self._init_setup = [] # Stores all the starting position of the agents 
         self._goal_setup = [] # Stores all the goal pose of the agents  
 
@@ -101,6 +103,13 @@ class ScenarioLauncher:
             self._fur_shape.pose.position = self._init_setup[ii].position
             self._fur_shape.pose.orientation = self._init_setup[ii].orientation
             self.agents.append(Furniture(shape=self._fur_shape, obstacle_environment=self.obstacle_environment, control_points=np.array([[0.4, 0], [-0.4, 0]]), goal_pose=self._goal_setup[ii]))
+
+    def reset_index(self):
+        self._init_index_free_space = [ (i, j) for i in range(self._resolution[0]) for j in range(self._resolution[1])]
+        self._init_index_occupied_space =[]
+        
+        self._goal_index_free_space = [ (i, j) for i in range(self._resolution[0]) for j in range(self._resolution[1])]
+        self._goal_index_occupied_space =[]
 
     def check_overlaping(self):
         pass
