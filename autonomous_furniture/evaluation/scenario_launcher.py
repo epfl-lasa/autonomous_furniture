@@ -9,8 +9,9 @@ from evaluation.grid import Grid
 import numpy as np
 
 class ScenarioLauncher:
-    def __init__(self, nb_furniture = 5, record = False):
-        random.seed(10)
+    def __init__(self, nb_furniture = 5, record = False, seed : int = 10):
+        self.seed= seed
+        random.seed(self.seed)
         x_lim=[-3, 8]
         y_lim=[-2, 7]
         self._resolution = [40, 40]

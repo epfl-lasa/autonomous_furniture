@@ -1,4 +1,5 @@
 from math import pi, cos, sin, sqrt
+from random import seed
 from turtle import shape
 
 import numpy as np
@@ -135,7 +136,7 @@ class DynamicalSystemAnimation(Animator):
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
         return False
 
-    def logs(self):
+    def logs(self, nb_furniture : int, do_drag : bool, seed : int):
 
         for ii in range(len(self.agent)):
             if not f"agent_{ii}" in self.metrics_json :
@@ -148,8 +149,9 @@ class DynamicalSystemAnimation(Animator):
             else:
                 self.metrics_json[f"agent_{ii}"]["total_dist"]=[self.agent[ii].total_distance]
 
-        
-        with open('distance.json', 'w') as outfile:
+        do_drag_str = "drag_" if do_drag else "nodrag_"
+        json_name = "distance_" + f"nb{nb_furniture}_" + do_drag_str + f"seed{seed}" + ".json"
+        with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
 
@@ -157,32 +159,37 @@ def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
     folds_number = 2
 
-    my_scenario = ScenarioLauncher(nb_furniture=5)
+    for nb_furniture in [5,2]:
+        for do_drag in [True,False] :
 
-    my_animation = DynamicalSystemAnimation(
-        it_max=250,
-        dt_simulation=0.05,
-        dt_sleep=0.01,
-        animation_name=args.name,
-    )
-    
-    for ii in range(folds_number):
-        my_scenario.creation()
-        anim_name_pre = f"{args.name}_scen{ii}_"
-
-        for do_drag in [True] :
-            anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
-            my_animation.animation_name = anim_name
-            my_scenario.setup()
-
-            my_animation.setup(
-                my_scenario.obstacle_environment,
-                agent=my_scenario.agents,
-                x_lim=[-3, 8],
-                y_lim=[-2, 7],
+            my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
+            my_animation = DynamicalSystemAnimation(
+                it_max=250,
+                dt_simulation=0.05,
+                dt_sleep=0.01,
+                animation_name=args.name,
             )
-            print(f"Doing drag : {do_drag}")
-            my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+            
+            for ii in range(folds_number):
+                my_scenario.creation()
+                
+                anim_name_pre = f"{args.name}_scen{ii}_"
+
+                
+                anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+                my_animation.animation_name = anim_name
+                
+                my_scenario.setup()
+
+                my_animation.setup(
+                    my_scenario.obstacle_environment,
+                    agent=my_scenario.agents,
+                    x_lim=[-3, 8],
+                    y_lim=[-2, 7],
+                )
+                print(f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
+                my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+                my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
 
 
 if __name__ == "__main__":
