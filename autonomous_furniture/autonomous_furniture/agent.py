@@ -207,11 +207,8 @@ class Furniture(BaseAgent):
 
         # Direction (angle), of the linear_velocity in the global frame
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
+
         # Make the smallest rotation- the furniture has to pi symetric
-        # if np.abs(lin_vel_dir-self.orientation) < np.abs(lin_vel_dir-(self.orientation + np.pi)):
-        #     drag_angle = lin_vel_dir-self.orientation
-        # else:
-        #     drag_angle = lin_vel_dir-(self.orientation + np.pi)
         drag_angle = lin_vel_dir-self.orientation
         # Case where there is no symetry in the furniture
         if np.abs(drag_angle) > np.pi:
@@ -238,7 +235,7 @@ class Furniture(BaseAgent):
             else :
                 orientation_sym = self.orientation + np.pi
         
-            goal_angle = lin_vel_dir - orientation_sym
+            goal_angle = self._goal_pose.orientation - orientation_sym
             if goal_angle > np.pi/2 : 
                 goal_angle = -1*(2*np.pi-goal_angle)       
 
