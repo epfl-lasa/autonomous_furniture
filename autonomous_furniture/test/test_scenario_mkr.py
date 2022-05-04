@@ -47,6 +47,7 @@ class DynamicalSystemAnimation(Animator):
         agent : BaseAgent,
         x_lim=None,
         y_lim=None,
+        anim : bool = True
     ):
 
         dim = 2
@@ -70,48 +71,51 @@ class DynamicalSystemAnimation(Animator):
 
         self.obstacle_environment = obstacle_environment
 
-        self.fig, self.ax = plt.subplots()
+        if anim :
+            self.fig, self.ax = plt.subplots()
 
-    def update_step(self, ii, mini_drag : bool = True):
+    def update_step(self, ii, mini_drag : bool = True, anim : bool = True):
         if not ii % 10:
             print(f"it={ii}")
 
-        self.ax.clear()
+        if anim :
+            self.ax.clear()
+            # Drawing and adjusting of the axis
+            # for agent in range(self.num_agent):
+            #     self.ax.plot(
+            #         self.position_list[agent, 0, :ii + 1],
+            #         self.position_list[agent, 1, :ii + 1],
+            #         ":",
+            #         color="#135e08"
+            #     )
+            #     self.ax.plot(
+            #         self.position_list[agent, 0, ii + 1],
+            #         self.position_list[agent, 1, ii + 1],
+            #         "o",
+            #         color="#135e08",
+            #         markersize=12,
+            #     )
 
-        # Drawing and adjusting of the axis
-        # for agent in range(self.num_agent):
-        #     self.ax.plot(
-        #         self.position_list[agent, 0, :ii + 1],
-        #         self.position_list[agent, 1, :ii + 1],
-        #         ":",
-        #         color="#135e08"
-        #     )
-        #     self.ax.plot(
-        #         self.position_list[agent, 0, ii + 1],
-        #         self.position_list[agent, 1, ii + 1],
-        #         "o",
-        #         color="#135e08",
-        #         markersize=12,
-        #     )
-
-        self.ax.set_xlim(self.x_lim)
-        self.ax.set_ylim(self.y_lim)
-
-        plot_obstacles(
-            self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
-        )
+            self.ax.set_xlim(self.x_lim)
+            self.ax.set_ylim(self.y_lim)
+    
+            plot_obstacles(
+                self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
+            )
 
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(mini_drag=mini_drag)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
-            global_crontrol_points = self.agent[jj].get_global_control_points()
-            self.ax.plot(
-                global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
+            
+            if anim :
+                global_crontrol_points = self.agent[jj].get_global_control_points()
+                self.ax.plot(
+                    global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
 
-            goal_crontrol_points = self.agent[jj].get_goal_control_points()
-            self.ax.plot(
-                goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
+                goal_crontrol_points = self.agent[jj].get_goal_control_points()
+                self.ax.plot(
+                    goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
 
         # for agent in range(self.num_agent):
         #     plt.arrow(self.position_list[agent, 0, ii + 1],
@@ -130,7 +134,7 @@ class DynamicalSystemAnimation(Animator):
         #         markersize=8,
         #     )
         # self.ax.grid()
-        self.ax.set_aspect("equal", adjustable="box")
+                self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self, ii) -> bool:
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
@@ -186,9 +190,10 @@ def run_single_furniture_rotating():
                     agent=my_scenario.agents,
                     x_lim=[-3, 8],
                     y_lim=[-2, 7],
+                    anim = False
                 )
                 print(f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-                my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+                my_animation.run_no_clip(mini_drag=do_drag)
                 my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
 
 
