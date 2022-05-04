@@ -36,6 +36,11 @@ class BaseAgent(ABC):
         #name of the furniture, useful for debugging stuff
         self._name = name
 
+        #metrics
+        self.direct_distance = LA.norm(goal_pose.position - self.position)
+        self.total_distance = 0
+        
+
     @property
     def position(self):
         return self._shape.pose.position
@@ -277,6 +282,10 @@ class Furniture(BaseAgent):
                 global_control_points[:, ii]-self._shape.center_position, velocities[:, ii]-self.linear_velocity)
 
         self.angular_velocity = np.sum(angular_vel)
+
+    def compute_metrics(self, dt):
+        # Compute distance 
+        self.total_distance += LA.norm(self.linear_velocity)*dt
 
 
 class Person(BaseAgent):

@@ -18,10 +18,12 @@ from vartools.animator import Animator
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
 
-from autonomous_furniture.agent import Furniture, Person
+from autonomous_furniture.agent import BaseAgent, Furniture, Person
 from evaluation.scenario_launcher import ScenarioLauncher
 
 import argparse
+
+import csv, os
 
 parser = argparse.ArgumentParser()
 
@@ -35,7 +37,7 @@ class DynamicalSystemAnimation(Animator):
     def setup(
         self,
         obstacle_environment,
-        agent,
+        agent : BaseAgent,
         x_lim=None,
         y_lim=None,
     ):
@@ -60,6 +62,9 @@ class DynamicalSystemAnimation(Animator):
         self.y_lim = y_lim
 
         self.obstacle_environment = obstacle_environment
+
+        # For logs
+        self.metrics_json = None
 
         self.fig, self.ax = plt.subplots()
 
@@ -94,6 +99,7 @@ class DynamicalSystemAnimation(Animator):
 
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(mini_drag=mini_drag)
+            self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
             global_crontrol_points = self.agent[jj].get_global_control_points()
             self.ax.plot(
@@ -126,10 +132,28 @@ class DynamicalSystemAnimation(Animator):
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
         return False
 
+    def open_logs(self):
+        with open('evaluation/logs/distance.csv', mode='w') as file:
+            field_names = ["agent", "direct_distance","total_distance"]
+            writer= csv.DictWriter(file, fieldnames=field_names)
+            writer.writeheader()
+
+    def logs(self):
+        with open('evaluation/logs/distance.csv', mode='w') as file:
+            field_names = ["agent", "direct_distance","total_distance"]
+            writer = csv.DictWriter(file, fieldnames=field_names)
+
+            for ii in range(len(self.agent)):
+                writer.writerow({
+                    'agent': ii,
+                    'direct_distance': self.agent[ii].direct_distance,
+                    'total_distance':self.agent[ii].total_distance
+                })
+
 
 def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
-    folds_number = 5
+    folds_number = 1
 
     my_scenario = ScenarioLauncher(nb_furniture=5)
 
@@ -144,7 +168,7 @@ def run_single_furniture_rotating():
         my_scenario.creation()
         anim_name_pre = f"{args.name}_scen{ii}_"
 
-        for do_drag in [True, False] :
+        for do_drag in [True] :
             anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
             my_animation.animation_name = anim_name
             my_scenario.setup()
