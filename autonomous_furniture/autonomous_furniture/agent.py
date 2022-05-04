@@ -278,36 +278,6 @@ class Furniture(BaseAgent):
 
         self.angular_velocity = np.sum(angular_vel)
 
-    def controller(self, initial_velocity):
-        distance_to_goal = LA.norm(self._goal_pose.position-self.position)
-        min_dist_to_minimize_drag = 4
-        dist_to_goal_thr = 2
-
-        goal_angle = self._goal_pose.orientation - self.orientation
-        opti_drag_angle = np.arctan2(
-            initial_velocity[1], initial_velocity[0]) - self.orientation
-
-        w1 = self.angular_velocity ^ 2/self.linear_velocity ^ 2
-        w2 = 1
-        weighted_angle = w1*goal_angle + w2*opti_drag_angle
-
-        return weighted_angle
-        # if distance_to_goal < dist_to_goal_thr:
-        #     self.minimize_drag = False
-        #     return self._goal_pose.orientation- self.orientation
-
-        # elif distance_to_goal > min_dist_to_minimize_drag or self.minimize_drag is True:
-        #     self.minimize_drag = True
-        #     goal_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
-
-        #     if np.abs(goal_dir-self.orientation) < np.abs(goal_dir-(self.orientation -np.pi)): # Make the smallest rotation- the furniture has to pi symetric
-        #         return goal_dir-self.orientation
-        #     else:
-        #         return goal_dir-(self.orientation -np.pi)
-
-        # else:
-        #     return self._goal_pose.orientation- self.orientation
-
 
 class Person(BaseAgent):
     def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
