@@ -62,7 +62,7 @@ class DynamicalSystemAnimation(Animator):
 
         self.fig, self.ax = plt.subplots()
 
-    def update_step(self, ii):
+    def update_step(self, ii, mini_drag : bool = True):
         if not ii % 10:
             print(f"it={ii}")
 
@@ -92,7 +92,7 @@ class DynamicalSystemAnimation(Animator):
         )
 
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity()
+            self.agent[jj].update_velocity(mini_drag=mini_drag)
             self.agent[jj].do_velocity_step(self.dt_simulation)
             global_crontrol_points = self.agent[jj].get_global_control_points()
             self.ax.plot(
