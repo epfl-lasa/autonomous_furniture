@@ -23,7 +23,7 @@ from evaluation.scenario_launcher import ScenarioLauncher
 
 import argparse
 
-import csv, os
+import json, os
 
 parser = argparse.ArgumentParser()
 
@@ -34,6 +34,12 @@ args = parser.parse_args()
 
 
 class DynamicalSystemAnimation(Animator):
+    def __init__(self, it_max: int = 100, iterator=None, dt_simulation: float = 0.1, dt_sleep: float = 0.1, animation_name=None, file_type=".mp4") -> None:
+        super().__init__(it_max, iterator, dt_simulation, dt_sleep, animation_name, file_type)
+
+        # For metrics
+        self.metrics_json = {}
+
     def setup(
         self,
         obstacle_environment,
@@ -62,9 +68,6 @@ class DynamicalSystemAnimation(Animator):
         self.y_lim = y_lim
 
         self.obstacle_environment = obstacle_environment
-
-        # For logs
-        self.metrics_json = None
 
         self.fig, self.ax = plt.subplots()
 
@@ -132,35 +135,34 @@ class DynamicalSystemAnimation(Animator):
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
         return False
 
-    def open_logs(self):
-        with open('evaluation/logs/distance.csv', mode='w') as file:
-            field_names = ["agent", "direct_distance","total_distance"]
-            writer= csv.DictWriter(file, fieldnames=field_names)
-            writer.writeheader()
-
     def logs(self):
-        with open('evaluation/logs/distance.csv', mode='w') as file:
-            field_names = ["agent", "direct_distance","total_distance"]
-            writer = csv.DictWriter(file, fieldnames=field_names)
 
-            for ii in range(len(self.agent)):
-                writer.writerow({
-                    'agent': ii,
-                    'direct_distance': self.agent[ii].direct_distance,
-                    'total_distance':self.agent[ii].total_distance
-                })
+        for ii in range(len(self.agent)):
+            if not f"agent_{ii}" in self.metrics_json :
+                self.metrics_json.update({f"agent_{ii}":{}})
+                self.metrics_json[f"agent_{ii}"].update({"id":ii })
+                self.metrics_json[f"agent_{ii}"].update({"direct_dist":self.agent[ii].direct_distance})
+            
+            if "total_dist" in  self.metrics_json[f"agent_{ii}"]:
+                self.metrics_json[f"agent_{ii}"]["total_dist"].append(self.agent[ii].total_distance)
+            else:
+                self.metrics_json[f"agent_{ii}"]["total_dist"]=[self.agent[ii].total_distance]
+
+        
+        with open('distance.json', 'w') as outfile:
+            print(json.dump(self.metrics_json, outfile, indent=4))
 
 
 def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
-    folds_number = 1
+    folds_number = 2
 
     my_scenario = ScenarioLauncher(nb_furniture=5)
 
     my_animation = DynamicalSystemAnimation(
         it_max=250,
         dt_simulation=0.05,
-        dt_sleep=0.05,
+        dt_sleep=0.01,
         animation_name=args.name,
     )
     
