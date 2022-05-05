@@ -137,6 +137,15 @@ class DynamicalSystemAnimation(Animator):
                 self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self, ii) -> bool:
+        for ii in range(len(self.agent)):
+            if not self.agent[ii].has_converged:
+                if np.allclose(self.agent[ii]._goal_pose.position, self.agent[ii].position) and \
+                    (np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation) \
+                        or np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation +np.pi) \
+                        or np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation -np.pi)): # TODO Very dirty way to manage PI symetry 
+                    self.agent[ii].has_converged = True
+
+        
         # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
         return False
 
@@ -166,7 +175,7 @@ def run_single_furniture_rotating():
     folds_number = 100
 
     for nb_furniture in [8]:
-        for do_drag in [True] :
+        for do_drag in [False] :
 
             my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
             my_animation = DynamicalSystemAnimation(

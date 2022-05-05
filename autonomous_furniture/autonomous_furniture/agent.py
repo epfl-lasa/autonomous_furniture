@@ -36,9 +36,12 @@ class BaseAgent(ABC):
         #name of the furniture, useful for debugging stuff
         self._name = name
 
+        self.has_converged : bool  = False
         #metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
+
+
         
 
     @property
@@ -169,6 +172,10 @@ class Furniture(BaseAgent):
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
         self.minimize_drag: bool = False
 
+        # Metrics 
+        self.time_conv_direct =self.direct_distance/self._dynamics.maximum_velocity
+        self.time_conv = 0
+
     def update_velocity(self,mini_drag : bool = True):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
@@ -286,6 +293,7 @@ class Furniture(BaseAgent):
     def compute_metrics(self, dt):
         # Compute distance 
         self.total_distance += LA.norm(self.linear_velocity)*dt
+        self.time_conv += dt
 
 
 class Person(BaseAgent):
