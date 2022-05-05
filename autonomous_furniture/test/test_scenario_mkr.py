@@ -147,7 +147,9 @@ class DynamicalSystemAnimation(Animator):
                 self.metrics_json.update({f"agent_{ii}":{}})
                 self.metrics_json[f"agent_{ii}"].update({"id":ii })
                 self.metrics_json[f"agent_{ii}"].update({"direct_dist":self.agent[ii].direct_distance})
-            
+            else :
+                self.metrics_json[f"agent_{ii}"]["direct_dist"].append(self.agent[ii].direct_distance)
+
             if "total_dist" in  self.metrics_json[f"agent_{ii}"]:
                 self.metrics_json[f"agent_{ii}"]["total_dist"].append(self.agent[ii].total_distance)
             else:
@@ -161,14 +163,14 @@ class DynamicalSystemAnimation(Animator):
 
 def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
-    folds_number = 2
+    folds_number = 100
 
-    for nb_furniture in [5,2]:
-        for do_drag in [True,False] :
+    for nb_furniture in [8]:
+        for do_drag in [True] :
 
             my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
             my_animation = DynamicalSystemAnimation(
-                it_max=250,
+                it_max=500,
                 dt_simulation=0.05,
                 dt_sleep=0.01,
                 animation_name=args.name,
