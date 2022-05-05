@@ -20,7 +20,7 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 
 class BaseAgent(ABC):
     def __init__(self, shape: Obstacle, obstacle_environment: ObstacleContainer, priority_value: float = 1., control_points: np.array = None, parking_pose: ObjectPose = None,
-                 goal_pose: ObjectPose = None, name: str ="no_name" ) -> None:
+                 goal_pose: ObjectPose = None, name: str = "no_name") -> None:
         super().__init__()
         self._shape = shape
         self.priority = priority_value
@@ -33,16 +33,13 @@ class BaseAgent(ABC):
         self._goal_pose = goal_pose
         # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
-        #name of the furniture, useful for debugging stuff
+        # name of the furniture, useful for debugging stuff
         self._name = name
 
-        self.has_converged : bool  = False
-        #metrics
+        self.has_converged: bool = False
+        # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
-
-
-        
 
     @property
     def position(self):
@@ -132,7 +129,7 @@ class BaseAgent(ABC):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
 
     def get_weight_of_control_points(self, control_points, environment_without_me):
-        cutoff_gamma = 1e-4 # TODO : This value has to be big and not small
+        cutoff_gamma = 1e-4  # TODO : This value has to be big and not small
         # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
         gamma_values = np.zeros(control_points.shape[1])
 
@@ -172,11 +169,11 @@ class Furniture(BaseAgent):
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
         self.minimize_drag: bool = False
 
-        # Metrics 
-        self.time_conv_direct =self.direct_distance/self._dynamics.maximum_velocity
+        # Metrics
+        self.time_conv_direct = self.direct_distance/self._dynamics.maximum_velocity
         self.time_conv = 0
 
-    def update_velocity(self,mini_drag : bool = True):
+    def update_velocity(self, mini_drag: bool = True):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -198,8 +195,12 @@ class Furniture(BaseAgent):
 
         initial_magnitude = LA.norm(initial_velocity)
 
+        # if self.orientation > np.pi:
+        #     self.orientation = self.orientation - 2*np.pi
+        # if self.orientation <= -np.pi:
+        #     self.orientation = self.orientation + 2*np.pi
         # Computing the weights of the angle to reach
-        if mini_drag :
+        if mini_drag:
 
             w1_hat = self.virtual_drag
             w2_hat_max = 1000
@@ -213,7 +214,7 @@ class Furniture(BaseAgent):
 
             w1 = w1_hat/(w1_hat + w2_hat)
             w2 = 1 - w1
-        else :
+        else:
             w1 = 0
             w2 = 1
 
@@ -225,31 +226,31 @@ class Furniture(BaseAgent):
         # Case where there is no symetry in the furniture
         if np.abs(drag_angle) > np.pi:
             drag_angle = -1*(2*np.pi-drag_angle)
-        
+
         # Case where we consider for instance PI-symetry for the furniture
-        if np.abs(drag_angle) > np.pi/2: # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-            if self.orientation > 0 :
-                orientation_sym = self.orientation -np.pi
-            else :
+        if np.abs(drag_angle) > np.pi/2:  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+            if self.orientation > 0:
+                orientation_sym = self.orientation - np.pi
+            else:
                 orientation_sym = self.orientation + np.pi
-        
+
             drag_angle = lin_vel_dir - orientation_sym
-            if drag_angle > np.pi/2 : 
+            if drag_angle > np.pi/2:
                 drag_angle = -1*(2*np.pi-drag_angle)
 
         goal_angle = self._goal_pose.orientation - self.orientation
         if np.abs(goal_angle) > np.pi:
             goal_angle = -1*(2*np.pi-goal_angle)
 
-        if np.abs(goal_angle) > np.pi/2: # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-            if self.orientation > 0 :
-                orientation_sym = self.orientation -np.pi
-            else :
+        if np.abs(goal_angle) > np.pi/2:  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+            if self.orientation > 0:
+                orientation_sym = self.orientation - np.pi
+            else:
                 orientation_sym = self.orientation + np.pi
-        
+
             goal_angle = self._goal_pose.orientation - orientation_sym
-            if goal_angle > np.pi/2 : 
-                goal_angle = -1*(2*np.pi-goal_angle)       
+            if goal_angle > np.pi/2:
+                goal_angle = -1*(2*np.pi-goal_angle)
 
         # if np.abs(self.orientation) > np.pi:
         #     print("NOP")
@@ -291,7 +292,7 @@ class Furniture(BaseAgent):
         self.angular_velocity = np.sum(angular_vel)
 
     def compute_metrics(self, dt):
-        # Compute distance 
+        # Compute distance
         self.total_distance += LA.norm(self.linear_velocity)*dt
         self.time_conv += dt
 

@@ -24,7 +24,8 @@ from evaluation.scenario_launcher import ScenarioLauncher
 
 import argparse
 
-import json, os
+import json
+import os
 
 parser = argparse.ArgumentParser()
 
@@ -36,7 +37,8 @@ args = parser.parse_args()
 
 class DynamicalSystemAnimation(Animator):
     def __init__(self, it_max: int = 100, iterator=None, dt_simulation: float = 0.1, dt_sleep: float = 0.1, animation_name=None, file_type=".mp4") -> None:
-        super().__init__(it_max, iterator, dt_simulation, dt_sleep, animation_name, file_type)
+        super().__init__(it_max, iterator, dt_simulation,
+                         dt_sleep, animation_name, file_type)
 
         # For metrics
         self.metrics_json = {}
@@ -44,10 +46,10 @@ class DynamicalSystemAnimation(Animator):
     def setup(
         self,
         obstacle_environment,
-        agent : BaseAgent,
+        agent: BaseAgent,
         x_lim=None,
         y_lim=None,
-        anim : bool = True
+        anim: bool = True
     ):
 
         dim = 2
@@ -71,14 +73,14 @@ class DynamicalSystemAnimation(Animator):
 
         self.obstacle_environment = obstacle_environment
 
-        if anim :
+        if anim:
             self.fig, self.ax = plt.subplots()
 
-    def update_step(self, ii, mini_drag : bool = True, anim : bool = True):
+    def update_step(self, ii, mini_drag: bool = True, anim: bool = True):
         if not ii % 10:
             print(f"it={ii}")
 
-        if anim :
+        if anim:
             self.ax.clear()
             # Drawing and adjusting of the axis
             # for agent in range(self.num_agent):
@@ -98,7 +100,7 @@ class DynamicalSystemAnimation(Animator):
 
             self.ax.set_xlim(self.x_lim)
             self.ax.set_ylim(self.y_lim)
-    
+
             plot_obstacles(
                 self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
             )
@@ -107,9 +109,10 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].update_velocity(mini_drag=mini_drag)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
-            
-            if anim :
-                global_crontrol_points = self.agent[jj].get_global_control_points()
+
+            if anim:
+                global_crontrol_points = self.agent[jj].get_global_control_points(
+                )
                 self.ax.plot(
                     global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
 
@@ -136,46 +139,50 @@ class DynamicalSystemAnimation(Animator):
         # self.ax.grid()
                 self.ax.set_aspect("equal", adjustable="box")
 
-    def has_converged(self, ii) -> bool:
+    def has_converged(self) -> bool:
+        rtol = 1e-1
         for ii in range(len(self.agent)):
             if not self.agent[ii].has_converged:
-                if np.allclose(self.agent[ii]._goal_pose.position, self.agent[ii].position) and \
-                    (np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation) \
-                        or np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation +np.pi) \
-                        or np.allclose(self.agent[ii]._goal_pose.orientation,self.agent[ii].orientation -np.pi)): # TODO Very dirty way to manage PI symetry 
+                if np.allclose(self.agent[ii]._goal_pose.position, self.agent[ii].position, rtol=rtol) and \
+                        np.allclose(self.agent[ii]._goal_pose.orientation % np.pi, self.agent[ii].orientation % np.pi, rtol=rtol):
                     self.agent[ii].has_converged = True
+                else:
+                    return False
 
-        
-        # return np.allclose(self.position_list[:, ii], self.position_list[:, ii - 1])
-        return False
+        return True
 
-    def logs(self, nb_furniture : int, do_drag : bool, seed : int):
+    def logs(self, nb_furniture: int, do_drag: bool, seed: int):
 
         for ii in range(len(self.agent)):
-            if not f"agent_{ii}" in self.metrics_json :
-                self.metrics_json.update({f"agent_{ii}":{}})
-                self.metrics_json[f"agent_{ii}"].update({"id":ii })
-                self.metrics_json[f"agent_{ii}"].update({"direct_dist":[self.agent[ii].direct_distance]})
-            else :
-                self.metrics_json[f"agent_{ii}"]["direct_dist"].append(self.agent[ii].direct_distance)
-
-            if "total_dist" in  self.metrics_json[f"agent_{ii}"]:
-                self.metrics_json[f"agent_{ii}"]["total_dist"].append(self.agent[ii].total_distance)
+            if not f"agent_{ii}" in self.metrics_json:
+                self.metrics_json.update({f"agent_{ii}": {}})
+                self.metrics_json[f"agent_{ii}"].update({"id": ii})
+                self.metrics_json[f"agent_{ii}"].update(
+                    {"direct_dist": [self.agent[ii].direct_distance]})
             else:
-                self.metrics_json[f"agent_{ii}"]["total_dist"]=[self.agent[ii].total_distance]
+                self.metrics_json[f"agent_{ii}"]["direct_dist"].append(
+                    self.agent[ii].direct_distance)
+
+            if "total_dist" in self.metrics_json[f"agent_{ii}"]:
+                self.metrics_json[f"agent_{ii}"]["total_dist"].append(
+                    self.agent[ii].total_distance)
+            else:
+                self.metrics_json[f"agent_{ii}"]["total_dist"] = [
+                    self.agent[ii].total_distance]
 
         do_drag_str = "drag_" if do_drag else "nodrag_"
-        json_name = "distance_" + f"nb{nb_furniture}_" + do_drag_str + f"seed{seed}" + ".json"
+        json_name = "distance_" + \
+            f"nb{nb_furniture}_" + do_drag_str + f"seed{seed}" + ".json"
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
 
 def run_single_furniture_rotating():
     # List of environment shared by all the furniture/agent
-    folds_number = 100
+    folds_number = 5
 
-    for nb_furniture in [8]:
-        for do_drag in [False] :
+    for nb_furniture in [2, 5]:
+        for do_drag in [True]:
 
             my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
             my_animation = DynamicalSystemAnimation(
@@ -184,16 +191,15 @@ def run_single_furniture_rotating():
                 dt_sleep=0.01,
                 animation_name=args.name,
             )
-            
+
             for ii in range(folds_number):
                 my_scenario.creation()
-                
+
                 anim_name_pre = f"{args.name}_scen{ii}_"
 
-                
                 anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
                 my_animation.animation_name = anim_name
-                
+
                 my_scenario.setup()
 
                 my_animation.setup(
@@ -201,10 +207,11 @@ def run_single_furniture_rotating():
                     agent=my_scenario.agents,
                     x_lim=[-3, 8],
                     y_lim=[-2, 7],
-                    anim = False
+                    anim=True
                 )
-                print(f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-                my_animation.run_no_clip(mini_drag=do_drag)
+                print(
+                    f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
+                my_animation.run(save_animation=args.rec, mini_drag=do_drag)
                 my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
 
 
