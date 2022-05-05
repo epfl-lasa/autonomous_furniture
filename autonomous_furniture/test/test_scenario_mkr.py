@@ -146,7 +146,7 @@ class DynamicalSystemAnimation(Animator):
             if not f"agent_{ii}" in self.metrics_json :
                 self.metrics_json.update({f"agent_{ii}":{}})
                 self.metrics_json[f"agent_{ii}"].update({"id":ii })
-                self.metrics_json[f"agent_{ii}"].update({"direct_dist":self.agent[ii].direct_distance})
+                self.metrics_json[f"agent_{ii}"].update({"direct_dist":[self.agent[ii].direct_distance]})
             else :
                 self.metrics_json[f"agent_{ii}"]["direct_dist"].append(self.agent[ii].direct_distance)
 
