@@ -1,6 +1,5 @@
 from math import pi, cos, sin, sqrt
-from random import seed
-from turtle import shape
+
 
 import numpy as np
 
@@ -17,7 +16,7 @@ from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
-from autonomous_furniture.attractor_dynamics import AttractorDynamics
+from autonomous_furniture.attractor_dynamics import AttractorDynamics, main
 
 from autonomous_furniture.agent import BaseAgent, Furniture, Person
 from evaluation.scenario_launcher import ScenarioLauncher
@@ -60,9 +59,6 @@ class DynamicalSystemAnimation(Animator):
         if x_lim is None:
             x_lim = [0, 10]
 
-        # self.attractor_dynamic = AttractorDynamics(obstacle_environment, cutoff_dist=1.8, parking_zone=parking_zone)
-        # self.dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=initial_dynamics, environment=obstacle_environment,
-        #                                           obs_multi_agent=obs_w_multi_agent)
         self.position_list = np.zeros((dim, self.it_max))
         self.time_list = np.zeros((self.it_max))
         self.position_list = [
@@ -75,6 +71,8 @@ class DynamicalSystemAnimation(Animator):
 
         if anim:
             self.fig, self.ax = plt.subplots()
+
+        self.converged: bool = False  # IF all the agent has converged
 
     def update_step(self, ii, mini_drag: bool = True, anim: bool = True):
         if not ii % 10:
@@ -142,26 +140,41 @@ class DynamicalSystemAnimation(Animator):
     def has_converged(self) -> bool:
         rtol = 1e-1
         for ii in range(len(self.agent)):
-            if not self.agent[ii].has_converged:
+            if not self.agent[ii].converged:
                 if np.allclose(self.agent[ii]._goal_pose.position, self.agent[ii].position, rtol=rtol) and \
                         np.allclose(self.agent[ii]._goal_pose.orientation % np.pi, self.agent[ii].orientation % np.pi, rtol=rtol):
-                    self.agent[ii].has_converged = True
+                    self.agent[ii].converged = True
                 else:
                     return False
 
+        self.converged = True  # All the agents has converged
         return True
 
     def logs(self, nb_furniture: int, do_drag: bool, seed: int):
+        if self.metrics_json == {}:  # If this is the first time we enter the parameters of the simulation
+            self.metrics_json["max_step"] = self.it_max
+            self.metrics_json["dt"] = self.dt_simulation
+            self.metrics_json["converged"] = [self.converged]
+        else:
+            self.metrics_json["converged"].append(self.converged)
 
         for ii in range(len(self.agent)):
             if not f"agent_{ii}" in self.metrics_json:
                 self.metrics_json.update({f"agent_{ii}": {}})
                 self.metrics_json[f"agent_{ii}"].update({"id": ii})
                 self.metrics_json[f"agent_{ii}"].update(
+                    {"time_conv": [self.agent[ii].time_conv]})
+                self.metrics_json[f"agent_{ii}"].update(
+                    {"time_direct": [self.agent[ii].time_conv_direct]})
+                self.metrics_json[f"agent_{ii}"].update(
                     {"direct_dist": [self.agent[ii].direct_distance]})
             else:
                 self.metrics_json[f"agent_{ii}"]["direct_dist"].append(
                     self.agent[ii].direct_distance)
+                self.metrics_json[f"agent_{ii}"]["time_conv"].append(
+                    self.agent[ii].time_conv)
+                self.metrics_json[f"agent_{ii}"]["time_direct"].append(
+                    self.agent[ii].time_conv_direct)
 
             if "total_dist" in self.metrics_json[f"agent_{ii}"]:
                 self.metrics_json[f"agent_{ii}"]["total_dist"].append(
@@ -177,46 +190,49 @@ class DynamicalSystemAnimation(Animator):
             print(json.dump(self.metrics_json, outfile, indent=4))
 
 
-def run_single_furniture_rotating():
+def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool):
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
+    my_animation = DynamicalSystemAnimation(
+        it_max=500,
+        dt_simulation=0.05,
+        dt_sleep=0.01,
+        animation_name=args.name,
+    )
+
+    for ii in range(folds_number):
+        my_scenario.creation()
+
+        anim_name_pre = f"{args.name}_scen{ii}_"
+
+        anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+        my_animation.animation_name = anim_name
+
+        my_scenario.setup()
+
+        my_animation.setup(
+            my_scenario.obstacle_environment,
+            agent=my_scenario.agents,
+            x_lim=[-3, 8],
+            y_lim=[-2, 7],
+            anim=False
+        )
+        print(
+            f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
+        my_animation.run_no_clip(mini_drag=do_drag)
+        my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
+
+
+def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 5
+    folds_number = 100
 
-    for nb_furniture in [2, 5]:
-        for do_drag in [True]:
-
-            my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
-            my_animation = DynamicalSystemAnimation(
-                it_max=500,
-                dt_simulation=0.05,
-                dt_sleep=0.01,
-                animation_name=args.name,
-            )
-
-            for ii in range(folds_number):
-                my_scenario.creation()
-
-                anim_name_pre = f"{args.name}_scen{ii}_"
-
-                anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
-                my_animation.animation_name = anim_name
-
-                my_scenario.setup()
-
-                my_animation.setup(
-                    my_scenario.obstacle_environment,
-                    agent=my_scenario.agents,
-                    x_lim=[-3, 8],
-                    y_lim=[-2, 7],
-                    anim=True
-                )
-                print(
-                    f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-                my_animation.run(save_animation=args.rec, mini_drag=do_drag)
-                my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
+    for nb_furniture in [7, 6]:
+        for do_drag in [True, False]:
+            multi_simulation(folds_number, nb_furniture, do_drag)
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    run_single_furniture_rotating()
+    main()

@@ -36,7 +36,7 @@ class BaseAgent(ABC):
         # name of the furniture, useful for debugging stuff
         self._name = name
 
-        self.has_converged: bool = False
+        self.converged: bool = False
         # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
@@ -195,10 +195,6 @@ class Furniture(BaseAgent):
 
         initial_magnitude = LA.norm(initial_velocity)
 
-        # if self.orientation > np.pi:
-        #     self.orientation = self.orientation - 2*np.pi
-        # if self.orientation <= -np.pi:
-        #     self.orientation = self.orientation + 2*np.pi
         # Computing the weights of the angle to reach
         if mini_drag:
 
@@ -271,10 +267,10 @@ class Furniture(BaseAgent):
             ctp = global_control_points[:, ii]
             velocities[:, ii] = obs_avoidance_interpolation_moving(
                 position=ctp, initial_velocity=init_velocities[:, ii], obs=environment_without_me, self_priority=self.priority)
-            plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
-                      init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
-            plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
-                      ii], head_width=0.1, head_length=0.2, color='m')
+            # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
+            #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
+            # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
+            #           ii], head_width=0.1, head_length=0.2, color='m')
 
         self.linear_velocity = np.sum(
             velocities*np.tile(weights, (self.dimension, 1)), axis=1)
@@ -293,8 +289,9 @@ class Furniture(BaseAgent):
 
     def compute_metrics(self, dt):
         # Compute distance
-        self.total_distance += LA.norm(self.linear_velocity)*dt
-        self.time_conv += dt
+        if not self.converged:
+            self.total_distance += LA.norm(self.linear_velocity)*dt
+            self.time_conv += dt
 
 
 class Person(BaseAgent):
