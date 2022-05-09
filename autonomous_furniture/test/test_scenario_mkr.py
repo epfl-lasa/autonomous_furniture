@@ -24,7 +24,8 @@ from evaluation.scenario_launcher import ScenarioLauncher
 import argparse
 
 import json
-import os
+import os, psutil, gc
+from memory_profiler import profile
 
 parser = argparse.ArgumentParser()
 
@@ -189,9 +190,8 @@ class DynamicalSystemAnimation(Animator):
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
-
-def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool):
-    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
+def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process):
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=11)
     my_animation = DynamicalSystemAnimation(
         it_max=500,
         dt_simulation=0.05,
@@ -214,21 +214,25 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool):
             agent=my_scenario.agents,
             x_lim=[-3, 8],
             y_lim=[-2, 7],
-            anim=False
+            anim=True
         )
+        print(f"{process.memory_info().rss/1024**2} MB usage")  # in bytes 
+
         print(
             f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-        my_animation.run_no_clip(mini_drag=do_drag)
+        my_animation.run(save_animation=args.rec, mini_drag=do_drag)
         my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
+        gc.collect()
 
 
 def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 100
+    folds_number = 2
+    process = psutil.Process(os.getpid())
 
-    for nb_furniture in [7, 6]:
-        for do_drag in [True, False]:
-            multi_simulation(folds_number, nb_furniture, do_drag)
+    for nb_furniture in [8]:
+        for do_drag in [True]:
+            multi_simulation(folds_number, nb_furniture, do_drag, process=process)
 
 
 if __name__ == "__main__":
