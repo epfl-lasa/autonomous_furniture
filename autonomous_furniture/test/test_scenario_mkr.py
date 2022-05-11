@@ -103,7 +103,6 @@ class DynamicalSystemAnimation(Animator):
             plot_obstacles(
                 self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
             )
-
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(mini_drag=mini_drag)
             self.agent[jj].compute_metrics(self.dt_simulation)
@@ -191,7 +190,6 @@ class DynamicalSystemAnimation(Animator):
             print(json.dump(self.metrics_json, outfile, indent=4))
 
 def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process):
-    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=11)
     my_animation = DynamicalSystemAnimation(
         it_max=500,
         dt_simulation=0.05,
@@ -200,6 +198,8 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process
     )
 
     for ii in range(folds_number):
+        my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
+
         my_scenario.creation()
 
         anim_name_pre = f"{args.name}_scen{ii}_"
@@ -214,24 +214,23 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process
             agent=my_scenario.agents,
             x_lim=[-3, 8],
             y_lim=[-2, 7],
-            anim=True
+            anim=False
         )
         print(f"{process.memory_info().rss/1024**2} MB usage")  # in bytes 
 
         print(
             f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-        my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+        my_animation.run_no_clip( mini_drag=do_drag)    # save_animation=args.rec,
         my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
-        gc.collect()
 
 
 def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 2
+    folds_number = 100
     process = psutil.Process(os.getpid())
 
-    for nb_furniture in [8]:
-        for do_drag in [True]:
+    for nb_furniture in [10]:
+        for do_drag in [True, False]:
             multi_simulation(folds_number, nb_furniture, do_drag, process=process)
 
 
