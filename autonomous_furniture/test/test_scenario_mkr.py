@@ -24,8 +24,9 @@ from evaluation.scenario_launcher import ScenarioLauncher
 import argparse
 
 import json
-import os, psutil, gc
-from memory_profiler import profile
+import os
+import psutil
+import gc
 
 parser = argparse.ArgumentParser()
 
@@ -189,7 +190,8 @@ class DynamicalSystemAnimation(Animator):
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
-def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process):
+
+def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, process):
     my_animation = DynamicalSystemAnimation(
         it_max=500,
         dt_simulation=0.05,
@@ -197,8 +199,9 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process
         animation_name=args.name,
     )
 
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
+
     for ii in range(folds_number):
-        my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
 
         my_scenario.creation()
 
@@ -216,11 +219,12 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool,process
             y_lim=[-2, 7],
             anim=False
         )
-        print(f"{process.memory_info().rss/1024**2} MB usage")  # in bytes 
+        print(f"{process.memory_info().rss/1024**2} MB usage")  # in bytes
 
         print(
             f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-        my_animation.run_no_clip( mini_drag=do_drag)    # save_animation=args.rec,
+        # save_animation=args.rec,
+        my_animation.run_no_clip(mini_drag=do_drag)
         my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
 
 
@@ -231,7 +235,8 @@ def main():
 
     for nb_furniture in [10]:
         for do_drag in [True, False]:
-            multi_simulation(folds_number, nb_furniture, do_drag, process=process)
+            multi_simulation(folds_number, nb_furniture,
+                             do_drag, process=process)
 
 
 if __name__ == "__main__":

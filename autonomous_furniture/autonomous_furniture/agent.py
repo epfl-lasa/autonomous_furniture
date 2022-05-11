@@ -278,8 +278,8 @@ class Furniture(BaseAgent):
         # normalization to the initial velocity
         self.linear_velocity = initial_magnitude * \
             self.linear_velocity/LA.norm(self.linear_velocity)
-        plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-                  self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+        # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+        #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
         for ii in range(self._control_points.shape[1]):
             angular_vel[0, ii] = weights[ii]*np.cross(
