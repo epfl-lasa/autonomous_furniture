@@ -24,9 +24,8 @@ from evaluation.scenario_launcher import ScenarioLauncher
 import argparse
 
 import json
-import os
-import psutil
-import gc
+import os, psutil, gc
+from memory_profiler import profile
 
 parser = argparse.ArgumentParser()
 
@@ -190,22 +189,19 @@ class DynamicalSystemAnimation(Animator):
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
-
-def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, process):
+def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: bool = True):
     my_animation = DynamicalSystemAnimation(
-        it_max=500,
+        it_max=250,
         dt_simulation=0.05,
         dt_sleep=0.01,
         animation_name=args.name,
     )
-
     my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
 
     for ii in range(folds_number):
-
         my_scenario.creation()
 
-        anim_name_pre = f"{args.name}_scen{ii}_"
+        anim_name_pre = f"{args.name}_scen{ii}_nb{nb_furniture}_"
 
         anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
         my_animation.animation_name = anim_name
@@ -217,26 +213,65 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, proces
             agent=my_scenario.agents,
             x_lim=[-3, 8],
             y_lim=[-2, 7],
-            anim=False
+            anim=anim
         )
-        print(f"{process.memory_info().rss/1024**2} MB usage")  # in bytes
 
         print(
             f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-        # save_animation=args.rec,
-        my_animation.run_no_clip(mini_drag=do_drag)
+        if anim :
+            my_animation.run(save_animation=args.rec, mini_drag=do_drag)    # save_animation=args.rec,
+        else :
+            my_animation.run_no_clip(mini_drag=do_drag)    # save_animation=args.rec,
+
         my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
+
+def single_simulation(number:int, folds_number: int, nb_furniture: int, do_drag: bool, anim: bool = True):
+    my_animation = DynamicalSystemAnimation(
+            it_max=250,
+            dt_simulation=0.05,
+            dt_sleep=0.01,
+            animation_name=args.name,
+        )
+
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
+    
+    for ii in range(number+1): # We need this loop be cause we start from a specific seed to retrieve the exact same scenario
+        my_scenario.creation() 
+    
+    anim_name_pre = f"{args.name}_scen{number}_"
+
+    anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+    my_animation.animation_name = anim_name
+
+    my_scenario.setup()
+
+    my_animation.setup(
+        my_scenario.obstacle_environment,
+        agent=my_scenario.agents,
+        x_lim=[-3, 8],
+        y_lim=[-2, 7],
+        anim=anim
+    )
+    print(
+        f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
+    
+    if anim :
+        my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+    else :
+        my_animation.run_no_clip(mini_drag=do_drag)
+
+    my_animation.logs(nb_furniture, do_drag, my_scenario.seed)        
 
 
 def main():
     # List of environment shared by all the furniture/agent
     folds_number = 100
-    process = psutil.Process(os.getpid())
 
-    for nb_furniture in [10]:
-        for do_drag in [True, False]:
-            multi_simulation(folds_number, nb_furniture,
-                             do_drag, process=process)
+    for scen in [64,83,13, 42, 58]:
+        for nb_furniture in [3]:
+            for do_drag in [True,False]:
+                #multi_simulation(folds_number, nb_furniture, do_drag, anim=False)
+                single_simulation(scen, folds_number, nb_furniture, do_drag, anim=True)
 
 
 if __name__ == "__main__":
