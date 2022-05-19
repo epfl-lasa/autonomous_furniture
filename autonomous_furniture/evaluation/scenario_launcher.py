@@ -65,9 +65,8 @@ class ScenarioLauncher:
 
         # Only use for iteration during the filling of cells_new_fur
         grid_coord = free_space.copy()
-        print("line 71", random.random())
+
         if True:  # while is_placed is not True:
-            print("line 69:", random.random())
             # Chosing from the occupied list of cell a potential candidate/challenger
             index_pos = random.choice(free_space)
             # index_pos is the tuple of the grid coordinate
@@ -75,7 +74,6 @@ class ScenarioLauncher:
             # Randomly choosing a pose between [-pi, pi]
             new_pose.orientation = random.randint(
                 np.floor(-np.pi*100), np.ceil(np.pi*100))/100
-            print("line 77:", random.random())
 
             self._fur_shape = CuboidXd(axes_length=[2, 1],   # TODO Remove from being it hardcoded
                                        center_position=new_pose.position,
