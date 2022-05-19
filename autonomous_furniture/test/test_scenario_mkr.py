@@ -1,9 +1,9 @@
 from math import pi, cos, sin, sqrt
 
-
 import numpy as np
 
 import matplotlib.pyplot as plt
+from scipy import rand
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from vartools.states import ObjectPose
 
@@ -24,8 +24,8 @@ from evaluation.scenario_launcher import ScenarioLauncher
 import argparse
 
 import json
-import os, psutil, gc
-from memory_profiler import profile
+import os
+import random
 
 parser = argparse.ArgumentParser()
 
@@ -150,7 +150,7 @@ class DynamicalSystemAnimation(Animator):
         self.converged = True  # All the agents has converged
         return True
 
-    def logs(self, nb_furniture: int, do_drag: bool, seed: int):
+    def logs(self, nb_furniture: int, do_drag: bool):
         if self.metrics_json == {}:  # If this is the first time we enter the parameters of the simulation
             self.metrics_json["max_step"] = self.it_max
             self.metrics_json["dt"] = self.dt_simulation
@@ -183,22 +183,24 @@ class DynamicalSystemAnimation(Animator):
                 self.metrics_json[f"agent_{ii}"]["total_dist"] = [
                     self.agent[ii].total_distance]
 
-        do_drag_str = "drag_" if do_drag else "nodrag_"
+        do_drag_str = "drag" if do_drag else "nodrag"
         json_name = "distance_" + \
-            f"nb{nb_furniture}_" + do_drag_str + f"seed{seed}" + ".json"
+            f"nb{nb_furniture}_" + do_drag_str + ".json"
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
+
 
 def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: bool = True):
     my_animation = DynamicalSystemAnimation(
         it_max=250,
         dt_simulation=0.05,
-        dt_sleep=0.01,
+        dt_sleep=0.05,
         animation_name=args.name,
     )
-    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
 
     for ii in range(folds_number):
+        random.seed(ii)
         my_scenario.creation()
 
         anim_name_pre = f"{args.name}_scen{ii}_nb{nb_furniture}_"
@@ -218,27 +220,29 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: 
 
         print(
             f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-        if anim :
-            my_animation.run(save_animation=args.rec, mini_drag=do_drag)    # save_animation=args.rec,
-        else :
-            my_animation.run_no_clip(mini_drag=do_drag)    # save_animation=args.rec,
+        if anim:
+            # save_animation=args.rec,
+            my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+        else:
+            # save_animation=args.rec,
+            my_animation.run_no_clip(mini_drag=do_drag)
 
-        my_animation.logs(nb_furniture, do_drag, my_scenario.seed)
+        my_animation.logs(nb_furniture, do_drag)
 
-def single_simulation(number:int, folds_number: int, nb_furniture: int, do_drag: bool, anim: bool = True):
+
+def single_simulation(scen: int, nb_furniture: int, do_drag: bool, anim: bool = True):
     my_animation = DynamicalSystemAnimation(
-            it_max=250,
-            dt_simulation=0.05,
-            dt_sleep=0.01,
-            animation_name=args.name,
-        )
+        it_max=250,
+        dt_simulation=0.05,
+        dt_sleep=0.05,
+        animation_name=args.name,
+    )
 
-    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture, seed=10)
-    
-    for ii in range(number+1): # We need this loop be cause we start from a specific seed to retrieve the exact same scenario
-        my_scenario.creation() 
-    
-    anim_name_pre = f"{args.name}_scen{number}_"
+    random.seed(scen)
+
+    my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
+    my_scenario.creation()
+    anim_name_pre = f"{args.name}_scen{scen}_"
 
     anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
     my_animation.animation_name = anim_name
@@ -253,29 +257,38 @@ def single_simulation(number:int, folds_number: int, nb_furniture: int, do_drag:
         anim=anim
     )
     print(
-        f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
-    
-    if anim :
+        f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {scen}")
+
+    if anim:
         my_animation.run(save_animation=args.rec, mini_drag=do_drag)
-    else :
+    else:
         my_animation.run_no_clip(mini_drag=do_drag)
 
-    my_animation.logs(nb_furniture, do_drag, my_scenario.seed)        
+    my_animation.logs(nb_furniture, do_drag)
 
 
 def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 100
+    folds_number = 50
 
-    for scen in [64,83,13, 42, 58]:
-        for nb_furniture in [3]:
-            for do_drag in [True,False]:
-                #multi_simulation(folds_number, nb_furniture, do_drag, anim=False)
-                single_simulation(scen, folds_number, nb_furniture, do_drag, anim=True)
+    # for scen in [59]:
+    for nb_furniture in [2]:
+        for do_drag in [True, False]:
+            multi_simulation(folds_number, nb_furniture, do_drag, anim=False)
+
+
+def run_single():
+    scen = 25
+    nb_furniture = 2
+
+    for do_drag in [True, False]:
+        single_simulation(scen,
+                          nb_furniture, do_drag, anim=True)
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    main()
+    # main()
+    run_single()
