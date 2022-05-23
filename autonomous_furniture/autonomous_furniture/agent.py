@@ -173,7 +173,7 @@ class Furniture(BaseAgent):
         self.time_conv_direct = self.direct_distance/self._dynamics.maximum_velocity
         self.time_conv = 0
 
-    def update_velocity(self, mini_drag: bool = True):
+    def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -189,10 +189,13 @@ class Furniture(BaseAgent):
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
 
-        # self._dynamics.attractor_position = self._goal_pose.position
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
-
+        
+        if version is "v2":
+            initial_velocity = obs_avoidance_interpolation_moving(
+                    position=self.position, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
+        
         initial_magnitude = LA.norm(initial_velocity)
 
         # Computing the weights of the angle to reach
@@ -248,10 +251,6 @@ class Furniture(BaseAgent):
             if goal_angle > np.pi/2:
                 goal_angle = -1*(2*np.pi-goal_angle)
 
-        # if np.abs(self.orientation) > np.pi:
-        #     print("NOP")
-        #     breakpoint()
-
         # TODO Very clunky : Rather make a function out of it
         K = 3  # K proportionnal parameter for the speed
         # Initial angular_velocity is computed
@@ -259,8 +258,8 @@ class Furniture(BaseAgent):
 
         for ii in range(self._control_points.shape[1]):
             # doing the cross product formula by "hand" than using the funct
-            tang_vel = [-initial_angular_vel*self._control_points[ii,
-                                                                  1], initial_angular_vel*self._control_points[ii, 0]]
+            tang_vel = [-initial_angular_vel*self._control_points[ii,1],
+                        initial_angular_vel*self._control_points[ii, 0]]
             tang_vel = self.get_veloctity_in_global_frame(tang_vel)
             init_velocities[:, ii] = initial_velocity + tang_vel
 

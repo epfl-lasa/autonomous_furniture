@@ -75,7 +75,7 @@ class DynamicalSystemAnimation(Animator):
 
         self.converged: bool = False  # IF all the agent has converged
 
-    def update_step(self, ii, mini_drag: bool = True, anim: bool = True):
+    def update_step(self, ii, mini_drag: bool = True, anim: bool = True, version: str = "v1"):
         if not ii % 10:
             print(f"it={ii}")
 
@@ -104,7 +104,7 @@ class DynamicalSystemAnimation(Animator):
                 self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
             )
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity(mini_drag=mini_drag)
+            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 
@@ -150,7 +150,7 @@ class DynamicalSystemAnimation(Animator):
         self.converged = True  # All the agents has converged
         return True
 
-    def logs(self, nb_furniture: int, do_drag: bool):
+    def logs(self, nb_furniture: int, do_drag: bool, version:str = "v1"):
         if self.metrics_json == {}:  # If this is the first time we enter the parameters of the simulation
             self.metrics_json["max_step"] = self.it_max
             self.metrics_json["dt"] = self.dt_simulation
@@ -185,14 +185,14 @@ class DynamicalSystemAnimation(Animator):
 
         do_drag_str = "drag" if do_drag else "nodrag"
         json_name = "distance_" + \
-            f"nb{nb_furniture}_" + do_drag_str + ".json"
+            f"nb{nb_furniture}_" + f"{do_drag_str}_" + version + ".json"
         with open(json_name, 'w') as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
 
 
-def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: bool = True):
+def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, version: str = "v1", anim: bool = True):
     my_animation = DynamicalSystemAnimation(
-        it_max=250,
+        it_max=400,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -205,7 +205,8 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: 
 
         anim_name_pre = f"{args.name}_scen{ii}_nb{nb_furniture}_"
 
-        anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+        anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag_"
+        anim_name += version
         my_animation.animation_name = anim_name
 
         my_scenario.setup()
@@ -219,10 +220,10 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: 
         )
 
         print(
-            f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {ii}")
+            f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | version : {version} | Number of fold : {ii}")
         if anim:
             # save_animation=args.rec,
-            my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+            my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
         else:
             # save_animation=args.rec,
             my_animation.run_no_clip(mini_drag=do_drag)
@@ -230,9 +231,9 @@ def multi_simulation(folds_number: int, nb_furniture: int, do_drag: bool, anim: 
         my_animation.logs(nb_furniture, do_drag)
 
 
-def single_simulation(scen: int, nb_furniture: int, do_drag: bool, anim: bool = True):
+def single_simulation(scen: int, nb_furniture: int, do_drag: bool, version: str ="v1", anim: bool = True):
     my_animation = DynamicalSystemAnimation(
-        it_max=250,
+        it_max=290,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -245,6 +246,7 @@ def single_simulation(scen: int, nb_furniture: int, do_drag: bool, anim: bool = 
     anim_name_pre = f"{args.name}_scen{scen}_"
 
     anim_name = anim_name_pre + "drag" if do_drag else anim_name_pre+"no_drag"
+    anim_name += version
     my_animation.animation_name = anim_name
 
     my_scenario.setup()
@@ -257,38 +259,38 @@ def single_simulation(scen: int, nb_furniture: int, do_drag: bool, anim: bool = 
         anim=anim
     )
     print(
-        f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | Number of fold : {scen}")
+        f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | version : {version} | Number of fold : {scen}")
 
     if anim:
-        my_animation.run(save_animation=args.rec, mini_drag=do_drag)
+        my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     else:
-        my_animation.run_no_clip(mini_drag=do_drag)
+        my_animation.run_no_clip(mini_drag=do_drag, version=version)
 
-    my_animation.logs(nb_furniture, do_drag)
+    my_animation.logs(nb_furniture, do_drag, version=version)
 
 
 def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 50
+    folds_number = 100
 
-    # for scen in [59]:
     for nb_furniture in [2]:
-        for do_drag in [True, False]:
-            multi_simulation(folds_number, nb_furniture, do_drag, anim=False)
+        for version in ["v2"]:
+            for do_drag in [False]:
+                multi_simulation(folds_number, nb_furniture, do_drag, version=version, anim=False)
 
 
 def run_single():
-    scen = 25
-    nb_furniture = 2
-
-    for do_drag in [True, False]:
+    scen = 14
+    nb_furniture = 6
+    version = "v1"
+    for do_drag in [False]:
         single_simulation(scen,
-                          nb_furniture, do_drag, anim=True)
+                          nb_furniture, do_drag, version=version, anim=True)
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    # main()
+    #main()
     run_single()
