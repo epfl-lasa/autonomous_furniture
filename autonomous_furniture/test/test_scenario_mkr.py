@@ -180,8 +180,14 @@ class DynamicalSystemAnimation(Animator):
             self.metrics_json["max_step"] = self.it_max
             self.metrics_json["dt"] = self.dt_simulation
             self.metrics_json["converged"] = [self.converged]
+            self.metrics_json["collisions"] = [BaseAgent.number_collisions]
+            self.metrics_json["collisions_ser"] = [BaseAgent.number_serious_collisions]
         else:
             self.metrics_json["converged"].append(self.converged)
+            self.metrics_json["collisions"].append(BaseAgent.number_collisions)
+            self.metrics_json["collisions_ser"].append(
+                BaseAgent.number_serious_collisions
+            )
 
         for ii in range(len(self.agent)):
             if not f"agent_{ii}" in self.metrics_json:
@@ -225,7 +231,7 @@ class DynamicalSystemAnimation(Animator):
 
 
 def multi_simulation(
-    folds_number: int,
+    scenarios: list,
     nb_furniture: int,
     do_drag: bool,
     version: str = "v1",
@@ -239,7 +245,7 @@ def multi_simulation(
     )
     my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
 
-    for ii in range(folds_number):
+    for ii in scenarios:
         random.seed(ii)
         my_scenario.creation()
 
@@ -271,7 +277,10 @@ def multi_simulation(
             # save_animation=args.rec,
             my_animation.run_no_clip(mini_drag=do_drag, version=version)
 
-        my_animation.logs(nb_furniture, do_drag)
+        my_animation.logs(nb_furniture, do_drag, version=version)
+        # Reset of the collisions counter (TODO: To be changed it's ugly)
+        BaseAgent.number_collisions = 0
+        BaseAgent.number_serious_collisions = 0
 
 
 def single_simulation(
@@ -317,21 +326,21 @@ def single_simulation(
 
 def main():
     # List of environment shared by all the furniture/agent
-    folds_number = 100
+    scenarios = range(100)
 
-    for nb_furniture in [3]:
-        for version in ["v2"]:
-            for do_drag in [False]:
+    for nb_furniture in [2, 3, 4, 5]:
+        for version in ["v2", "v1"]:
+            for do_drag in [True, False]:
                 multi_simulation(
-                    folds_number, nb_furniture, do_drag, version=version, anim=False
+                    scenarios, nb_furniture, do_drag, version=version, anim=False
                 )
 
 
 def run_single():
-    scen = 29
+    scen = 10
     nb_furniture = 3
     version = "v2"
-    for do_drag in [False]:
+    for do_drag in [True]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)
 
 

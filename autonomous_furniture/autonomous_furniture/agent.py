@@ -19,13 +19,24 @@ from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_mov
 
 
 class BaseAgent(ABC):
-    def __init__(self, shape: Obstacle, obstacle_environment: ObstacleContainer, priority_value: float = 1., control_points: np.array = None, parking_pose: ObjectPose = None,
-                 goal_pose: ObjectPose = None, name: str = "no_name") -> None:
+    # Static variable, to trak the number of collisions within a scenario
+    number_collisions = 0
+    number_serious_collisions = 0
+
+    def __init__(
+        self,
+        shape: Obstacle,
+        obstacle_environment: ObstacleContainer,
+        priority_value: float = 1.0,
+        control_points: np.array = None,
+        parking_pose: ObjectPose = None,
+        goal_pose: ObjectPose = None,
+        name: str = "no_name",
+    ) -> None:
         super().__init__()
         self._shape = shape
         self.priority = priority_value
-        self.virtual_drag = max(self._shape.axes_length) / \
-            min(self._shape.axes_length)
+        self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
@@ -81,16 +92,28 @@ class BaseAgent(ABC):
         return self._shape.do_velocity_step(dt)
 
     def get_global_control_points(self):
-        return np.array([self._shape.pose.transform_position_from_local_to_reference(ctp) for ctp in self._control_points]).T
+        return np.array(
+            [
+                self._shape.pose.transform_position_from_local_to_reference(ctp)
+                for ctp in self._control_points
+            ]
+        ).T
 
     def get_goal_control_points(self):
-        return np.array([self._goal_pose.transform_position_from_local_to_reference(ctp) for ctp in self._control_points]).T
+        return np.array(
+            [
+                self._goal_pose.transform_position_from_local_to_reference(ctp)
+                for ctp in self._control_points
+            ]
+        ).T
 
     def get_veloctity_in_global_frame(self, velocity):
         return self._shape.pose.transform_direction_from_local_to_reference(velocity)
 
     @staticmethod
-    def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5):
+    def get_weight_from_gamma(
+        gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
+    ):
         weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
         weights = weights / frac_gamma_nth
         weights = 1.0 / weights
@@ -108,7 +131,8 @@ class BaseAgent(ABC):
         for ii, obs in enumerate(env):
             # gamma_type needs to be implemented for all obstacles
             gamma_list[ii] = obs.get_gamma(
-                position, in_global_frame=True
+                position,
+                in_global_frame=True
                 # , gamma_type=gamma_type
             )
 
@@ -116,6 +140,7 @@ class BaseAgent(ABC):
         # Total gamma [1, infinity]
         # Take root of order 'n_obs' to make up for the obstacle multiple
         if any(gamma_list < 1):
+            BaseAgent.number_collisions += 1
             warnings.warn("Collision detected.")
             return 0
 
@@ -135,19 +160,19 @@ class BaseAgent(ABC):
 
         for ii in range(control_points.shape[1]):
             gamma_values[ii] = self.get_gamma_product_crowd(
-                control_points[:, ii], environment_without_me)
+                control_points[:, ii], environment_without_me
+            )
 
         ctl_point_weight = np.zeros(gamma_values.shape)
         ind_nonzero = gamma_values < cutoff_gamma
         if not any(ind_nonzero):  # TODO Case he there is ind_nonzero
             # ctl_point_weight[-1] = 1
-            ctl_point_weight = np.full(
-                gamma_values.shape, 1/control_points.shape[1])
+            ctl_point_weight = np.full(gamma_values.shape, 1 / control_points.shape[1])
         # for index in range(len(gamma_values)):
         ctl_point_weight[ind_nonzero] = self.get_weight_from_gamma(
             gamma_values[ind_nonzero],
             cutoff_gamma=cutoff_gamma,
-            n_points=control_points.shape[1]
+            n_points=control_points.shape[1],
         )
 
         ctl_point_weight_sum = np.sum(ctl_point_weight)
@@ -160,17 +185,17 @@ class BaseAgent(ABC):
 
 
 class Furniture(BaseAgent):
-    def __init__(self,
-                 **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self._dynamics = LinearSystem(attractor_position=self._goal_pose.position,
-                                      maximum_velocity=1)
+        self._dynamics = LinearSystem(
+            attractor_position=self._goal_pose.position, maximum_velocity=1
+        )
 
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
         self.minimize_drag: bool = False
 
         # Metrics
-        self.time_conv_direct = self.direct_distance/self._dynamics.maximum_velocity
+        self.time_conv_direct = self.direct_distance / self._dynamics.maximum_velocity
         self.time_conv = 0
 
     def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
@@ -181,21 +206,25 @@ class Furniture(BaseAgent):
         global_goal_control_points = self.get_goal_control_points()
 
         weights = self.get_weight_of_control_points(
-            global_control_points, environment_without_me)
+            global_control_points, environment_without_me
+        )
 
         velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-        init_velocities = np.zeros(
-            (self.dimension, self._control_points.shape[1]))
+        init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
 
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
-        
-        if version is "v2":
+
+        if version == "v2":
             initial_velocity = obs_avoidance_interpolation_moving(
-                    position=self.position, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
-        
+                position=self.position,
+                initial_velocity=initial_velocity,
+                obs=environment_without_me,
+                self_priority=self.priority,
+            )
+
         initial_magnitude = LA.norm(initial_velocity)
 
         # Computing the weights of the angle to reach
@@ -204,14 +233,13 @@ class Furniture(BaseAgent):
             w1_hat = self.virtual_drag
             w2_hat_max = 1000
             if LA.norm(initial_velocity) != 0:
-                w2_hat = self._dynamics.maximum_velocity / \
-                    LA.norm(initial_velocity)-1
+                w2_hat = self._dynamics.maximum_velocity / LA.norm(initial_velocity) - 1
                 if w2_hat > w2_hat_max:
                     w2_hat = w2_hat_max
             else:
                 w2_hat = w2_hat_max
 
-            w1 = w1_hat/(w1_hat + w2_hat)
+            w1 = w1_hat / (w1_hat + w2_hat)
             w2 = 1 - w1
         else:
             w1 = 0
@@ -221,91 +249,114 @@ class Furniture(BaseAgent):
         lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
         # Make the smallest rotation- the furniture has to pi symetric
-        drag_angle = lin_vel_dir-self.orientation
+        drag_angle = lin_vel_dir - self.orientation
         # Case where there is no symetry in the furniture
         if np.abs(drag_angle) > np.pi:
-            drag_angle = -1*(2*np.pi-drag_angle)
+            drag_angle = -1 * (2 * np.pi - drag_angle)
 
         # Case where we consider for instance PI-symetry for the furniture
-        if np.abs(drag_angle) > np.pi/2:  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+        if (
+            np.abs(drag_angle) > np.pi / 2
+        ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
             if self.orientation > 0:
                 orientation_sym = self.orientation - np.pi
             else:
                 orientation_sym = self.orientation + np.pi
 
             drag_angle = lin_vel_dir - orientation_sym
-            if drag_angle > np.pi/2:
-                drag_angle = -1*(2*np.pi-drag_angle)
+            if drag_angle > np.pi / 2:
+                drag_angle = -1 * (2 * np.pi - drag_angle)
 
         goal_angle = self._goal_pose.orientation - self.orientation
         if np.abs(goal_angle) > np.pi:
-            goal_angle = -1*(2*np.pi-goal_angle)
+            goal_angle = -1 * (2 * np.pi - goal_angle)
 
-        if np.abs(goal_angle) > np.pi/2:  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+        if (
+            np.abs(goal_angle) > np.pi / 2
+        ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
             if self.orientation > 0:
                 orientation_sym = self.orientation - np.pi
             else:
                 orientation_sym = self.orientation + np.pi
 
             goal_angle = self._goal_pose.orientation - orientation_sym
-            if goal_angle > np.pi/2:
-                goal_angle = -1*(2*np.pi-goal_angle)
+            if goal_angle > np.pi / 2:
+                goal_angle = -1 * (2 * np.pi - goal_angle)
 
         # TODO Very clunky : Rather make a function out of it
         K = 3  # K proportionnal parameter for the speed
         # Initial angular_velocity is computed
-        initial_angular_vel = K*(w1*drag_angle + w2*goal_angle)
+        initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
 
         for ii in range(self._control_points.shape[1]):
             # doing the cross product formula by "hand" than using the funct
-            tang_vel = [-initial_angular_vel*self._control_points[ii,1],
-                        initial_angular_vel*self._control_points[ii, 0]]
+            tang_vel = [
+                -initial_angular_vel * self._control_points[ii, 1],
+                initial_angular_vel * self._control_points[ii, 0],
+            ]
             tang_vel = self.get_veloctity_in_global_frame(tang_vel)
             init_velocities[:, ii] = initial_velocity + tang_vel
 
             ctp = global_control_points[:, ii]
             velocities[:, ii] = obs_avoidance_interpolation_moving(
-                position=ctp, initial_velocity=init_velocities[:, ii], obs=environment_without_me, self_priority=self.priority)
+                position=ctp,
+                initial_velocity=init_velocities[:, ii],
+                obs=environment_without_me,
+                self_priority=self.priority,
+            )
             # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
             #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
             # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
             #           ii], head_width=0.1, head_length=0.2, color='m')
 
         self.linear_velocity = np.sum(
-            velocities*np.tile(weights, (self.dimension, 1)), axis=1)
+            velocities * np.tile(weights, (self.dimension, 1)), axis=1
+        )
 
         # normalization to the initial velocity
-        self.linear_velocity = initial_magnitude * \
-            self.linear_velocity/LA.norm(self.linear_velocity)
+        self.linear_velocity = (
+            initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+        )
         # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
         #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
         for ii in range(self._control_points.shape[1]):
-            angular_vel[0, ii] = weights[ii]*np.cross(
-                global_control_points[:, ii]-self._shape.center_position, velocities[:, ii]-self.linear_velocity)
+            angular_vel[0, ii] = weights[ii] * np.cross(
+                global_control_points[:, ii] - self._shape.center_position,
+                velocities[:, ii] - self.linear_velocity,
+            )
 
         self.angular_velocity = np.sum(angular_vel)
 
     def compute_metrics(self, dt):
         # Compute distance
         if not self.converged:
-            self.total_distance += LA.norm(self.linear_velocity)*dt
+            self.total_distance += LA.norm(self.linear_velocity) * dt
             self.time_conv += dt
 
 
 class Person(BaseAgent):
-    def __init__(self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs) -> None:
-        _shape = EllipseWithAxes(center_position=np.array(center_position),
-                                 margin_absolut=1,
-                                 orientation=0,
-                                 tail_effect=False,
-                                 axes_length=np.array([radius, radius]))
+    def __init__(
+        self, priority_value: float = 1, center_position=None, radius=0.5, **kwargs
+    ) -> None:
+        _shape = EllipseWithAxes(
+            center_position=np.array(center_position),
+            margin_absolut=1,
+            orientation=0,
+            tail_effect=False,
+            axes_length=np.array([radius, radius]),
+        )
 
-        super().__init__(shape=_shape, priority_value=priority_value,
-                         control_points=np.array([[0, 0]]), **kwargs)  # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
+        super().__init__(
+            shape=_shape,
+            priority_value=priority_value,
+            control_points=np.array([[0, 0]]),
+            **kwargs
+        )  # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
 
-        self._dynamics = LinearSystem(attractor_position=self.position,
-                                      maximum_velocity=1)
+        self._dynamics = LinearSystem(
+            attractor_position=self.position, maximum_velocity=1
+        )
 
     def update_velocity(self):
         environment_without_me = self.get_obstacles_without_me()
@@ -318,6 +369,10 @@ class Person(BaseAgent):
         self._dynamics.attractor_position = global_goal_control_points[:, 0]
         initial_velocity = self._dynamics.evaluate(ctp)
         velocity = obs_avoidance_interpolation_moving(
-            position=ctp, initial_velocity=initial_velocity, obs=environment_without_me, self_priority=self.priority)
+            position=ctp,
+            initial_velocity=initial_velocity,
+            obs=environment_without_me,
+            self_priority=self.priority,
+        )
 
         self.linear_velocity = velocity
