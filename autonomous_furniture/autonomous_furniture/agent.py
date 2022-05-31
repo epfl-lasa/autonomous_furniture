@@ -216,7 +216,6 @@ class Furniture(BaseAgent):
 
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
-        initial_magnitude = LA.norm(initial_velocity)
 
         if version == "v2":
             initial_velocity = obs_avoidance_interpolation_moving(
@@ -225,6 +224,8 @@ class Furniture(BaseAgent):
                 obs=environment_without_me,
                 self_priority=self.priority,
             )
+        
+        initial_magnitude = LA.norm(initial_velocity)
 
         # Computing the weights of the angle to reach
         if mini_drag:
