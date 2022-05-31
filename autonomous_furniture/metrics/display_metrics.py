@@ -52,7 +52,7 @@ def compare_v2_vs_v1():
     diff_dist = []
     list_algo = ["drag"]
     list_vers = ["v2", "v1"]
-    list_fur = [2, 3,4, 5, 6, 8, 9]
+    list_fur = [2, 3, 4, 5, 6, 8, 9]
     converg_data = np.zeros((len(list_vers), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
@@ -63,24 +63,31 @@ def compare_v2_vs_v1():
 
             for jj, version in enumerate(list_vers):
                 data = json.load(
-                    open(f"autonomous_furniture/metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{version}.json", "r")
+                    open(
+                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{version}.json",
+                        "r",
+                    )
                 )
 
                 dist = np.zeros(nb_folds)
 
                 # for agent in data.keys():
                 for ii in range(nb_fur):
-                    dist = dist + [data[f"agent_{ii}"]["total_dist"][ll]/data[f"agent_{ii}"]["direct_dist"][ll] for ll in range(nb_folds) ]
+                    dist = dist + [
+                        data[f"agent_{ii}"]["total_dist"][mm]
+                        / data[f"agent_{ii}"]["direct_dist"][mm]
+                        for mm in range(nb_folds)
+                    ]
                     # sum_direct_dist += data[f"agent_{ii}"]["direct_dist"]
                     # times += data[f"agent_{ii}"]["time_conv"]
 
-                #dist /= nb_fur
+                dist /= nb_fur
 
                 dist_data[kk, :] = dist
                 converg_data[jj, ll] = data["converged"].count(True)
 
                 kk += 1
-                #conv_data.append(data["converged"].count(True))
+                # conv_data.append(data["converged"].count(True))
 
             temp = dist_data[0, :] - dist_data[1, :]
             diff_dist.append(dist_data[0, :] - dist_data[1, :])
@@ -108,7 +115,7 @@ def compare_drag_vs_nodrag():
     diff_dist = []
     list_algo = ["drag", "nodrag"]
     list_vers = ["v2"]
-    list_fur = [2, 3, 5, 6, 7, 8,9]
+    list_fur = [2, 3, 5, 6, 7, 8, 9]
     converg_data = np.zeros((len(list_algo), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
@@ -120,15 +127,22 @@ def compare_drag_vs_nodrag():
 
             for jj, algo in enumerate(list_algo):
                 data = json.load(
-                    open(f"new_seed_gen/distance_nb{nb_fur}_{algo}_{version}.json", "r")
+                    open(
+                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{version}.json",
+                        "r",
+                    )
                 )
 
                 dist = np.zeros(nb_folds)
 
                 # for agent in data.keys():
                 for ii in range(nb_fur):
-                    dist = dist + data[f"agent_{ii}"]["total_dist"]/data[f"agent_{ii}"]["direct_dist"]
-                    # sum_direct_dist += 
+                    dist = dist + [
+                        data[f"agent_{ii}"]["total_dist"][mm]
+                        / data[f"agent_{ii}"]["direct_dist"][mm]
+                        for mm in range(nb_folds)
+                    ]
+                    # sum_direct_dist +=
                     # times += data[f"agent_{ii}"]["time_conv"]
 
                 dist /= nb_fur
@@ -137,15 +151,13 @@ def compare_drag_vs_nodrag():
                 converg_data[jj, ll] = data["converged"].count(True)
                 kk += 1
 
-                conv_data.append(data["converged"].count(True))
+                # conv_data.append(data["converged"].count(True))
 
             temp = dist_data[0, :] - dist_data[1, :]
             diff_dist.append(dist_data[0, :] - dist_data[1, :])
 
     plot_box(diff_dist, list_fur)
     plot_bar(converg_data, list_algo)
-
-
 
 
 def extract_best_worst_scn(diff_data, nb_fur, diff_between, alg, version):
@@ -163,7 +175,12 @@ def extract_best_worst_scn(diff_data, nb_fur, diff_between, alg, version):
 
 
 def number_scen(nb_fur, algo, vers):
-    data = json.load(open(f"autonomous_furniture/metrics/new_seed_gen/distance_nb{nb_fur}_{algo}_{vers}.json", "r"))
+    data = json.load(
+        open(
+            f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{vers}.json",
+            "r",
+        )
+    )
     nb_folds = len(data["agent_0"]["total_dist"])
     return nb_folds
 
@@ -180,9 +197,7 @@ def plot_box(data, labels: list, save: bool = False):
     plt.axhline(y=0, color="r", linestyle="--", linewidth=0.5)
     plt.title("Comparison between v1 and v2 with drag")
     if save:
-        plt.savefig(
-            f"autonomous_furniture/metrics/distance_nb{nb_fur}.png", format="png"
-        )
+        plt.savefig(f"metrics/distance_nb{nb_fur}.png", format="png")
 
 
 def plot_bar(data, label):
@@ -200,14 +215,14 @@ def plot_bar(data, label):
 
     plt.xlabel("Number of furnitures", fontweight="bold", fontsize=15)
     plt.ylabel("Converged scenario[%]", fontweight="bold", fontsize=15)
-    plt.xticks([r + barWidth for r in range(len(drag))], [2, 3,4, 5, 6, 8, 9])
+    plt.xticks([r + barWidth for r in range(len(drag))], [2, 3, 4, 5, 6, 8, 9])
 
 
 def plot_collisions():
 
-    list_nb_fur = [2,3,4,5,6,7,8,9]
+    list_nb_fur = [2, 3, 4, 5, 6, 7, 8, 9]
     list_version = ["v2"]
-    list_algo = ["drag","nodrag"]
+    list_algo = ["drag", "nodrag"]
 
     collisions_data = []
     nb_collisions_data = []
@@ -215,10 +230,15 @@ def plot_collisions():
         for vers in list_version:
             collisions_data_temp = []
             nb_collisions = []
-        
+
             for idx, nb_fur in enumerate(list_nb_fur):
 
-                data = json.load(open(f"autonomous_furniture/metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{vers}.json", "r"))
+                data = json.load(
+                    open(
+                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{vers}.json",
+                        "r",
+                    )
+                )
                 collisions_data_temp.append(data["collisions"])
                 has_collision = [1 for i in data["collisions"] if i > 0]
                 nb_collisions.append(len(has_collision))
@@ -233,16 +253,17 @@ def plot_collisions():
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
     fig, ax = plt.subplots()
-    plt.title('Collisions during scenarios : v1 vs v2 with nodrag')
+    plt.title("Collisions during scenarios : v1 vs v2 with nodrag")
     plt.bar(pos, nb_collisions_data[0], width=width, label="drag")
-    plt.bar(pos + width,  nb_collisions_data[1], width=width, label="nodrag")
+    plt.bar(pos + width, nb_collisions_data[1], width=width, label="nodrag")
     plt.xticks(pos + width / 2, list_nb_fur)
     for bars in ax.containers:
         ax.bar_label(bars)
-    
-    plt.xlabel('Number of furniture')
-    plt.ylabel('Percentage with collisions') 
+
+    plt.xlabel("Number of furniture")
+    plt.ylabel("Percentage with collisions")
     print("Coucou")
+
 
 if __name__ == "__main__":
     compare_v2_vs_v1()
