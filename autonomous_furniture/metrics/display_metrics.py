@@ -47,12 +47,13 @@ print(os.getcwd())
 #     # Sort the list and keep their old index which corresponds to the number of the scenario
 #     sort_dist = sorted(enumerate(temp), key=lambda i: i[1])
 
+folder ="autonomous_furniture/metrics/v2_new_converg"
 
 def compare_v2_vs_v1():
     diff_dist = []
     list_algo = ["drag"]
-    list_vers = ["v2", "v1"]
-    list_fur = [2, 3, 4, 5, 6, 8, 9]
+    list_vers = ["v2","v1"]
+    list_fur = [2, 3, 4, 5, 6]
     converg_data = np.zeros((len(list_vers), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
@@ -64,7 +65,7 @@ def compare_v2_vs_v1():
             for jj, version in enumerate(list_vers):
                 data = json.load(
                     open(
-                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{version}.json",
+                        f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
                         "r",
                     )
                 )
@@ -93,15 +94,15 @@ def compare_v2_vs_v1():
             diff_dist.append(dist_data[0, :] - dist_data[1, :])
 
     # Nb fur to compare :
-    fur_number = 6
-    idx = list_fur.index(fur_number)
-    extract_best_worst_scn(
-        diff_dist[idx],
-        fur_number,
-        diff_between=list_vers,
-        alg=list_algo,
-        version=list_vers,
-    )
+    # fur_number = 6
+    # idx = list_fur.index(fur_number)
+    # extract_best_worst_scn(
+    #     diff_dist[idx],
+    #     fur_number,
+    #     diff_between=list_vers,
+    #     alg=list_algo,
+    #     version=list_vers,
+    # )
 
     plot_box(diff_dist, list_fur)
     plot_bar(converg_data, list_vers)
@@ -115,7 +116,7 @@ def compare_drag_vs_nodrag():
     diff_dist = []
     list_algo = ["drag", "nodrag"]
     list_vers = ["v2"]
-    list_fur = [2, 3, 5, 6, 7, 8, 9]
+    list_fur = [2, 3, 5, 6,]
     converg_data = np.zeros((len(list_algo), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
@@ -128,7 +129,7 @@ def compare_drag_vs_nodrag():
             for jj, algo in enumerate(list_algo):
                 data = json.load(
                     open(
-                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{version}.json",
+                        f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
                         "r",
                     )
                 )
@@ -157,7 +158,7 @@ def compare_drag_vs_nodrag():
             diff_dist.append(dist_data[0, :] - dist_data[1, :])
 
     plot_box(diff_dist, list_fur)
-    plot_bar(converg_data, list_algo)
+    #plot_bar(converg_data, list_algo)
 
 
 def extract_best_worst_scn(diff_data, nb_fur, diff_between, alg, version):
@@ -177,7 +178,7 @@ def extract_best_worst_scn(diff_data, nb_fur, diff_between, alg, version):
 def number_scen(nb_fur, algo, vers):
     data = json.load(
         open(
-            f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{vers}.json",
+            f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
             "r",
         )
     )
@@ -197,7 +198,7 @@ def plot_box(data, labels: list, save: bool = False):
     plt.axhline(y=0, color="r", linestyle="--", linewidth=0.5)
     plt.title("Comparison between v1 and v2 with drag")
     if save:
-        plt.savefig(f"metrics/distance_nb{nb_fur}.png", format="png")
+        plt.savefig(f"autonomous_furniture/metrics/distance_nb{nb_fur}.png", format="png")
 
 
 def plot_bar(data, label):
@@ -215,12 +216,12 @@ def plot_bar(data, label):
 
     plt.xlabel("Number of furnitures", fontweight="bold", fontsize=15)
     plt.ylabel("Converged scenario[%]", fontweight="bold", fontsize=15)
-    plt.xticks([r + barWidth for r in range(len(drag))], [2, 3, 4, 5, 6, 8, 9])
+    plt.xticks([r + barWidth for r in range(len(drag))], [2, 3, 4, 5, 6,])
 
 
 def plot_collisions():
 
-    list_nb_fur = [2, 3, 4, 5, 6, 7, 8, 9]
+    list_nb_fur = [2, 3, 4, 5, 6,]
     list_version = ["v2"]
     list_algo = ["drag", "nodrag"]
 
@@ -235,7 +236,7 @@ def plot_collisions():
 
                 data = json.load(
                     open(
-                        f"metrics/v2_v1_margin1.5/distance_nb{nb_fur}_{algo}_{vers}.json",
+                        f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
                         "r",
                     )
                 )
@@ -266,8 +267,8 @@ def plot_collisions():
 
 
 if __name__ == "__main__":
-    compare_v2_vs_v1()
-    # compare_drag_vs_nodrag()
+    #compare_v2_vs_v1()
+    compare_drag_vs_nodrag()
     plot_collisions()
     plt.legend()
     plt.show()
