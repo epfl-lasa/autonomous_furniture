@@ -154,17 +154,18 @@ class DynamicalSystemAnimation(Animator):
                 self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self) -> bool:
-        rtol = 1e-1
+        rtol_pos = 1e-3
+        rtol_ang = 1e-1
         for ii in range(len(self.agent)):
             if not self.agent[ii].converged:
                 if np.allclose(
                     self.agent[ii]._goal_pose.position,
                     self.agent[ii].position,
-                    rtol=rtol,
+                    rtol=rtol_pos,
                 ) and np.allclose(
                     self.agent[ii]._goal_pose.orientation % np.pi,
                     self.agent[ii].orientation % np.pi,
-                    rtol=rtol,
+                    rtol=rtol_ang,
                 ):
                     self.agent[ii].converged = True
                 else:
@@ -328,17 +329,17 @@ def main():
     # List of environment shared by all the furniture/agent
     scenarios = range(100)
 
-    for nb_furniture in [2, 3, 4, 5]:
+    for nb_furniture in [2]:
         for version in ["v2", "v1"]:
-            for do_drag in [True, False]:
+            for do_drag in [True]:
                 multi_simulation(
                     scenarios, nb_furniture, do_drag, version=version, anim=False
                 )
 
 
 def run_single():
-    scen = 10
-    nb_furniture = 3
+    scen = 78
+    nb_furniture = 2
     version = "v2"
     for do_drag in [True]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)
