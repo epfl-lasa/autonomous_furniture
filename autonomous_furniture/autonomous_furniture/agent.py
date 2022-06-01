@@ -371,6 +371,10 @@ class Person(BaseAgent):
 
         # Metrics :
         self._proximity = 0
+    @property
+    def margin_absolut(self):
+        return self._shape.margin_absolut
+
 
     def update_velocity(self, **kwargs):
         environment_without_me = self.get_obstacles_without_me()
@@ -401,10 +405,14 @@ class Person(BaseAgent):
         self.time_sim += 1
 
         for obs in self.get_obstacles_without_me():
-            distance.append(obs.get_distance_to_surface(self.position, in_obstacle_frame=False))
+            distance.append(obs.get_distance_to_surface(self.position, in_obstacle_frame=False, margin_absolut=self.margin_absolut))
         
         dmin  = min(distance)
         dmin = dmin if dmin < R else R
         self._proximity += dmin/R
-        
+    
+    def get_distance_to_surface(self, position, in_obstacle_frame: bool = True, margin_absolut: float = None):
+        self.get_point_on_surface(position=position,
+        in_obstacle_frame=in_obstacle_frame,
+        margin_absolut=margin_absolut,)
          
