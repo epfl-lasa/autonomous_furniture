@@ -54,6 +54,8 @@ class BaseAgent(ABC):
         # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
+        self.time_conv = 0
+        self.time_sim = 0
 
     @property
     def position(self):
@@ -199,7 +201,6 @@ class Furniture(BaseAgent):
 
         # Metrics
         self.time_conv_direct = self.direct_distance / self._dynamics.maximum_velocity
-        self.time_conv = 0
 
     def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
         initial_velocity = np.zeros(2)
@@ -368,6 +369,9 @@ class Person(BaseAgent):
             attractor_position=self.position, maximum_velocity=1
         )
 
+        # Metrics :
+        self._proximity = 0
+
     def update_velocity(self, **kwargs):
         environment_without_me = self.get_obstacles_without_me()
         global_control_points = self.get_global_control_points()
@@ -389,6 +393,18 @@ class Person(BaseAgent):
         
         else:
             self.linear_velocity = [0,0]
+        
 
     def compute_metrics(self, delta_t):
-        pass
+        R = 3 # radius
+        distance = []
+        self.time_sim += 1
+
+        for obs in self.get_obstacles_without_me():
+            distance.append(obs.get_distance_to_surface(self.position, in_obstacle_frame=False))
+        
+        dmin  = min(distance)
+        dmin = dmin if dmin < R else R
+        self._proximity += dmin/R
+        
+         
