@@ -129,41 +129,54 @@ def compare_drag_vs_nodrag():
         for version in list_vers:
             kk = 0
 
+            data = []
             for jj, algo in enumerate(list_algo):
-                data = json.load(
+                data.append( json.load(
                     open(
                         f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
                         "r",
                     )
-                )
+                ))
+            
+            idx_with_coll = []
+            for data_alg in data:
+                idx_with_coll= idx_with_coll + [idx for idx,i in enumerate(data_alg["collisions"]) if i > 0]
 
-                dist = np.zeros(nb_folds)
-
-                # for agent in data.keys():
-                for ii in range(nb_fur):
-                    dist = dist + [
-                        data[f"agent_{ii}"]["total_dist"][mm]
-                        / data[f"agent_{ii}"]["direct_dist"][mm]
-                        for mm in range(nb_folds)
-                    ]
+            idx_with_coll = list(dict.fromkeys(idx_with_coll)) # Little trick to remove duplicants from a list as a dictionnary cannot have duplicate keys 
                 
-                    # sum_direct_dist +=
-                    # times += data[f"agent_{ii}"]["time_conv"]
+        for algo,data_alg in enumerate(data):  # Becareful here to the order alg = 0 is drag alg = 1 is nondrag    
+            
+            dist = np.zeros(nb_folds)
+            for ii in range(nb_fur):
+                dist = dist + [
+                    data_alg[f"agent_{ii}"]["total_dist"][mm]
+                    / data_alg[f"agent_{ii}"]["direct_dist"][mm]
+                    for mm in range(nb_folds)
+                ]
+            
+                # sum_direct_dist +=
+                # times += data[f"agent_{ii}"]["time_conv"]
 
-                dist /= nb_fur
+            dist /= nb_fur
 
-                dist_data[kk, :] = dist
-                converg_data[jj, ll] = data["converged"].count(True)
-                kk += 1
-                
-                # Part of code to remove scenario that registered collisions
-                idx_coll = [idx for idx,i in enumerate(data["collisions"]) if i > 0]
-                dist = np.delete(dist, idx_coll)
-                if algo == "drag":
-                    data_drag_temp.append(list(dist))
-                if algo == "nodrag":
-                    data_nodrag_temp.append(list(dist))
-                
+            #dist_data[kk, :] = dist
+            #converg_data[jj, ll] = data["converged"].count(True)
+            kk += 1
+        
+            
+            # Part of code to remove scenario that registered collisions
+            # idx_coll = [idx for idx,i in enumerate(data["collisions"]) if i > 0]
+            # dist = np.delete(dist, idx_coll)
+            # if algo == "drag":
+            #     data_drag_temp.append(list(dist))
+            # if algo == "nodrag":
+            #     data_nodrag_temp.append(list(dist))
+            dist = np.delete(dist, idx_with_coll)
+            if algo == 0: # 0 is drag, verify the order in list_version
+                data_drag_temp.append(list(dist))
+            if algo == 1: # 1 is nondrag, verify the order in list_version
+                data_nodrag_temp.append(list(dist))
+
     ticks = list_fur
     def set_box_color(bp, color):
         plt.setp(bp['boxes'], color=color)
