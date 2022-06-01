@@ -47,7 +47,7 @@ print(os.getcwd())
 #     # Sort the list and keep their old index which corresponds to the number of the scenario
 #     sort_dist = sorted(enumerate(temp), key=lambda i: i[1])
 
-folder ="autonomous_furniture/metrics/v2_new_converg"
+folder ="autonomous_furniture/metrics/v2_new_conv_wihtout_BUG"
 
 def compare_v2_vs_v1():
     diff_dist = []
@@ -116,9 +116,12 @@ def compare_drag_vs_nodrag():
     diff_dist = []
     list_algo = ["drag", "nodrag"]
     list_vers = ["v2"]
-    list_fur = [2, 3, 5, 6,]
+    list_fur = [2, 3, 4, 5, 6, 7]
     converg_data = np.zeros((len(list_algo), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
+
+    data_drag_temp =[] #TODO temp to remove
+    data_nodrag_temp =[]  # TODO temp to remove
 
     for ll, nb_fur in enumerate(list_fur):
         dist_data = np.zeros((2, 100))
@@ -143,6 +146,7 @@ def compare_drag_vs_nodrag():
                         / data[f"agent_{ii}"]["direct_dist"][mm]
                         for mm in range(nb_folds)
                     ]
+                
                     # sum_direct_dist +=
                     # times += data[f"agent_{ii}"]["time_conv"]
 
@@ -151,13 +155,47 @@ def compare_drag_vs_nodrag():
                 dist_data[kk, :] = dist
                 converg_data[jj, ll] = data["converged"].count(True)
                 kk += 1
+                
+                # Part of code to remove scenario that registered collisions
+                idx_coll = [idx for idx,i in enumerate(data["collisions"]) if i > 0]
+                dist = np.delete(dist, idx_coll)
+                if algo == "drag":
+                    data_drag_temp.append(list(dist))
+                if algo == "nodrag":
+                    data_nodrag_temp.append(list(dist))
+                
+    ticks = list_fur
+    def set_box_color(bp, color):
+        plt.setp(bp['boxes'], color=color)
+        plt.setp(bp['whiskers'], color=color)
+        plt.setp(bp['caps'], color=color)
+        plt.setp(bp['medians'], color=color) 
+    
+    plt.figure()
+    bpr = plt.boxplot(data_drag_temp, positions=np.array(range(len(data_drag_temp)))*2.0+0.4, sym='', widths=0.6)    
+    bpl = plt.boxplot(data_nodrag_temp, positions=np.array(range(len(data_nodrag_temp)))*2.0-0.4, sym='', widths=0.6)
+    set_box_color(bpl, '#D7191C')  
+    set_box_color(bpr, '#238b45') # colors are from http://colorbrewer2.org/
+
+    plt.plot([], c='#D7191C', label='SVMsimple')
+    plt.plot([], c='#238b45', label='SVM')
+    plt.title("Comparisons of the mean relative distance traveled by the furnitures")
+    plt.xlabel("Number of furnitures")
+    plt.ylabel("Mean relative distance")
+    plt.legend()      
+
+    plt.xticks(range(0, len(ticks) * 2, 2), ticks)
+    # ax= plt.gca()
+    # ax.annotate('local max', xy=(1.15, 1.15),  xycoords='axes fraction',
+    #     xytext=(0.2, 0.95), textcoords='axes fraction')
+    plt.tight_layout()
 
                 # conv_data.append(data["converged"].count(True))
 
-            temp = dist_data[0, :] - dist_data[1, :]
-            diff_dist.append(dist_data[0, :] - dist_data[1, :])
+            #diff_dist.append(dist_data[0, :] - dist_data[1, :])
 
-    plot_box(diff_dist, list_fur)
+    
+    #plot_box(diff_dist, list_fur)
     #plot_bar(converg_data, list_algo)
 
 
@@ -221,9 +259,9 @@ def plot_bar(data, label):
 
 def plot_collisions():
 
-    list_nb_fur = [2, 3, 4, 5, 6,]
+    list_nb_fur = [2, 3, 4, 5, 6, 7]
     list_version = ["v2"]
-    list_algo = ["drag", "nodrag"]
+    list_algo = ["nodrag", "drag",]
 
     collisions_data = []
     nb_collisions_data = []
@@ -248,16 +286,17 @@ def plot_collisions():
             nb_collisions_data.append(nb_collisions)
 
     width = 0.25
-
+    ERM_temp = [4, 17, 38, 56, 74, 87, 97, 99] # TODO TO be removed after presentation, report
     pos = np.arange(len(list_nb_fur))
 
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
     fig, ax = plt.subplots()
-    plt.title("Collisions during scenarios : v1 vs v2 with nodrag")
-    plt.bar(pos, nb_collisions_data[0], width=width, label="drag")
-    plt.bar(pos + width, nb_collisions_data[1], width=width, label="nodrag")
-    plt.xticks(pos + width / 2, list_nb_fur)
+    plt.title("Percentage of scenarios where collisions occured")
+    plt.bar(pos, ERM_temp, width=width, label="ERM")
+    plt.bar(pos+width, nb_collisions_data[0], width=width, label="SVMsimple")
+    plt.bar(pos + 2*width, nb_collisions_data[1], width=width, label="SVM")
+    plt.xticks(pos + width, list_nb_fur)
     for bars in ax.containers:
         ax.bar_label(bars)
 
@@ -269,6 +308,6 @@ def plot_collisions():
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     compare_drag_vs_nodrag()
-    plot_collisions()
+    #plot_collisions()
     plt.legend()
     plt.show()
