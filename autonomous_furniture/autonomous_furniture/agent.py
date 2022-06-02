@@ -55,7 +55,7 @@ class BaseAgent(ABC):
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
         self.time_conv = 0
-        self.time_sim = 0
+        self._proximity = 0
 
     @property
     def position(self):
@@ -202,6 +202,10 @@ class Furniture(BaseAgent):
         # Metrics
         self.time_conv_direct = self.direct_distance / self._dynamics.maximum_velocity
 
+    @property
+    def margin_absolut(self):
+        return self._shape._margin_absolut
+        
     def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
@@ -345,6 +349,17 @@ class Furniture(BaseAgent):
             self.total_distance += LA.norm(self.linear_velocity) * dt
             self.time_conv += dt
 
+        # compute proximity 
+        R = 3 # radius
+        distance = []
+
+        for obs in self.get_obstacles_without_me():
+            distance.append(obs.get_distance_to_surface(self.position, in_obstacle_frame=False, margin_absolut=self.margin_absolut))
+        
+        dmin  = min(distance)
+        dmin = dmin if dmin < R else R
+        self._proximity += dmin/R
+
 
 class Person(BaseAgent):
     def __init__(
@@ -368,9 +383,7 @@ class Person(BaseAgent):
         self._dynamics = LinearSystem(
             attractor_position=self.position, maximum_velocity=1
         )
-
-        # Metrics :
-        self._proximity = 0
+        
     @property
     def margin_absolut(self):
         return self._shape.margin_absolut
@@ -400,9 +413,9 @@ class Person(BaseAgent):
         
 
     def compute_metrics(self, delta_t):
+        # compute the proximity
         R = 3 # radius
         distance = []
-        self.time_sim += 1
 
         for obs in self.get_obstacles_without_me():
             distance.append(obs.get_distance_to_surface(self.position, in_obstacle_frame=False, margin_absolut=self.margin_absolut))

@@ -25,6 +25,7 @@ class DynamicalSystemAnimation(Animator):
 
         # For metrics
         self.metrics_json = {}
+        self.it_final = it_max # By default set to it_max, value is changed in metrics method
 
     def setup(
         self,
@@ -126,7 +127,7 @@ class DynamicalSystemAnimation(Animator):
                 # self.ax.grid()
                 self.ax.set_aspect("equal", adjustable="box")
 
-    def has_converged(self) -> bool:
+    def has_converged(self, it: int) -> bool:
         rtol_pos = 1e-3
         rtol_ang = 1e-1
         for ii in range(len(self.agent)):
@@ -145,6 +146,7 @@ class DynamicalSystemAnimation(Animator):
                     return False
 
         self.converged = True  # All the agents has converged
+        self.it_final = it
         return True
 
     def logs(self, nb_furniture: int, do_drag: bool, version: str = "v1"):
@@ -176,6 +178,9 @@ class DynamicalSystemAnimation(Animator):
                 self.metrics_json[f"agent_{ii}"].update(
                     {"direct_dist": [self.agent[ii].direct_distance]}
                 )
+                self.metrics_json[f"agent_{ii}"].update(
+                    {"prox": [1-1/self.it_final*self.agent[ii]._proximity] }
+                )
             else:
                 self.metrics_json[f"agent_{ii}"]["direct_dist"].append(
                     self.agent[ii].direct_distance
@@ -185,6 +190,9 @@ class DynamicalSystemAnimation(Animator):
                 )
                 self.metrics_json[f"agent_{ii}"]["time_direct"].append(
                     self.agent[ii].time_conv_direct
+                )
+                self.metrics_json[f"agent_{ii}"]["prox"].append(
+                    1-1/self.it_final*self.agent[ii]._proximity
                 )
 
             if "total_dist" in self.metrics_json[f"agent_{ii}"]:

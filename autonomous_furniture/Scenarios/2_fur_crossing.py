@@ -75,7 +75,7 @@ def run_turning_around():
     do_drag= True
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
-    #my_animation.logs(len(my_furniture), do_drag, version=version)
+    my_animation.logs(len(my_furniture), do_drag, version=version)
     print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
 
 if __name__ == "__main__":
