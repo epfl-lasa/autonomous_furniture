@@ -205,7 +205,7 @@ class Furniture(BaseAgent):
     @property
     def margin_absolut(self):
         return self._shape._margin_absolut
-        
+
     def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
@@ -239,7 +239,7 @@ class Furniture(BaseAgent):
 
             # Computing the weights of the angle to reach
             if mini_drag:
-
+                
                 w1_hat = self.virtual_drag
                 w2_hat_max = 1000
                 if LA.norm(initial_velocity) != 0:
@@ -254,7 +254,11 @@ class Furniture(BaseAgent):
             else:
                 w1 = 0
                 w2 = 1
-
+                # d = LA.norm(self.position-self._goal_pose.position)
+                # kappa = self.virtual_drag
+                # w1 = 1/2*(1+np.tanh((d*kappa-2*kappa)))
+                # w2 = 1- w1
+                
             # Direction (angle), of the linear_velocity in the global frame
             lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
@@ -358,6 +362,8 @@ class Furniture(BaseAgent):
         
         dmin  = min(distance)
         dmin = dmin if dmin < R else R
+        dmin = dmin if dmin >0 else 0
+
         self._proximity += dmin/R
 
 
@@ -422,6 +428,7 @@ class Person(BaseAgent):
         
         dmin  = min(distance)
         dmin = dmin if dmin < R else R
+        dmin = dmin if dmin >0 else 0
         self._proximity += dmin/R
     
     def get_distance_to_surface(self, position, in_obstacle_frame: bool = True, margin_absolut: float = None):
