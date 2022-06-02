@@ -260,10 +260,10 @@ def priority_demo():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=100, margin=1, static=True, name="elder"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="elder"),
                     Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
                     Person(center_position=[2, 1],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=0.5, margin=1, static=True, name="medic")]  
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="medic")]  
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
