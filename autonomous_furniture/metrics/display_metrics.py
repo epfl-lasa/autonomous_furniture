@@ -47,7 +47,7 @@ print(os.getcwd())
 #     # Sort the list and keep their old index which corresponds to the number of the scenario
 #     sort_dist = sorted(enumerate(temp), key=lambda i: i[1])
 
-folder ="autonomous_furniture/metrics/v2_new_conv_wihtout_BUG"
+folder ="autonomous_furniture/metrics/w_proximity"
 
 def compare_v2_vs_v1():
     diff_dist = []
@@ -317,10 +317,87 @@ def plot_collisions():
     plt.ylabel("Percentage with collisions")
     print("Coucou")
 
+def plot_proximity():
+    
+    delete_collisions_from_data = True
+
+    list_algo = ["drag", "nodrag"]
+    list_vers = ["v2"]
+    list_fur = [4]
+    nb_folds = number_scen(list_fur[0], list_algo[0], list_vers[0])
+
+    data_drag_temp =[] #TODO temp to remove
+    data_nodrag_temp =[]  # TODO temp to remove
+
+    for nb_fur in list_fur:
+
+        for version in list_vers:
+            kk = 0
+            data = []
+            
+            for algo in list_algo:
+                data.append( json.load(
+                    open(
+                        f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                        "r",
+                    )
+                ))
+            
+            idx_with_coll = []
+            
+            for data_alg in data:
+                idx_with_coll= idx_with_coll + [idx for idx,i in enumerate(data_alg["collisions"]) if i > 0]
+
+            idx_with_coll = list(dict.fromkeys(idx_with_coll)) # Little trick to remove duplicants from a list as a dictionnary cannot have duplicate keys 
+                
+        for algo,data_alg in enumerate(data):  # Becareful here to the order alg = 0 is drag alg = 1 is nondrag    
+            
+            prox = np.zeros(nb_folds)
+            for ii in range(nb_fur):
+                prox = prox + [
+                    data_alg[f"agent_{ii}"]["prox"][mm]/nb_fur for mm in range(nb_folds)
+                ]
+
+
+            kk += 1
+            if delete_collisions_from_data == True:
+                prox = np.delete(prox, idx_with_coll)
+            
+            if algo == 0: # 0 is drag, verify the order in list_version
+                data_drag_temp.append(list(prox))
+            if algo == 1: # 1 is nondrag, verify the order in list_version
+                data_nodrag_temp.append(list(prox))
+           
+
+
+    ticks = list_fur
+    def set_box_color(bp, color):
+        plt.setp(bp['boxes'], color=color)
+        plt.setp(bp['whiskers'], color=color)
+        plt.setp(bp['caps'], color=color)
+        plt.setp(bp['medians'], color=color) 
+    
+    plt.figure()
+    bpr = plt.boxplot(data_drag_temp, positions=np.array(range(len(data_drag_temp)))*2.0+0.4, sym='', widths=0.6)    
+    bpl = plt.boxplot(data_nodrag_temp, positions=np.array(range(len(data_nodrag_temp)))*2.0-0.4, sym='', widths=0.6)
+    set_box_color(bpl, '#D7191C')  
+    set_box_color(bpr, '#238b45') # colors are from http://colorbrewer2.org/
+
+    plt.plot([], c='#D7191C', label='SVMsimple')
+    plt.plot([], c='#238b45', label='SVM')
+    plt.title("Comparisons of the mean relative distance traveled by the furnitures")
+    plt.xlabel("Number of furnitures")
+    plt.ylabel("Mean relative distance")
+    plt.legend()      
+
+    plt.xticks(range(0, len(ticks) * 2, 2), ticks)
+    plt.tight_layout()
+
 
 if __name__ == "__main__":
     #compare_v2_vs_v1()
-    compare_drag_vs_nodrag()
+    #compare_drag_vs_nodrag()
     #plot_collisions()
+    plot_proximity()
     plt.legend()
     plt.show()
