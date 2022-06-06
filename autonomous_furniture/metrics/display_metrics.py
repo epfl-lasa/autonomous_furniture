@@ -47,7 +47,7 @@ print(os.getcwd())
 #     # Sort the list and keep their old index which corresponds to the number of the scenario
 #     sort_dist = sorted(enumerate(temp), key=lambda i: i[1])
 
-folder ="autonomous_furniture/metrics/w_proximity"
+folder ="autonomous_furniture/metrics/magnitude_mod"
 
 def compare_v2_vs_v1():
     diff_dist = []
@@ -272,9 +272,9 @@ def plot_bar(data, label):
 
 def plot_collisions():
 
-    list_nb_fur = [2, 3, 4, 5, 6, 7]
+    list_nb_fur = [4, 5,]
     list_version = ["v2"]
-    list_algo = ["nodrag", "drag",]
+    list_algo = ["nodrag","drag"]
 
     collisions_data = []
     nb_collisions_data = []
@@ -299,14 +299,14 @@ def plot_collisions():
             nb_collisions_data.append(nb_collisions)
 
     width = 0.25
-    ERM_temp = [4, 17, 38, 56, 74, 87, 97, 99] # TODO TO be removed after presentation, report
+    #ERM_temp = [4, 17, 38, 56, 74, 87, 97, 99] # TODO TO be removed after presentation, report
     pos = np.arange(len(list_nb_fur))
 
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
     fig, ax = plt.subplots()
     plt.title("Percentage of scenarios where collisions occured")
-    plt.bar(pos, ERM_temp, width=width, label="ERM")
+    #plt.bar(pos, ERM_temp, width=width, label="ERM")
     plt.bar(pos+width, nb_collisions_data[0], width=width, label="SVMsimple")
     plt.bar(pos + 2*width, nb_collisions_data[1], width=width, label="SVM")
     plt.xticks(pos + width, list_nb_fur)
@@ -323,7 +323,7 @@ def plot_proximity():
 
     list_algo = ["drag", "nodrag"]
     list_vers = ["v2"]
-    list_fur = [4]
+    list_fur = [2,3,4,5,6,7, 8]
     nb_folds = number_scen(list_fur[0], list_algo[0], list_vers[0])
 
     data_drag_temp =[] #TODO temp to remove
@@ -397,7 +397,7 @@ def plot_proximity():
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     #compare_drag_vs_nodrag()
-    #plot_collisions()
-    plot_proximity()
+    plot_collisions()
+    #plot_proximity()
     plt.legend()
     plt.show()
