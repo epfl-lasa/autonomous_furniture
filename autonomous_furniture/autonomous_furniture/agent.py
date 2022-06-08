@@ -55,6 +55,7 @@ class BaseAgent(ABC):
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
         self.time_conv = 0
+        self.time_conv_direct = 0
         self._proximity = 0
 
     @property
@@ -257,12 +258,12 @@ class Furniture(BaseAgent):
         #         w1 = w1_hat / (w1_hat + w2_hat)
         #         w2 = 1 - w1
         #     else:
-        #         w1 = 0
-        #         w2 = 1
-        #         # d = LA.norm(self.position-self._goal_pose.position)
-        #         # kappa = self.virtual_drag
-        #         # w1 = 1/2*(1+np.tanh((d*kappa-2*kappa)))
-        #         # w2 = 1- w1
+        #         # w1 = 0
+        #         # w2 = 1
+        #         d = LA.norm(self.position-self._goal_pose.position)
+        #         kappa = self.virtual_drag
+        #         w1 = 1/2*(1+np.tanh((d*kappa-1.5*kappa)/2))
+        #         w2 = 1- w1
                 
         #     # Direction (angle), of the linear_velocity in the global frame
         #     lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
@@ -500,7 +501,7 @@ class Furniture(BaseAgent):
                 # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
                 #           ii], head_width=0.1, head_length=0.2, color='m')
             
-            gamma_critic = 1.3
+            gamma_critic = 2
             magnitude =1
             if np.sign(np.prod(sign_project)) < 0:
                 #print("..warning..")
