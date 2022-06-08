@@ -64,7 +64,7 @@ def corner_case():
     )
 
     version = "v2"
-    do_drag= False
+    do_drag= "nodrag"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)

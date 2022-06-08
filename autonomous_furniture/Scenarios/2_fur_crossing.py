@@ -72,7 +72,7 @@ def run_turning_around():
     )
 
     version = "v2"
-    do_drag= True
+    do_drag= "dragdist"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)

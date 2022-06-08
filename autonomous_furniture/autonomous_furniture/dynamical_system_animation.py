@@ -1,4 +1,3 @@
-from math import pi, cos, sin, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
@@ -25,7 +24,7 @@ class DynamicalSystemAnimation(Animator):
 
         # For metrics
         self.metrics_json = {}
-        self.it_final = it_max # By default set to it_max, value is changed in metrics method
+        self.it_final = it_max-1 # By default set to it_max, value is changed in metrics method
 
     def setup(
         self,
@@ -59,7 +58,7 @@ class DynamicalSystemAnimation(Animator):
         self.converged: bool = False  # IF all the agent has converged
 
     def update_step(
-        self, ii, mini_drag: bool = True, anim: bool = True, version: str = "v1"
+        self, ii, mini_drag: str = "nodrag", anim: bool = True, version: str = "v1"
     ):
         if not ii % 10:
             print(f"it={ii}")
@@ -129,7 +128,7 @@ class DynamicalSystemAnimation(Animator):
 
     def has_converged(self, it: int) -> bool:
         rtol_pos = 1e-3
-        rtol_ang = 1e-1
+        rtol_ang = 4e-1
         for ii in range(len(self.agent)):
             if not self.agent[ii].converged:
                 if np.allclose(
@@ -146,10 +145,10 @@ class DynamicalSystemAnimation(Animator):
                     return False
 
         self.converged = True  # All the agents has converged
-        self.it_final = it
+        self.it_final = it +1 # Because it starts at 0 
         return True
 
-    def logs(self, nb_furniture: int, do_drag: bool, version: str = "v1"):
+    def logs(self, nb_furniture: int, mini_drag: str, version: str = "v1"):
         if (
             self.metrics_json == {}
         ):  # If this is the first time we enter the parameters of the simulation
@@ -204,9 +203,8 @@ class DynamicalSystemAnimation(Animator):
                     self.agent[ii].total_distance
                 ]
 
-        do_drag_str = "drag" if do_drag else "nodrag"
         json_name = (
-            "distance_" + f"nb{nb_furniture}_" + f"{do_drag_str}_" + version + ".json"
+            "distance_" + f"nb{nb_furniture}_" + mini_drag +"_" + version + ".json"
         )
         with open(json_name, "w") as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))

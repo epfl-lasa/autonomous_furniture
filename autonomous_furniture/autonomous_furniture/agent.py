@@ -201,7 +201,7 @@ class Furniture(BaseAgent):
         )
 
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
-        self.minimize_drag: bool = False
+        self.minimize_drag: bool = False # Seems to be used nowhere, mb to be removed
 
         # Metrics
         self.time_conv_direct = self.direct_distance / self._dynamics.maximum_velocity
@@ -210,147 +210,154 @@ class Furniture(BaseAgent):
     def margin_absolut(self):
         return self._shape._margin_absolut
 
-    def update_velocity(self, mini_drag: bool = True, version: str = "v1"):
-        self.corner_case(mini_drag, version)
+    def update_velocity(self, mini_drag: str = "nodrag", version: str = "v1"):
+        #self.corner_case(mini_drag, version)
 
-        # initial_velocity = np.zeros(2)
-        # environment_without_me = self.get_obstacles_without_me()
-        # # TODO : Make it a method to be called outside the class
-        # global_control_points = self.get_global_control_points()
-        # global_goal_control_points = self.get_goal_control_points()
+        initial_velocity = np.zeros(2)
+        environment_without_me = self.get_obstacles_without_me()
+        # TODO : Make it a method to be called outside the class
+        global_control_points = self.get_global_control_points()
+        global_goal_control_points = self.get_goal_control_points()
 
-        # weights = self.get_weight_of_control_points(
-        #     global_control_points, environment_without_me
-        # )
+        weights = self.get_weight_of_control_points(
+            global_control_points, environment_without_me
+        )
 
-        # velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-        # init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
 
-        # if not self._static:
-        #     # TODO : Do we want to enable rotation along other axis in the futur ?
-        #     angular_vel = np.zeros((1, self._control_points.shape[1]))
+        if not self._static:
+            # TODO : Do we want to enable rotation along other axis in the futur ?
+            angular_vel = np.zeros((1, self._control_points.shape[1]))
 
-        #     # First we compute the initial velocity at the "center", ugly
-        #     initial_velocity = self._dynamics.evaluate(self.position)
+            # First we compute the initial velocity at the "center", ugly
+            initial_velocity = self._dynamics.evaluate(self.position)
 
-        #     if version == "v2":
-        #         initial_velocity = obs_avoidance_interpolation_moving(
-        #             position=self.position,
-        #             initial_velocity=initial_velocity,
-        #             obs=environment_without_me,
-        #             self_priority=self.priority,
-        #         )
+            if version == "v2":
+                initial_velocity = obs_avoidance_interpolation_moving(
+                    position=self.position,
+                    initial_velocity=initial_velocity,
+                    obs=environment_without_me,
+                    self_priority=self.priority,
+                )
             
-        #     initial_magnitude = LA.norm(initial_velocity)
+            initial_magnitude = LA.norm(initial_velocity)
 
-        #     # Computing the weights of the angle to reach
-        #     if mini_drag:
+            # Computing the weights of the angle to reach
+            if mini_drag == "dragvel":
                 
-        #         w1_hat = self.virtual_drag
-        #         w2_hat_max = 1000
-        #         if LA.norm(initial_velocity) != 0:
-        #             w2_hat = self._dynamics.maximum_velocity / LA.norm(initial_velocity) - 1
-        #             if w2_hat > w2_hat_max:
-        #                 w2_hat = w2_hat_max
-        #         else:
-        #             w2_hat = w2_hat_max
+                w1_hat = self.virtual_drag
+                w2_hat_max = 1000
+                if LA.norm(initial_velocity) != 0:
+                    w2_hat = self._dynamics.maximum_velocity / LA.norm(initial_velocity) - 1
+                    if w2_hat > w2_hat_max:
+                        w2_hat = w2_hat_max
+                else:
+                    w2_hat = w2_hat_max
 
-        #         w1 = w1_hat / (w1_hat + w2_hat)
-        #         w2 = 1 - w1
-        #     else:
-        #         # w1 = 0
-        #         # w2 = 1
-        #         d = LA.norm(self.position-self._goal_pose.position)
-        #         kappa = self.virtual_drag
-        #         w1 = 1/2*(1+np.tanh((d*kappa-1.5*kappa)/2))
-        #         w2 = 1- w1
+                w1 = w1_hat / (w1_hat + w2_hat)
+                w2 = 1 - w1
+            elif mini_drag == "dragdist":
                 
-        #     # Direction (angle), of the linear_velocity in the global frame
-        #     lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
+                d = LA.norm(self.position-self._goal_pose.position)
+                kappa = self.virtual_drag
+                w1 = 1/2*(1+np.tanh((d*kappa-1.5*kappa)/2))
+                w2 = 1- w1
 
-        #     # Make the smallest rotation- the furniture has to pi symetric
-        #     drag_angle = lin_vel_dir - self.orientation
-        #     # Case where there is no symetry in the furniture
-        #     if np.abs(drag_angle) > np.pi:
-        #         drag_angle = -1 * (2 * np.pi - drag_angle)
+            elif mini_drag == "nodrag":
+                w1 = 0
+                w2 = 1 
+            else :
+                print("Error in the name of the type of drag to use")
+                w1 = 0
+                w2 = 1 
 
-        #     # Case where we consider for instance PI-symetry for the furniture
-        #     if (
-        #         np.abs(drag_angle) > np.pi / 2
-        #     ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-        #         if self.orientation > 0:
-        #             orientation_sym = self.orientation - np.pi
-        #         else:
-        #             orientation_sym = self.orientation + np.pi
+            # Direction (angle), of the linear_velocity in the global frame
+            lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
-        #         drag_angle = lin_vel_dir - orientation_sym
-        #         if drag_angle > np.pi / 2:
-        #             drag_angle = -1 * (2 * np.pi - drag_angle)
+            # Make the smallest rotation- the furniture has to pi symetric
+            drag_angle = lin_vel_dir - self.orientation
+            # Case where there is no symetry in the furniture
+            if np.abs(drag_angle) > np.pi:
+                drag_angle = -1 * (2 * np.pi - drag_angle)
 
-        #     goal_angle = self._goal_pose.orientation - self.orientation
-        #     if np.abs(goal_angle) > np.pi:
-        #         goal_angle = -1 * (2 * np.pi - goal_angle)
+            # Case where we consider for instance PI-symetry for the furniture
+            if (
+                np.abs(drag_angle) > np.pi / 2
+            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+                if self.orientation > 0:
+                    orientation_sym = self.orientation - np.pi
+                else:
+                    orientation_sym = self.orientation + np.pi
 
-        #     if (
-        #         np.abs(goal_angle) > np.pi / 2
-        #     ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-        #         if self.orientation > 0:
-        #             orientation_sym = self.orientation - np.pi
-        #         else:
-        #             orientation_sym = self.orientation + np.pi
+                drag_angle = lin_vel_dir - orientation_sym
+                if drag_angle > np.pi / 2:
+                    drag_angle = -1 * (2 * np.pi - drag_angle)
 
-        #         goal_angle = self._goal_pose.orientation - orientation_sym
-        #         if goal_angle > np.pi / 2:
-        #             goal_angle = -1 * (2 * np.pi - goal_angle)
+            goal_angle = self._goal_pose.orientation - self.orientation
+            if np.abs(goal_angle) > np.pi:
+                goal_angle = -1 * (2 * np.pi - goal_angle)
 
-        #     # TODO Very clunky : Rather make a function out of it
-        #     K = 3  # K proportionnal parameter for the speed
-        #     # Initial angular_velocity is computed
-        #     initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
+            if (
+                np.abs(goal_angle) > np.pi / 2
+            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+                if self.orientation > 0:
+                    orientation_sym = self.orientation - np.pi
+                else:
+                    orientation_sym = self.orientation + np.pi
 
-        #     for ii in range(self._control_points.shape[1]):
-        #         # doing the cross product formula by "hand" than using the funct
-        #         tang_vel = [
-        #             -initial_angular_vel * self._control_points[ii, 1],
-        #             initial_angular_vel * self._control_points[ii, 0],
-        #         ]
-        #         tang_vel = self.get_veloctity_in_global_frame(tang_vel)
-        #         init_velocities[:, ii] = initial_velocity + tang_vel
+                goal_angle = self._goal_pose.orientation - orientation_sym
+                if goal_angle > np.pi / 2:
+                    goal_angle = -1 * (2 * np.pi - goal_angle)
 
-        #         ctp = global_control_points[:, ii]
-        #         velocities[:, ii] = obs_avoidance_interpolation_moving(
-        #             position=ctp,
-        #             initial_velocity=init_velocities[:, ii],
-        #             obs=environment_without_me,
-        #             self_priority=self.priority,
-        #         )
-        #         # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
-        #         #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
-        #         # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
-        #         #           ii], head_width=0.1, head_length=0.2, color='m')
+            # TODO Very clunky : Rather make a function out of it
+            K = 3  # K proportionnal parameter for the speed
+            # Initial angular_velocity is computed
+            initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
 
-        #     self.linear_velocity = np.sum(
-        #         velocities * np.tile(weights, (self.dimension, 1)), axis=1
-        #     )
+            for ii in range(self._control_points.shape[1]):
+                # doing the cross product formula by "hand" than using the funct
+                tang_vel = [
+                    -initial_angular_vel * self._control_points[ii, 1],
+                    initial_angular_vel * self._control_points[ii, 0],
+                ]
+                tang_vel = self.get_veloctity_in_global_frame(tang_vel)
+                init_velocities[:, ii] = initial_velocity + tang_vel
 
-        #     # normalization to the initial velocity
-        #     self.linear_velocity = (
-        #         initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
-        #     )
-        #     # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-        #     #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+                ctp = global_control_points[:, ii]
+                velocities[:, ii] = obs_avoidance_interpolation_moving(
+                    position=ctp,
+                    initial_velocity=init_velocities[:, ii],
+                    obs=environment_without_me,
+                    self_priority=self.priority,
+                )
+                # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
+                #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
+                # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
+                #           ii], head_width=0.1, head_length=0.2, color='m')
 
-        #     for ii in range(self._control_points.shape[1]):
-        #         angular_vel[0, ii] = weights[ii] * np.cross(
-        #             global_control_points[:, ii] - self._shape.center_position,
-        #             velocities[:, ii] - self.linear_velocity,
-        #         )
+            self.linear_velocity = np.sum(
+                velocities * np.tile(weights, (self.dimension, 1)), axis=1
+            )
 
-        #     self.angular_velocity = np.sum(angular_vel)
+            # normalization to the initial velocity
+            self.linear_velocity = (
+                initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+            )
+            # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+            #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+
+            for ii in range(self._control_points.shape[1]):
+                angular_vel[0, ii] = weights[ii] * np.cross(
+                    global_control_points[:, ii] - self._shape.center_position,
+                    velocities[:, ii] - self.linear_velocity,
+                )
+
+            self.angular_velocity = np.sum(angular_vel)
         
-        # else:
-        #     self.linear_velocity = [0,0]
-        #     self.angular_velocity = 0
+        else:
+            self.linear_velocity = [0,0]
+            self.angular_velocity = 0
 
 
     def compute_metrics(self, dt):
@@ -372,7 +379,7 @@ class Furniture(BaseAgent):
 
         self._proximity += dmin/R
 
-    def corner_case(self, mini_drag: bool = True, version: str = "v1"):
+    def corner_case(self, mini_drag: str = "nodrag", version: str = "v1"):
         
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
@@ -410,7 +417,7 @@ class Furniture(BaseAgent):
             initial_magnitude = LA.norm(initial_velocity)
 
             # Computing the weights of the angle to reach
-            if mini_drag:
+            if mini_drag == "dragvel":
                 
                 w1_hat = self.virtual_drag
                 w2_hat_max = 1000
@@ -423,13 +430,20 @@ class Furniture(BaseAgent):
 
                 w1 = w1_hat / (w1_hat + w2_hat)
                 w2 = 1 - w1
-            else:
+            elif mini_drag == "dragdist":
+                
+                d = LA.norm(self.position-self._goal_pose.position)
+                kappa = self.virtual_drag
+                w1 = 1/2*(1+np.tanh((d*kappa-1.5*kappa)/2))
+                w2 = 1- w1
+
+            elif mini_drag == "nodrag":
                 w1 = 0
-                w2 = 1
-                # d = LA.norm(self.position-self._goal_pose.position)
-                # kappa = self.virtual_drag
-                # w1 = 1/2*(1+np.tanh((d*kappa-2*kappa)))
-                # w2 = 1- w1
+                w2 = 1 
+            else :
+                print("Error in the name of the type of drag to use")
+                w1 = 0
+                w2 = 1 
                 
             # Direction (angle), of the linear_velocity in the global frame
             lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
