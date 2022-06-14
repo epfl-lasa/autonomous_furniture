@@ -56,10 +56,10 @@ def priority_demo():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="elder"),
-                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=10000, margin=1, static=True, name="pers"),
+                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur"),
                     Person(center_position=[2, 1],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="medic")]  
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=0.2, margin=1, static=True, name="static")]  
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
@@ -75,7 +75,7 @@ def priority_demo():
     )
 
     version = "v2"
-    do_drag= "dragvel"
+    do_drag= "dragdist"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     #my_animation.logs(len(my_furniture), do_drag, version=version)

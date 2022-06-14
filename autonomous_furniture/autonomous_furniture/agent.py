@@ -48,7 +48,7 @@ class BaseAgent(ABC):
         
         self._static = static
         # name of the furniture, useful for debugging stuff
-        self._name = name
+        self.name = name
 
         self.converged: bool = False
         # metrics
@@ -93,6 +93,14 @@ class BaseAgent(ABC):
     @priority.setter
     def priority(self, value):
         self._shape.reactivity = value
+    
+    @property
+    def name(self):
+        return self._shape.name
+    
+    @name.setter
+    def name(self, name):
+        self._shape.name = name
 
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
