@@ -91,10 +91,16 @@ class DynamicalSystemAnimation(Animator):
                 self.y_lim,
                 showLabel=False,
             )
+            
+            for jj in range(self.number_agent):
+                self.ax.plot([ self.agent[jj]._list_center_pos[kk][0] for kk in range(len(self.agent[jj]._list_center_pos))], 
+                            [ self.agent[jj]._list_center_pos[kk][1] for kk in range(len(self.agent[jj]._list_center_pos))], "r--")
+
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
+            self.agent[jj]._list_center_pos.append(self.agent[jj].position)
 
             if anim:
                 global_crontrol_points = self.agent[jj].get_global_control_points()

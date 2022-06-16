@@ -57,7 +57,8 @@ class BaseAgent(ABC):
         self.time_conv = 0
         self.time_conv_direct = 0
         self._proximity = 0
-
+        #plot
+        self._list_center_pos = [self.position]
     @property
     def position(self):
         return self._shape.pose.position
