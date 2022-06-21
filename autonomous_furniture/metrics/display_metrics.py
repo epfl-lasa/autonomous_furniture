@@ -116,7 +116,7 @@ def compare_drag_vs_nodrag():
     delete_collisions_from_data = True # Whether or not we take into consideration for the graph all the scenarios
                                         # or the ones where both alg did not register collisions
 
-    list_algo = ["dragdist", "nodrag"]
+    list_algo = ["dragvel", "nodrag"]
     list_vers = ["v2"]
     list_fur = [2, 3, 4, 5, 6, 7]
     converg_data = np.zeros((len(list_algo), len(list_fur)))
@@ -176,6 +176,10 @@ def compare_drag_vs_nodrag():
         plt.setp(bp['medians'], color="black") 
     
     plt.figure()
+    plt.figure(figsize=(3.5, 3.5), dpi=120)
+    plt.xticks(fontsize=8.5)
+    plt.yticks(fontsize=8.5)
+    plt.legend(fontsize=1.5)
     bpr = plt.boxplot(data_drag_temp, positions=np.array(range(len(data_drag_temp)))*2.0+0.4, sym='', widths=0.6, patch_artist=True)    
     bpl = plt.boxplot(data_nodrag_temp, positions=np.array(range(len(data_nodrag_temp)))*2.0-0.4, sym='', widths=0.6,  patch_artist=True)
     set_box_color(bpl, 'red')  
@@ -183,9 +187,9 @@ def compare_drag_vs_nodrag():
 
     plt.plot([], c='red', label='TSVMA')
     plt.plot([], c='green', label='SVMA')
-    plt.title("Comparisons of the mean relative distance traveled by the furniture")
-    plt.xlabel("Number of furnitures")
-    plt.ylabel("Mean relative distance traveled, $\overline{Dist}$ [-]")
+  
+    plt.xlabel("Number of furniture", fontsize=9)
+    plt.ylabel("Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=9)
     plt.legend()      
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
@@ -263,7 +267,7 @@ def plot_collisions():
 
     list_nb_fur = [2, 3, 4, 5, 6, 7,]
     list_version = ["v2"]
-    list_algo = ["nodrag","dragdist"]
+    list_algo = ["nodrag","dragvel"]
 
     collisions_data = []
     nb_collisions_data = []
@@ -293,17 +297,20 @@ def plot_collisions():
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
     fig, ax = plt.subplots()
-    plt.title("Percentage of scenarios where at least one collision occurred")
+    #plt.figure(figsize=(3.5, 3.5), dpi=120)
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
+
     #plt.bar(pos, ERM_temp, width=width, label="ERM")
     plt.bar(pos-0.5*width, nb_collisions_data[0], color="RED", width=width, label="TSVMA")
     plt.bar(pos + 0.5*width, nb_collisions_data[1], color="green", width=width, label="SVMA")
     plt.xticks(pos , list_nb_fur)
+    ax.legend(fontsize=1)
     for bars in ax.containers:
-        ax.bar_label(bars)
+        ax.bar_label(bars,fontsize =15)
 
-    plt.xlabel("Number of furniture")
-    plt.ylabel("Percentage with collisions, $Coll_r$ [%]")
-    print("Coucou")
+    plt.xlabel("Number of furniture", fontsize=14)
+    plt.ylabel("Percentage of scenarios with virtual collisions, $\mathcal{C}$[%]", fontsize=14)
 
 def plot_proximity():
     
@@ -366,6 +373,11 @@ def plot_proximity():
         plt.setp(bp['medians'], color="black") 
     
     plt.figure()
+    plt.figure(figsize=(3.5, 3.5), dpi=120)
+    plt.xticks(fontsize=8.5)
+    plt.yticks(fontsize=8.5)
+    plt.legend(fontsize=1.5)
+    
     bpr = plt.boxplot(data_drag_temp, positions=np.array(range(len(data_drag_temp)))*2.0+0.4, sym='', widths=0.6, patch_artist=True)    
     bpl = plt.boxplot(data_nodrag_temp, positions=np.array(range(len(data_nodrag_temp)))*2.0-0.4, sym='', widths=0.6, patch_artist=True)
     set_box_color(bpl, 'red')  
@@ -373,9 +385,9 @@ def plot_proximity():
 
     plt.plot([], c='red', label='TSVMA')
     plt.plot([], c='green', label='SVMA')
-    plt.title("Comparison of the mean proximity")
-    plt.xlabel("Number of furnitures")
-    plt.ylabel("Mean proximity, $\overline{Prox}$ [-]")
+
+    plt.xlabel("Number of furniture", fontsize=9)
+    plt.ylabel("Mean proximity, $\overline{\mathcal{P}}$ [-]", fontsize=9)
     plt.legend()      
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
@@ -385,7 +397,7 @@ def plot_proximity():
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     #compare_drag_vs_nodrag()
-    #plot_collisions()
-    plot_proximity()
+    plot_collisions()
+    #plot_proximity()
     plt.legend()
     plt.show()
