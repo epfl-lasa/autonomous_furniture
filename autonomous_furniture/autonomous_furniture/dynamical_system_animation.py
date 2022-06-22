@@ -186,6 +186,9 @@ class DynamicalSystemAnimation(Animator):
                 self.metrics_json[f"agent_{ii}"].update(
                     {"prox": [1-1/self.it_final*self.agent[ii]._proximity] }
                 )
+                self.metrics_json[f"agent_{ii}"].update(
+                    {"list_prox":self.agent[ii]._list_prox}
+                )
             else:
                 self.metrics_json[f"agent_{ii}"]["direct_dist"].append(
                     self.agent[ii].direct_distance

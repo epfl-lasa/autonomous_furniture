@@ -49,6 +49,7 @@ def priority_demo():
                            tail_effect=False,)
 
     goal2 = ObjectPose(position=np.array([2, 1]), orientation=np.pi/2)
+    goal_pers = ObjectPose(position=np.array([2, 5.5]), orientation=0)
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                             center_position=goal2.position,
                             margin_absolut=1,
@@ -56,12 +57,12 @@ def priority_demo():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=10000, margin=1, static=True, name="pers"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal_pers,priority_value=10000, margin=1, static=True, name="pers"),
                     Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur"),
                     Person(center_position=[2, 1],
                            radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=0.2, margin=1, static=True, name="static")]  
     my_animation = DynamicalSystemAnimation(
-        it_max=450,
+        it_max=200,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -78,7 +79,7 @@ def priority_demo():
     do_drag= "dragdist"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
-    #my_animation.logs(len(my_furniture), do_drag, version=version)
+    my_animation.logs(len(my_furniture), do_drag, version=version)
     
 if __name__ == "__main__":
     plt.close("all")

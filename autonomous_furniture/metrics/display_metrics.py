@@ -393,11 +393,24 @@ def plot_proximity():
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
     plt.tight_layout()
 
+def plot_prox_graph():
+    nb_fur = 3 
+    algo = "dragdist"
+    version = "v2"
+    
+    data = json.load(
+        open(
+        f"distance_nb{nb_fur}_{algo}_{version}.json", "r",))
+    
+    pers_list = data["agent_0"]["list_prox"]
+
+    print("coucou")
 
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     #compare_drag_vs_nodrag()
-    plot_collisions()
+    #plot_collisions()
+    plot_prox_graph()
     #plot_proximity()
     plt.legend()
     plt.show()

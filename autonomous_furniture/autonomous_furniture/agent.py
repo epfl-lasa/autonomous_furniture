@@ -57,6 +57,7 @@ class BaseAgent(ABC):
         self.time_conv = 0
         self.time_conv_direct = 0
         self._proximity = 0
+        self._list_prox = [] # Tempory attribute only use for the qualitative example of the report. To be deleted after
         #plot
         self._list_center_pos = [self.position]
     @property
@@ -387,6 +388,7 @@ class Furniture(BaseAgent):
         dmin = dmin if dmin >0 else 0
 
         self._proximity += dmin/R
+        self._list_prox.append(self._proximity) # Temporary metric used for the prox graph of the report, can be deleted
 
     def corner_case(self, mini_drag: str = "nodrag", version: str = "v1"):
         
@@ -620,6 +622,7 @@ class Person(BaseAgent):
         dmin = dmin if dmin < R else R
         dmin = dmin if dmin >0 else 0
         self._proximity += dmin/R
+        self._list_prox.append(self._proximity) # Temporary metric used for the prox graph of the report, can be deleted
     
     def get_distance_to_surface(self, position, in_obstacle_frame: bool = True, margin_absolut: float = None):
         self.get_point_on_surface(position=position,
