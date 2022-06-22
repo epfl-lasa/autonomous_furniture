@@ -60,6 +60,8 @@ class DynamicalSystemAnimation(Animator):
     def update_step(
         self, ii, mini_drag: str = "nodrag", anim: bool = True, version: str = "v1"
     ):
+        if any([ii == el for el in [0, 100, 180]]):
+            self._animation_paused = True
         if anim:
             self.ax.clear()
             # Drawing and adjusting of the axis

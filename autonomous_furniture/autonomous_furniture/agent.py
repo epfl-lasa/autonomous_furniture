@@ -605,7 +605,8 @@ class Person(BaseAgent):
                 obs=environment_without_me,
                 self_priority=self.priority,
             )
-        
+
+            self.linear_velocity = velocity
         else:
             self.linear_velocity = [0,0]
         

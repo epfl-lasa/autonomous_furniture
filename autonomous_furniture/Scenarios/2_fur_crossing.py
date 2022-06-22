@@ -45,6 +45,8 @@ def run_turning_around():
                            orientation=np.pi/2,
                            tail_effect=False,)
 
+    goal_pers = ObjectPose(position=np.array([2, 5.5]), orientation=0)
+
     goal2 = ObjectPose(position=np.array([2, 1]), orientation=np.pi/2)
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                             center_position=goal2.position,
@@ -53,7 +55,7 @@ def run_turning_around():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="pers"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal_pers, priority_value=1, margin=1, static=False, name="pers"),
                     Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur"),
                     Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2, priority_value=1, static=True, name="static")]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
 
@@ -72,7 +74,7 @@ def run_turning_around():
     )
 
     version = "v2"
-    do_drag= "nodrag"
+    do_drag= "dragdist"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)
