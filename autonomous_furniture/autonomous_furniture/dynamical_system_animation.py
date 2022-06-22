@@ -60,9 +60,6 @@ class DynamicalSystemAnimation(Animator):
     def update_step(
         self, ii, mini_drag: str = "nodrag", anim: bool = True, version: str = "v1"
     ):
-        if not ii % 10:
-            print(f"it={ii}")
-
         if anim:
             self.ax.clear()
             # Drawing and adjusting of the axis

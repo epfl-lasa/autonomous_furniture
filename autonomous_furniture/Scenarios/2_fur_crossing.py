@@ -53,8 +53,8 @@ def run_turning_around():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="elder"),
-                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1, margin=1, static=True, name="pers"),
+                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur"),
                     Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2, priority_value=1, static=True, name="static")]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
 
     my_animation = DynamicalSystemAnimation(
@@ -72,11 +72,11 @@ def run_turning_around():
     )
 
     version = "v2"
-    do_drag= "dragdist"
+    do_drag= "nodrag"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)
-    print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
+    #print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
 
 if __name__ == "__main__":
     plt.close("all")

@@ -398,19 +398,133 @@ def plot_prox_graph():
     algo = "dragdist"
     version = "v2"
     
+    step= 180
     data = json.load(
         open(
         f"distance_nb{nb_fur}_{algo}_{version}.json", "r",))
     
     pers_list = data["agent_0"]["list_prox"]
+    furn_list = data["agent_2"]["list_prox"]
 
+    pers_list = [ 1-pers_list[ii]/(ii+1) for ii in range(step)]
+    furn_list = [ 1-furn_list[ii]/(ii+1) for ii in range(step)]
+    
+    plt.figure()
+    xmin = 0
+    xmax = 190
+    ymin = 0.2
+    ymax = 0.8
+    
+    plt.ylim(ymin, ymax)
+    plt.xlim(xmin, xmax)
+    
+    plt.xticks(fontsize=11)
+    plt.yticks(fontsize=11)
+    plt.xlabel("Step", fontsize=12)
+
+    plt.ylabel("Proximity, $\mathcal{P}$", fontsize=12)
+    plt.plot(range(step), pers_list, color=(246/255, 178/255, 107/255))
+    plt.plot(step-1, pers_list[step-1],"o", color=(246/255, 178/255, 107/255))
+    plt.plot(60, pers_list[60],"o", color=(246/255, 178/255, 107/255))
+    plt.plot(0, pers_list[0],"o", color=(246/255, 178/255, 107/255))
+    #plt.vlines(step-1, 0, pers_list[step-1], linestyle="dashed", color="black")
+    #plt.hlines(pers_list[step-1], 0, step-1, linestyle="dashed")
+    
+    plt.plot(range(step), furn_list, color=(221/255, 16/255, 16/255))
+    plt.plot(step-1, furn_list[step-1], "o", color=(221/255, 16/255, 16/255))
+    plt.plot(60, furn_list[60], "o", color=(221/255, 16/255, 16/255))
+    plt.plot(0, furn_list[0], "o", color=(221/255, 16/255, 16/255))
+    #plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
+    
     print("coucou")
+
+def plot_time():
+    
+    delete_collisions_from_data = True
+
+    list_algo = ["dragvel", "nodrag"]
+    list_vers = ["v2"]
+    list_fur = [2,3,4,5,6,7]
+    nb_folds = number_scen(list_fur[0], list_algo[0], list_vers[0])
+
+    data_drag_temp =[] #TODO temp to remove
+    data_nodrag_temp =[]  # TODO temp to remove
+
+    for nb_fur in list_fur:
+
+        for version in list_vers:
+            data = []
+            
+            for algo in list_algo:
+                data.append( json.load(
+                    open(
+                        f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                        "r",
+                    )
+                ))
+            
+            idx_conv = []
+            
+            for data_alg in data:
+                idx_conv= idx_conv + [idx for idx,i in enumerate(data_alg["converged"]) if i == False]
+
+            idx_conv = list(dict.fromkeys(idx_conv)) # Little trick to remove duplicants from a list as a dictionnary cannot have duplicate keys 
+
+            for algo,data_alg in enumerate(data):  # Becareful here to the order alg = 0 is drag alg = 1 is nondrag    
+            
+                time_rel = np.zeros(nb_folds)
+                for ii in range(nb_fur):
+                    time_rel = time_rel + [
+                        data_alg[f"agent_{ii}"]["time_conv"][mm]
+                        / data_alg[f"agent_{ii}"]["time_direct"][mm]
+                        for mm in range(nb_folds)
+                    ]
+                
+                time_rel /= nb_fur                    
+               
+                if delete_collisions_from_data == True:
+                    time_rel = np.delete(time_rel, idx_conv)
+                if algo == 0: # 0 is drag, verify the order in list_version
+                    data_drag_temp.append(list(time_rel))
+                if algo == 1: # 1 is nondrag, verify the order in list_version
+                    data_nodrag_temp.append(list(time_rel))
+
+    ticks = list_fur
+    def set_box_color(bp, color):
+        plt.setp(bp['boxes'], facecolor=color)
+        plt.setp(bp['whiskers'], color=color)
+        plt.setp(bp['caps'], color=color)
+        plt.setp(bp['medians'], color="black") 
+    
+    plt.figure()
+    plt.figure(figsize=(3.5, 3.5), dpi=120)
+    plt.xticks(fontsize=8.5)
+    plt.yticks(fontsize=8.5)
+    plt.legend(fontsize=1.5)
+    
+    bpr = plt.boxplot(data_drag_temp, positions=np.array(range(len(data_drag_temp)))*2.0+0.4, sym='', widths=0.6, patch_artist=True)    
+    bpl = plt.boxplot(data_nodrag_temp, positions=np.array(range(len(data_nodrag_temp)))*2.0-0.4, sym='', widths=0.6, patch_artist=True)
+    set_box_color(bpl, 'red')  
+    set_box_color(bpr, 'green') # colors are from http://colorbrewer2.org/
+
+    plt.plot([], c='red', label='TSVMA')
+    plt.plot([], c='green', label='SVMA')
+
+    plt.xlabel("Number of furniture", fontsize=9)
+    plt.ylabel("Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=9)
+    plt.legend()      
+
+    plt.xticks(range(0, len(ticks) * 2, 2), ticks)
+    plt.tight_layout()        
+           
+
 
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     #compare_drag_vs_nodrag()
     #plot_collisions()
-    plot_prox_graph()
+    #plot_prox_graph()
     #plot_proximity()
+    plot_time()
     plt.legend()
     plt.show()
