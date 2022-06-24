@@ -92,8 +92,9 @@ class DynamicalSystemAnimation(Animator):
             )
             
             for jj in range(self.number_agent):
+                color = ["b", "g", "r", "m"]
                 self.ax.plot([ self.agent[jj]._list_center_pos[kk][0] for kk in range(len(self.agent[jj]._list_center_pos))], 
-                            [ self.agent[jj]._list_center_pos[kk][1] for kk in range(len(self.agent[jj]._list_center_pos))], "r--")
+                            [ self.agent[jj]._list_center_pos[kk][1] for kk in range(len(self.agent[jj]._list_center_pos))], f"{color[jj]}--")
 
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)

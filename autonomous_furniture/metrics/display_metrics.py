@@ -188,7 +188,7 @@ def compare_drag_vs_nodrag():
     plt.plot([], c='red', label='TSVMA')
     plt.plot([], c='green', label='SVMA')
   
-    plt.xlabel("Number of furniture", fontsize=9)
+    plt.xlabel("Number of agents", fontsize=9)
     plt.ylabel("Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=9)
     plt.legend()      
 
@@ -291,26 +291,30 @@ def plot_collisions():
             nb_collisions_data.append(nb_collisions)
 
     width = 0.25
-    #ERM_temp = [4, 17, 38, 56, 74, 87, 97, 99] # TODO TO be removed after presentation, report
+    ERM_temp = [4, 17, 38, 56, 74, 87]#, 97, 99] # TODO TO be removed after presentation, report
     pos = np.arange(len(list_nb_fur))
 
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(3.7, 3.7), dpi=120)
     #plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=13)
-    plt.yticks(fontsize=13)
+    plt.xticks(fontsize=9)
+    plt.yticks(fontsize=9)
 
-    #plt.bar(pos, ERM_temp, width=width, label="ERM")
-    plt.bar(pos-0.5*width, nb_collisions_data[0], color="RED", width=width, label="TSVMA")
-    plt.bar(pos + 0.5*width, nb_collisions_data[1], color="green", width=width, label="SVMA")
+    plt.bar(pos+0.5*width, ERM_temp, color="blue", width=width, label="previous work")
+    
+    plt.bar(pos-0.5*width, nb_collisions_data[0], color="red", width=width, label="TSVMA")
+    #plt.bar(pos + 0.5*width, nb_collisions_data[1], color="green", width=width, label="SVMA")
     plt.xticks(pos , list_nb_fur)
-    ax.legend(fontsize=1)
+    
     for bars in ax.containers:
-        ax.bar_label(bars,fontsize =15)
+        ax.bar_label(bars,fontsize =9)
 
-    plt.xlabel("Number of furniture", fontsize=14)
-    plt.ylabel("Percentage of scenarios with virtual collisions, $\mathcal{C}$[%]", fontsize=14)
+    plt.xlabel("Number of agents", fontsize=10)
+    plt.ylabel("Percentage of scenarios with virtual collisions, $\mathcal{C}$[%]", fontsize=10)
+    plt.legend(fontsize=10)
+    plt.show()
+    
 
 def plot_proximity():
     
@@ -386,7 +390,7 @@ def plot_proximity():
     plt.plot([], c='red', label='TSVMA')
     plt.plot([], c='green', label='SVMA')
 
-    plt.xlabel("Number of furniture", fontsize=9)
+    plt.xlabel("Number of agents", fontsize=9)
     plt.ylabel("Mean proximity, $\overline{\mathcal{P}}$ [-]", fontsize=9)
     plt.legend()      
 
@@ -435,8 +439,6 @@ def plot_prox_graph():
     plt.plot(60, furn_list[60], "o", color=(221/255, 16/255, 16/255))
     plt.plot(0, furn_list[0], "o", color=(221/255, 16/255, 16/255))
     #plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
-    
-    print("coucou")
 
 def plot_time():
     
@@ -510,7 +512,7 @@ def plot_time():
     plt.plot([], c='red', label='TSVMA')
     plt.plot([], c='green', label='SVMA')
 
-    plt.xlabel("Number of furniture", fontsize=9)
+    plt.xlabel("Number of agents", fontsize=9)
     plt.ylabel("Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=9)
     plt.legend()      
 
@@ -522,9 +524,10 @@ def plot_time():
 if __name__ == "__main__":
     #compare_v2_vs_v1()
     #compare_drag_vs_nodrag()
-    #plot_collisions()
+    plot_collisions()
     #plot_prox_graph()
     #plot_proximity()
-    plot_time()
+    #plot_time()
     plt.legend()
     plt.show()
+    
