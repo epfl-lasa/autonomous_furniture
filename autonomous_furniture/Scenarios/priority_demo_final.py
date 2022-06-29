@@ -56,7 +56,7 @@ def priority_demo():
                             tail_effect=False,)
 
     my_furniture = [Person(center_position=[2, -1],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=10000, margin=1.3, static=False, name="pers"),
+                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal2,priority_value=1.5, margin=1.3, static=False, name="pers"),
                            Person(center_position=[2.5, 3],
                            radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal,priority_value=1, margin=1.3, static=False, name="fur")]
                     #Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]  
