@@ -37,18 +37,28 @@ def corner_case():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([6, 2]), orientation=np.pi/2)
+    goal = ObjectPose(position=np.array([7, 2]), orientation=0)
 
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([-2, 2]),
+                           center_position=np.array([7.5, 8]),
                            margin_absolut=1,
-                           orientation=np.pi/2,
+                           orientation=0,
                            tail_effect=False,)
 
-    my_furniture = [Person(center_position=[2, 2.2],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal,priority_value=1, margin=1, static=True, name="elder"),
-                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="elder"),
-                    ]
+    table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
+                           center_position=np.array([9.5, 4]),
+                           margin_absolut=1,
+                           orientation=np.pi/4,
+                           tail_effect=False,)
+    table_shape3 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
+                           center_position=np.array([4.5, 4]),
+                           margin_absolut=1,
+                           orientation=-np.pi/4,
+                           tail_effect=False,)                           
+
+    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
+                    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, static=True, priority_value=1, name="move"),
+                    Furniture(shape=table_shape3, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, static=True, priority_value=1, name="move"),]
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
@@ -59,8 +69,8 @@ def corner_case():
     my_animation.setup(
         obstacle_environment,
         agent=my_furniture,
-        x_lim=[-3, 8],
-        y_lim=[-2, 7]
+        x_lim=[0, 14],
+        y_lim=[0, 14]
     )
 
     version = "v2"

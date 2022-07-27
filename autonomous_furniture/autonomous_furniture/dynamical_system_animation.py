@@ -97,7 +97,10 @@ class DynamicalSystemAnimation(Animator):
                             [ self.agent[jj]._list_center_pos[kk][1] for kk in range(len(self.agent[jj]._list_center_pos))], f"{color[jj]}--")
 
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
+            if self.agent[jj].name=="move":
+                self.agent[jj].corner_case(mini_drag=mini_drag, version=version)
+            elif self.agent[jj].name=="elder":
+                self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
             self.agent[jj]._list_center_pos.append(self.agent[jj].position)
