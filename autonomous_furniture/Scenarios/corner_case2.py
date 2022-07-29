@@ -37,10 +37,10 @@ def corner_case():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([7, 2]), orientation=0)
+    goal = ObjectPose(position=np.array([7, 0]), orientation=0)
 
     table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([7.5, 8]),
+                           center_position=np.array([7, 8]),
                            margin_absolut=1,
                            orientation=0,
                            tail_effect=False,)
@@ -48,12 +48,12 @@ def corner_case():
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=np.array([9.5, 4]),
                            margin_absolut=1,
-                           orientation=np.pi/4,
+                           orientation=np.pi/2,
                            tail_effect=False,)
     table_shape3 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=np.array([4.5, 4]),
                            margin_absolut=1,
-                           orientation=-np.pi/4,
+                           orientation=-np.pi/2,
                            tail_effect=False,)                           
 
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),

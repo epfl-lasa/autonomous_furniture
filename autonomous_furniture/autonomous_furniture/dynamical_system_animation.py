@@ -98,7 +98,7 @@ class DynamicalSystemAnimation(Animator):
 
         for jj in range(self.number_agent):
             if self.agent[jj].name=="move":
-                self.agent[jj].corner_case(mini_drag=mini_drag, version=version)
+                self.agent[jj].emergency_stop(mini_drag=mini_drag, version=version)
             elif self.agent[jj].name=="elder":
                 self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
             self.agent[jj].compute_metrics(self.dt_simulation)
