@@ -729,6 +729,7 @@ class Furniture(BaseAgent):
                     normal = environment_without_me[ii].get_normal_direction(self.get_global_control_points()[:][ii], in_obstacle_frame=False)
                     plt.arrow(self.get_global_control_points()[0][0], self.get_global_control_points()[1][0], temp[0],
                                 temp[1], head_width=0.1, head_length=0.2, color='r')
+                    print(f"normal: ", normal)
                     if np.dot(instant_velocity, normal) < 0:
                         print("Collision trajectory")
                     else:

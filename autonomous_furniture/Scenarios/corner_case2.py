@@ -46,7 +46,7 @@ def corner_case():
                            tail_effect=False,)
 
     table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([9.5, 4]),
+                           center_position=np.array([11.5, 4]),
                            margin_absolut=1,
                            orientation=np.pi/2,
                            tail_effect=False,)
