@@ -53,7 +53,7 @@ def corner_case():
     table_shape3 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
                            center_position=np.array([4.5, 4]),
                            margin_absolut=1,
-                           orientation=-np.pi/2,
+                           orientation=np.pi/2,
                            tail_effect=False,)                           
 
     my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),

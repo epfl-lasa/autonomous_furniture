@@ -535,7 +535,6 @@ class Furniture(BaseAgent):
             gamma_critic = 2
             magnitude =1
             if np.sign(np.prod(sign_project)) < 0:
-                #print("..warning..")
                 if all(gamma_values < gamma_critic):
                     print("ANTI COLLSION")
                     magnitude = 1/(1-gamma_critic)*(min(gamma_values)-gamma_critic)
@@ -716,30 +715,29 @@ class Furniture(BaseAgent):
 
             self.angular_velocity = np.sum(angular_vel)
             
-            #TODO: Remove the arrow after, jsut for debbug purpose
-            temp = [0, self.angular_velocity*self._control_points[0][ii]]
-            plt.arrow(self.get_global_control_points()[0][0], self.get_global_control_points()[1][0], temp[0],
-                                temp[1], head_width=0.1, head_length=0.2, color='r')
-
             if list_critic_gammas is not None:
                 for ii in list_critic_gammas:
                     
                     # This only works if control points are on the longest axis of the cuboid, calculation of Omega x R + linear_velocity
                     instant_velocity = [0, self.angular_velocity*self._control_points[0][ii]] + self.get_velocity_in_local_frame(self.linear_velocity) 
-                    normal = environment_without_me[ii].get_normal_direction(self.get_global_control_points()[:][ii], in_obstacle_frame=False)
-                    plt.arrow(self.get_global_control_points()[0][0], self.get_global_control_points()[1][0], temp[0],
-                                temp[1], head_width=0.1, head_length=0.2, color='r')
-                    print(f"normal: ", normal)
+
+                    temp = [0, self.angular_velocity*self._control_points[ii][0]]
+
+                    normal = environment_without_me[ii].get_normal_direction(self.get_global_control_points()[:,ii], in_obstacle_frame=False)
+                    plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], temp[0],
+                                temp[1], head_width=0.1, head_length=0.2, color='b')
+
+                    plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
+                                head_width=0.1, head_length=0.2, color='r')
                     if np.dot(instant_velocity, normal) < 0:
                         print("Collision trajectory")
                     else:
                         print("Not in collision trajectory")
-
         
         else:
             self.linear_velocity = [0,0]
             self.angular_velocity = 0
-        
+
 
 class Person(BaseAgent):
     def __init__(
