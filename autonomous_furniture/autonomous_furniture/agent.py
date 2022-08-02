@@ -721,11 +721,11 @@ class Furniture(BaseAgent):
                     # This only works if control points are on the longest axis of the cuboid, calculation of Omega x R + linear_velocity
                     instant_velocity = [0, self.angular_velocity*self._control_points[0][ii]] + self.get_velocity_in_local_frame(self.linear_velocity) 
 
-                    temp = [0, self.angular_velocity*self._control_points[ii][0]]
+                    #temp = [0, self.angular_velocity*self._control_points[ii][0]]
 
                     normal = environment_without_me[ii].get_normal_direction(self.get_global_control_points()[:,ii], in_obstacle_frame=False)
-                    plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], temp[0],
-                                temp[1], head_width=0.1, head_length=0.2, color='b')
+                    plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
+                                instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
                     plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
                                 head_width=0.1, head_length=0.2, color='r')
