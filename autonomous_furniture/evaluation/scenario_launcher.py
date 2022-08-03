@@ -38,7 +38,7 @@ class ScenarioLauncher:
         self._fur_shape = CuboidXd(
             axes_length=[2, 1],  # TODO TEMPORARY Remove from being it hardcoded
             center_position=[0, 0],
-            margin_absolut=0.6,
+            margin_absolut=0.8,
             orientation=0,
             tail_effect=False,
         )

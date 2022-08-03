@@ -60,8 +60,6 @@ class DynamicalSystemAnimation(Animator):
     def update_step(
         self, ii, mini_drag: str = "nodrag", anim: bool = True, version: str = "v1"
     ):
-        if any([ii == el for el in [0, 100, 180]]):
-            self._animation_paused = True
         if anim:
             self.ax.clear()
             # Drawing and adjusting of the axis
@@ -91,19 +89,10 @@ class DynamicalSystemAnimation(Animator):
                 showLabel=False,
             )
             
-            for jj in range(self.number_agent):
-                color = ["b", "g", "r", "m"]
-                self.ax.plot([ self.agent[jj]._list_center_pos[kk][0] for kk in range(len(self.agent[jj]._list_center_pos))], 
-                            [ self.agent[jj]._list_center_pos[kk][1] for kk in range(len(self.agent[jj]._list_center_pos))], f"{color[jj]}--")
-
         for jj in range(self.number_agent):
-            if self.agent[jj].name=="move":
-                self.agent[jj].emergency_stop(mini_drag=mini_drag, version=version)
-            elif self.agent[jj].name=="elder":
-                self.agent[jj].update_velocity(mini_drag=mini_drag, version=version)
+            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version, emergency_stop=False)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
-            self.agent[jj]._list_center_pos.append(self.agent[jj].position)
 
             if anim:
                 global_crontrol_points = self.agent[jj].get_global_control_points()
@@ -116,23 +105,6 @@ class DynamicalSystemAnimation(Animator):
                     goal_crontrol_points[0, :], goal_crontrol_points[1, :], "ko"
                 )
 
-                # for agent in range(self.num_agent):
-                #     plt.arrow(self.position_list[agent, 0, ii + 1],
-                #               self.position_list[agent, 1, ii + 1],
-                #               self.velocity[agent, 0],
-                #               self.velocity[agent, 1],
-                #               head_width=0.05,
-                #               head_length=0.1,
-                #               fc='k',
-                #               ec='k')
-
-                #     self.ax.plot(
-                #         self.initial_dynamics[agent].attractor_position[0],
-                #         self.initial_dynamics[agent].attractor_position[1],
-                #         "k*",
-                #         markersize=8,
-                #     )
-                # self.ax.grid()
                 self.ax.set_aspect("equal", adjustable="box")
 
     def has_converged(self, it: int) -> bool:
