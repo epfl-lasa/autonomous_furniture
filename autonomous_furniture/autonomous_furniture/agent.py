@@ -161,11 +161,11 @@ class BaseAgent(ABC):
             BaseAgent.number_collisions += 1
             warnings.warn("Collision detected.")
             breakpoint()
-            return None, 0
+            return 0, 0
 
         # gamma = np.prod(gamma_list-1)**(1.0/n_obs) + 1
         gamma = np.min(gamma_list)
-        index = np.argmin(gamma_list)
+        index = int(np.argmin(gamma_list))
 
         if np.isnan(gamma):
             breakpoint()
@@ -370,9 +370,9 @@ class Furniture(BaseAgent):
             self.angular_velocity = np.sum(angular_vel)
 
             if emergency_stop:
-                gamma_critic = 1.5
+                gamma_critic = 2
                 gamma_values = np.zeros(global_control_points.shape[1]) # Store the min Gamma of each control point
-                obs_idx = np.zeros(global_control_points.shape[1]) # Idx of the obstacle in the environment where the Gamma is calculated from
+                obs_idx = [None]*global_control_points.shape[1] # Idx of the obstacle in the environment where the Gamma is calculated from
         
                 for ii in range(global_control_points.shape[1]):
                     obs_idx[ii], gamma_values[ii] = self.get_gamma_product_crowd( #TODO: Done elsewhere, for efficiency maybe will need to be delete
@@ -394,7 +394,7 @@ class Furniture(BaseAgent):
 
                         #temp = [0, self.angular_velocity*self._control_points[ii][0]]
 
-                        normal = environment_without_me[ii].get_normal_direction(self.get_global_control_points()[:,ii], in_obstacle_frame=False)
+                        normal = environment_without_me[obs_idx[ii]].get_normal_direction(self.get_global_control_points()[:,ii], in_obstacle_frame=False)
                         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
                         #             instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
 

@@ -37,7 +37,7 @@ def multi_simulation(
     my_animation = DynamicalSystemAnimation(
         it_max=500,
         dt_simulation=0.05,
-        dt_sleep=0.01,
+        dt_sleep=0.05,
         animation_name=args.name,
     )
     my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
@@ -85,7 +85,7 @@ def single_simulation(
     scen: int, nb_furniture: int, do_drag: str, version: str = "v1", anim: bool = True
 ):
     my_animation = DynamicalSystemAnimation(
-        it_max=600,
+        it_max=250,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -127,19 +127,19 @@ def main():
     # List of environment shared by all the furniture/agent
     scenarios = range(100)
 
-    for nb_furniture in [2]:
+    for nb_furniture in [2,3,4]:
         for version in ["v2"]:
-            for do_drag in ["dragdist"]:
+            for do_drag in ["dragvel"]:
                 multi_simulation(
                     scenarios, nb_furniture, do_drag, version=version, anim=False
                 )
 
 
 def run_single():
-    scen = 1
-    nb_furniture = 5
+    scen = 3
+    nb_furniture = 6
     version = "v2"
-    for do_drag in ["dragdist"]:
+    for do_drag in ["dragvel"]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)
 
 
@@ -147,5 +147,5 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    main()
-    # run_single()
+    #main()
+    run_single()
