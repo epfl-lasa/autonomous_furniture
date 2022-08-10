@@ -90,7 +90,7 @@ class DynamicalSystemAnimation(Animator):
             )
             
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version, emergency_stop=True)
+            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version, emergency_stop=False)
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 

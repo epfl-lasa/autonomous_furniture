@@ -51,6 +51,8 @@ class BaseAgent(ABC):
         self.name = name
 
         self.converged: bool = False
+        # Emergency Stop
+        self.stop: bool = False
         # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
@@ -94,6 +96,14 @@ class BaseAgent(ABC):
     @priority.setter
     def priority(self, value):
         self._shape.reactivity = value
+    
+    @property
+    def danger(self):
+        return self._shape.danger
+    
+    @danger.setter
+    def danger(self, value:bool):
+        self._shape.danger=value
     
     @property
     def name(self):
@@ -385,8 +395,23 @@ class Furniture(BaseAgent):
                 for ii in range(global_control_points.shape[1]):
                     if gamma_values[ii] < gamma_critic:
                         list_critic_gammas.append(ii)
-                
-                if list_critic_gammas is not None:
+                    if gamma_values[ii] <= 1.05:
+                        print("EMERGENCY STOP")
+                        self.stop = True
+                        environment_without_me[obs_idx[ii]].danger=True
+                        
+                if self.stop:
+                    if all(gamma_values > 2.5):
+                        self.stop = False
+                    else:
+                        self.angular_velocity = 0
+                        self.linear_velocity = [0, 0]
+                    
+                elif self.danger:
+                    self.angular_velocity = 0
+                    self.linear_velocity = [0, 0]
+
+                elif list_critic_gammas is not None:
                     for ii in list_critic_gammas:
                         
                         # This only works if control points are on the longest axis of the cuboid, calculation of Omega x R + linear_velocity
