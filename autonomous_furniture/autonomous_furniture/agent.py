@@ -53,6 +53,7 @@ class BaseAgent(ABC):
         self.converged: bool = False
         # Emergency Stop
         self.stop: bool = False
+        self.gamma_critic = 0
         # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
@@ -106,12 +107,28 @@ class BaseAgent(ABC):
         self._shape.danger=value
     
     @property
+    def gamma_critic(self):
+        return self._shape.gamma_critic
+    
+    @gamma_critic.setter
+    def gamma_critic(self, value):
+        self._shape.gamma_critic = value
+
+    @property
     def name(self):
         return self._shape.name
     
     @name.setter
     def name(self, name):
         self._shape.name = name
+
+    @property
+    def color(self):
+        return self._shape.color
+    
+    @color.setter
+    def color(self, value):
+        self._shape.color = value
 
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
@@ -170,7 +187,8 @@ class BaseAgent(ABC):
         if any(gamma_list < 1):
             BaseAgent.number_collisions += 1
             warnings.warn("Collision detected.")
-            breakpoint()
+            print("COLLSIONS")
+            #breakpoint()
             return 0, 0
 
         # gamma = np.prod(gamma_list-1)**(1.0/n_obs) + 1
@@ -380,7 +398,8 @@ class Furniture(BaseAgent):
             self.angular_velocity = np.sum(angular_vel)
 
             if emergency_stop:
-                gamma_critic = 2
+                self.gamma_critic = 2
+
                 gamma_values = np.zeros(global_control_points.shape[1]) # Store the min Gamma of each control point
                 obs_idx = [None]*global_control_points.shape[1] # Idx of the obstacle in the environment where the Gamma is calculated from
         
@@ -393,16 +412,19 @@ class Furniture(BaseAgent):
                 
                 list_critic_gammas = []
                 for ii in range(global_control_points.shape[1]):
-                    if gamma_values[ii] < gamma_critic:
+                    if gamma_values[ii] < self.gamma_critic:
                         list_critic_gammas.append(ii)
+                        self.color = "k" #np.array([221, 16, 16]) / 255.0
                     if gamma_values[ii] <= 1.05:
-                        print("EMERGENCY STOP")
-                        self.stop = True
-                        environment_without_me[obs_idx[ii]].danger=True
+                        #print("EMERGENCY STOP")
+                        #self.stop = True
+                        #environment_without_me[obs_idx[ii]].danger=True
+                        pass
                         
                 if self.stop:
                     if all(gamma_values > 2.5):
-                        self.stop = False
+                        #self.stop = False
+                        pass
                     else:
                         self.angular_velocity = 0
                         self.linear_velocity = [0, 0]
@@ -426,11 +448,12 @@ class Furniture(BaseAgent):
                         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
                         #             head_width=0.1, head_length=0.2, color='r')
                         if np.dot(instant_velocity, normal) < 0:
-                            print("Collision trajectory")
-                            self.angular_velocity *= 1/(gamma_critic-1)*(gamma_values[ii]-1)
-                            self.linear_velocity *= 1/(gamma_critic-1)*(gamma_values[ii]-1)
+                            #print("Collision trajectory")
+                            self.angular_velocity *= 1/(self.gamma_critic-1)*(gamma_values[ii]-1)
+                            self.linear_velocity *= 1/(self.gamma_critic-1)*(gamma_values[ii]-1)
                         else:
-                            print("Not in collision trajectory")        
+                            pass
+                            #print("Not in collision trajectory")        
         else:
             self.linear_velocity = [0,0]
             self.angular_velocity = 0

@@ -125,9 +125,9 @@ def single_simulation(
 
 def main():
     # List of environment shared by all the furniture/agent
-    scenarios = range(100)
+    scenarios = range(155,250)
 
-    for nb_furniture in [6]:
+    for nb_furniture in [3]:
         for version in ["v2"]:
             for do_drag in ["dragvel"]:
                 multi_simulation(
@@ -136,8 +136,8 @@ def main():
 
 
 def run_single():
-    scen = 34
-    nb_furniture = 6
+    scen = 119
+    nb_furniture = 3
     version = "v2"
     for do_drag in ["dragvel"]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)
