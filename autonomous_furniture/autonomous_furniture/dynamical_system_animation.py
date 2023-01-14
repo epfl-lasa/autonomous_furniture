@@ -34,7 +34,11 @@ class DynamicalSystemAnimation(Animator):
         x_lim=None,
         y_lim=None,
         anim: bool = True,
+        mini_drag: str = "nodrag",
+        version: str = "v1",
     ):
+        self.mini_drag = mini_drag
+        self.version = version
 
         dim = 2
         self.number_agent = len(agent)
@@ -58,9 +62,7 @@ class DynamicalSystemAnimation(Animator):
 
         self.converged: bool = False  # IF all the agent has converged
 
-    def update_step(
-        self, ii, mini_drag: str = "nodrag", anim: bool = True, version: str = "v1"
-    ):
+    def update_step(self, ii, anim: bool = True):
         if anim:
             self.ax.clear()
             # Drawing and adjusting of the axis
@@ -83,16 +85,16 @@ class DynamicalSystemAnimation(Animator):
             self.ax.set_ylim(self.y_lim)
 
             plot_obstacles(
-                self.ax,
-                self.obstacle_environment,
-                self.x_lim,
-                self.y_lim,
+                ax=self.ax,
+                obstacle_container=self.obstacle_environment,
+                x_lim=self.x_lim,
+                y_lim=self.y_lim,
                 showLabel=False,
             )
 
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
-                mini_drag=mini_drag, version=version, emergency_stop=True
+                mini_drag=self.mini_drag, version=self.version, emergency_stop=True
             )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
@@ -132,7 +134,7 @@ class DynamicalSystemAnimation(Animator):
         self.it_final = it + 1  # Because it starts at 0
         return True
 
-    def logs(self, nb_furniture: int, mini_drag: str, version: str = "v1"):
+    def logs(self, nb_furniture: int):
         if (
             self.metrics_json == {}
         ):  # If this is the first time we enter the parameters of the simulation
@@ -191,7 +193,12 @@ class DynamicalSystemAnimation(Animator):
                 ]
 
         json_name = (
-            "distance_" + f"nb{nb_furniture}_" + mini_drag + "_" + version + ".json"
+            "distance_"
+            + f"nb{nb_furniture}_"
+            + self.mini_drag
+            + "_"
+            + self.version
+            + ".json"
         )
         with open(json_name, "w") as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))
