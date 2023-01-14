@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from asyncio import get_running_loop
 import warnings
+
 import numpy as np
+import numpy.typing as npt
+
 import matplotlib.pyplot as plt
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
@@ -16,6 +19,42 @@ from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
 # from vartools.states
+
+
+def get_distance_to_obtacle_surface(
+    obstacle,
+    position,
+    in_obstacle_frame: bool = True,
+    margin_absolut: float = None,
+    in_global_frame: bool = None,
+) -> float:
+    if in_global_frame is not None:
+        in_obstacle_frame = not (in_global_frame)
+
+    if not in_obstacle_frame:
+        position = obstacle.pose.transform_position_from_reference_to_local(position)
+
+    if margin_absolut is None:
+        surface_point = obstacle.get_point_on_surface(
+            position=position,
+            in_obstacle_frame=True,
+        )
+    else:
+        surface_point = obstacle.get_point_on_surface(
+            position=position,
+            in_obstacle_frame=True,
+            margin_absolut=margin_absolut,
+        )
+
+    distance_surface = LA.norm(surface_point)
+    distance_position = LA.norm(position)
+
+    if distance_position > distance_surface:
+        distance = LA.norm(position - surface_point)
+    else:
+        distance = distance_position / distance_surface - 1
+
+    return distance
 
 
 class BaseAgent(ABC):
@@ -35,7 +74,14 @@ class BaseAgent(ABC):
         static: bool = False,
     ) -> None:
         super().__init__()
+
         self._shape = shape
+
+        # Default values for new variables
+        self.danger = False
+        self.gamma_critic = 0
+        self.color = np.array([176, 124, 124]) / 255.0
+
         self.priority = priority_value
         self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
         # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
@@ -102,19 +148,32 @@ class BaseAgent(ABC):
 
     @property
     def danger(self):
-        return self._shape.danger
+        # return self._shape.danger
+        return self._danger
 
     @danger.setter
     def danger(self, value: bool):
-        self._shape.danger = value
+        # self._shape.danger = value
+        self._danger = value
 
     @property
     def gamma_critic(self):
-        return self._shape.gamma_critic
+        return self._gamma_critic
+        # return self._shape.gamma_critic
 
     @gamma_critic.setter
     def gamma_critic(self, value):
-        self._shape.gamma_critic = value
+        # self._shape.gamma_critic = value
+        self._gamma_critic = value
+
+    @property
+    def color(self):
+        # return self._shape.color
+        return self._color
+
+    @color.setter
+    def color(self, value):
+        self._color = value
 
     @property
     def name(self):
@@ -123,14 +182,6 @@ class BaseAgent(ABC):
     @name.setter
     def name(self, name):
         self._shape.name = name
-
-    @property
-    def color(self):
-        return self._shape.color
-
-    @color.setter
-    def color(self, value):
-        self._shape.color = value
 
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
@@ -151,8 +202,8 @@ class BaseAgent(ABC):
             ]
         ).T
 
-    def get_veloctity_in_global_frame(self, velocity):
-        return self._shape.pose.transform_direction_from_local_to_reference(velocity)
+    def get_veloctity_in_global_frame(self, velocity: npt.ArrayLike) -> np.ndarray:
+        return self._shape.pose.transform_direction_from_relative(np.array(velocity))
 
     def get_velocity_in_local_frame(self, velocity):
         return self._shape.pose.transform_direction_from_reference_to_local(velocity)
@@ -498,8 +549,9 @@ class Furniture(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                obs.get_distance_to_surface(
-                    self.position,
+                get_distance_to_obtacle_surface(
+                    obstacle=obs,
+                    position=self.position,
                     in_obstacle_frame=False,
                     margin_absolut=self.margin_absolut,
                 )
@@ -748,8 +800,9 @@ class Person(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                obs.get_distance_to_surface(
-                    self.position,
+                get_distance_to_obtacle_surface(
+                    obstacle=obs,
+                    position=self.position,
                     in_obstacle_frame=False,
                     margin_absolut=self.margin_absolut,
                 )
@@ -763,11 +816,11 @@ class Person(BaseAgent):
             self._proximity
         )  # Temporary metric used for the prox graph of the report, can be deleted
 
-    def get_distance_to_surface(
-        self, position, in_obstacle_frame: bool = True, margin_absolut: float = None
-    ):
-        self.get_point_on_surface(
-            position=position,
-            in_obstacle_frame=in_obstacle_frame,
-            margin_absolut=margin_absolut,
-        )
+    # def get_distance_to_surface(
+    #     self, position, in_obstacle_frame: bool = True, margin_absolut: float = None
+    # ):
+    #     self.get_point_on_surface(
+    #         position=position,
+    #         in_obstacle_frame=in_obstacle_frame,
+    #         margin_absolut=margin_absolut,
+    #     )

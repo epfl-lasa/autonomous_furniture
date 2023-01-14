@@ -5,7 +5,8 @@ from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.obstacles import Obstacle
 from vartools.states import ObjectPose
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
-from evaluation.grid import Grid
+
+from grid import Grid
 import numpy as np
 
 

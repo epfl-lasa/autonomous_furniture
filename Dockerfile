@@ -3,6 +3,8 @@ FROM osrf/ros:humble-desktop
 # FROM osrf/ros:${ROS_DISTRO}-desktop
 # FROM osrf/ros:${ROS_DISTRO}-ros-base
 
+ARG HOME=/home/ros
+
 # INSTALL NECESSARY PACKAGES
 RUN apt update \
 	&& apt install -y \
@@ -28,13 +30,14 @@ RUN groupadd -g 1000 ros
 RUN useradd -d /home/ros -s /bin/bash -m ros -u 1000 -g 1000
 
 # Install Python-Libraries
+USER ros
 RUN mkdir -p ${HOME}/python
 WORKDIR ${HOME}/python
 
 RUN git clone -b main --single-branch https://github.com/hubernikus/various_tools.git
 RUN git clone -b main --single-branch https://github.com/epfl-lasa/dynamic_obstacle_avoidance
 
-USER root
+# USER root
 WORKDIR ${HOME}/python/various_tools
 RUN python3 -m pip install -r requirements.txt
 RUN python3 -m pip install --editable .
