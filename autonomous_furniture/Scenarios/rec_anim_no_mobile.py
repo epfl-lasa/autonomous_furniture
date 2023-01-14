@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 def calculate_relative_position(num_agent, max_ax, min_ax):
     div = max_ax / (num_agent + 1)
-    radius = sqrt(((min_ax / 2) ** 2) + (div ** 2))
+    radius = sqrt(((min_ax / 2) ** 2) + (div**2))
     rel_agent_pos = np.zeros((num_agent, 2))
 
     for i in range(num_agent):
@@ -55,8 +55,10 @@ def global2relative(global_pos, obstacle):
 
     return relative_pos
 
+
 def energyComputation():
     pass
+
 
 def run_person_avoiding_multiple_furniture():
     axis = [2.2, 1.1]
@@ -65,7 +67,9 @@ def run_person_avoiding_multiple_furniture():
     tot_ctl_pts = 2
     attractor_cp_pos = np.array([[-5, 2], [0, 1]])
 
-    obstacle_pos = np.array([[-1.5, 1.5], [-1.5, -1.5], [1.5, 1.5], [1.5, -1.5], [4.5, -1.2]])
+    obstacle_pos = np.array(
+        [[-1.5, 1.5], [-1.5, -1.5], [1.5, 1.5], [1.5, -1.5], [4.5, -1.2]]
+    )
 
     radius = 0.6
 
@@ -105,7 +109,7 @@ def run_person_avoiding_multiple_furniture():
             orientation=0,
             tail_effect=False,
             repulsion_coeff=1,
-            linear_velocity=np.array([0., 0.]),
+            linear_velocity=np.array([0.0, 0.0]),
         )
     )
 
@@ -113,9 +117,7 @@ def run_person_avoiding_multiple_furniture():
     attractor_pos[0] = attractor_cp_pos[0]
 
     initial_dynamics = LinearSystem(
-        attractor_position=attractor_pos[0],
-        maximum_velocity=1,
-        distance_decrease=0.3
+        attractor_position=attractor_pos[0], maximum_velocity=1, distance_decrease=0.3
     )
 
     my_animation = DynamicalSystemAnimation(

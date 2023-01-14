@@ -39,26 +39,57 @@ def corner_case():
     # , orientation = 1.6) Goal of the CuboidXd
     goal = ObjectPose(position=np.array([7, 0]), orientation=0)
 
-    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([7, 8]),
-                           margin_absolut=1,
-                           orientation=0,
-                           tail_effect=False,)
+    table_shape = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([7, 8]),
+        margin_absolut=1,
+        orientation=0,
+        tail_effect=False,
+    )
 
-    table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([11.5, 4]),
-                           margin_absolut=1,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
-    table_shape3 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([4.5, 4]),
-                           margin_absolut=1,
-                           orientation=np.pi/2,
-                           tail_effect=False,)                           
+    table_shape2 = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([11.5, 4]),
+        margin_absolut=1,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
+    table_shape3 = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([4.5, 4]),
+        margin_absolut=1,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
 
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
-                    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, static=True, priority_value=1, name="move"),
-                    Furniture(shape=table_shape3, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, static=True, priority_value=1, name="move"),]
+    my_furniture = [
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            priority_value=1,
+            name="move",
+        ),
+        Furniture(
+            shape=table_shape2,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            static=True,
+            priority_value=1,
+            name="move",
+        ),
+        Furniture(
+            shape=table_shape3,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            static=True,
+            priority_value=1,
+            name="move",
+        ),
+    ]
     my_animation = DynamicalSystemAnimation(
         it_max=450,
         dt_simulation=0.05,
@@ -67,17 +98,15 @@ def corner_case():
     )
 
     my_animation.setup(
-        obstacle_environment,
-        agent=my_furniture,
-        x_lim=[0, 14],
-        y_lim=[0, 14]
+        obstacle_environment, agent=my_furniture, x_lim=[0, 14], y_lim=[0, 14]
     )
 
     version = "v2"
-    do_drag= "nodrag"
+    do_drag = "nodrag"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)
+
 
 if __name__ == "__main__":
     plt.close("all")

@@ -25,8 +25,9 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
-parser.add_argument("--name", action="store",
-                    default="recording", help="Name of the simulation")
+parser.add_argument(
+    "--name", action="store", default="recording", help="Name of the simulation"
+)
 args = parser.parse_args()
 
 
@@ -43,7 +44,7 @@ class DynamicalSystemAnimation(Animator):
         self.number_agent = len(agent)
 
         if y_lim is None:
-            y_lim = [0., 10]
+            y_lim = [0.0, 10]
         if x_lim is None:
             x_lim = [0, 10]
 
@@ -52,8 +53,7 @@ class DynamicalSystemAnimation(Animator):
         #                                           obs_multi_agent=obs_w_multi_agent)
         self.position_list = np.zeros((dim, self.it_max))
         self.time_list = np.zeros((self.it_max))
-        self.position_list = [
-            agent[ii].position for ii in range(self.number_agent)]
+        self.position_list = [agent[ii].position for ii in range(self.number_agent)]
         self.agent = agent
         self.x_lim = x_lim
         self.y_lim = y_lim
@@ -96,11 +96,11 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].do_velocity_step(self.dt_simulation)
             global_crontrol_points = self.agent[jj].get_global_control_points()
             self.ax.plot(
-                global_crontrol_points[0, :], global_crontrol_points[1, :], 'ko')
+                global_crontrol_points[0, :], global_crontrol_points[1, :], "ko"
+            )
 
             goal_crontrol_points = self.agent[jj].get_goal_control_points()
-            self.ax.plot(
-                goal_crontrol_points[0, :], goal_crontrol_points[1, :], 'ko')
+            self.ax.plot(goal_crontrol_points[0, :], goal_crontrol_points[1, :], "ko")
 
         # for agent in range(self.num_agent):
         #     plt.arrow(self.position_list[agent, 0, ii + 1],
@@ -138,23 +138,41 @@ def run_single_furniture_rotating():
     control_points = np.array([[0.4, 0], [-0.4, 0]])
 
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([7, 1]), orientation=np.pi/2)
+    goal = ObjectPose(position=np.array([7, 1]), orientation=np.pi / 2)
 
-    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([-2, 1]),
-                           margin_absolut=0.6,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
+    table_shape = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([-2, 1]),
+        margin_absolut=0.6,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
 
-    goal2 = ObjectPose(position=np.array([-2, 0.5]), orientation=np.pi/2)
-    table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                            center_position=np.array([7, 0.5]),
-                            margin_absolut=0.6,
-                            orientation=0,
-                            tail_effect=False,)
+    goal2 = ObjectPose(position=np.array([-2, 0.5]), orientation=np.pi / 2)
+    table_shape2 = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([7, 0.5]),
+        margin_absolut=0.6,
+        orientation=0,
+        tail_effect=False,
+    )
 
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1),
-                    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2, priority_value=1)]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
+    my_furniture = [
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            priority_value=1,
+        ),
+        Furniture(
+            shape=table_shape2,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal2,
+            priority_value=1,
+        ),
+    ]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,

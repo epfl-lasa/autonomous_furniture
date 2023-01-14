@@ -37,17 +37,26 @@ def run_turning_around():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    
 
-    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([-1, 1]),
-                           margin_absolut=1,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
-    goal = ObjectPose(np.array([-1, 1]), orientation=np.pi/2)
+    table_shape = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([-1, 1]),
+        margin_absolut=1,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
+    goal = ObjectPose(np.array([-1, 1]), orientation=np.pi / 2)
 
-    my_furniture = [Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="move"),
-                    ]
+    my_furniture = [
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            priority_value=1,
+            name="move",
+        ),
+    ]
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,
@@ -57,16 +66,14 @@ def run_turning_around():
     )
 
     my_animation.setup(
-        obstacle_environment,
-        agent=my_furniture,
-        x_lim=[-3, 8],
-        y_lim=[-2, 7]
+        obstacle_environment, agent=my_furniture, x_lim=[-3, 8], y_lim=[-2, 7]
     )
     my_furniture[0]._shape.get_normal_direction(np.array([4, 3]), in_global_frame=True)
     version = "v2"
-    do_drag= True
+    do_drag = True
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
+
 
 if __name__ == "__main__":
     plt.close("all")

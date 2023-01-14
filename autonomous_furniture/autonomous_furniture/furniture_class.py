@@ -8,7 +8,9 @@ from vartools.dynamical_systems import DynamicalSystem, LinearSystem
 
 from dynamic_obstacle_avoidance.obstacles import GammaType
 
-from dynamic_obstacle_avoidance.avoidance.modulation import obs_avoidance_interpolation_moving
+from dynamic_obstacle_avoidance.avoidance.modulation import (
+    obs_avoidance_interpolation_moving,
+)
 
 
 class FurnitureContainer(BaseContainer):
@@ -50,28 +52,34 @@ class FurnitureContainer(BaseContainer):
         reduced_margin_list.pop(index_max)
         for furniture in self._obstacle_list:
             if furniture.furniture_type == "person":
-                furniture.furniture_container.margin_absolut = max(margin_list) / adjusting_factor
+                furniture.furniture_container.margin_absolut = (
+                    max(margin_list) / adjusting_factor
+                )
             elif furniture.furniture_type == "furniture":
                 if furniture.radius != margin_list[index_max]:
-                    furniture.furniture_container.margin_absolut = margin_list[index_max] / adjusting_factor
+                    furniture.furniture_container.margin_absolut = (
+                        margin_list[index_max] / adjusting_factor
+                    )
                 else:
-                    furniture.furniture_container.margin_absolut = max(reduced_margin_list) / adjusting_factor
+                    furniture.furniture_container.margin_absolut = (
+                        max(reduced_margin_list) / adjusting_factor
+                    )
 
 
 class Furniture:
     def __init__(
-            self,
-            furniture_type: str = "furniture",
-            num_control_points=None,
-            size=None,
-            shape: str = "Cuboid",
-            initial_position: np.ndarray = np.array([0, 0]),
-            initial_orientation: float = 0.0,
-            initial_speed: np.ndarray = np.array([0, 0]),
-            goal_position: np.ndarray = np.array([0, 0]),
-            goal_orientation: float = 0.0,
-            parking_zone_position=None,
-            parking_zone_orientation=None,
+        self,
+        furniture_type: str = "furniture",
+        num_control_points=None,
+        size=None,
+        shape: str = "Cuboid",
+        initial_position: np.ndarray = np.array([0, 0]),
+        initial_orientation: float = 0.0,
+        initial_speed: np.ndarray = np.array([0, 0]),
+        goal_position: np.ndarray = np.array([0, 0]),
+        goal_orientation: float = 0.0,
+        parking_zone_position=None,
+        parking_zone_orientation=None,
     ):
         # if not "person" or "furniture" in furniture_type:
         #     raise ValueError("Can only be person or furniture")
@@ -104,14 +112,16 @@ class Furniture:
             self.goal_orientation = goal_orientation
             self.goal_container = self.generate_goal_container()
             self.rel_ctl_pts_pos, self.radius = self.calculate_relative_position()
-            global_ctl_pos = self.relative2global(self.rel_ctl_pts_pos, self.goal_container)
+            global_ctl_pos = self.relative2global(
+                self.rel_ctl_pts_pos, self.goal_container
+            )
             self.initial_dynamic = []
             for i in range(self.num_control_points):
                 self.initial_dynamic.append(
                     LinearSystem(
                         attractor_position=global_ctl_pos[i],
                         maximum_velocity=1,
-                        distance_decrease=0.3
+                        distance_decrease=0.3,
                     )
                 )
             if parking_zone_position is None:
@@ -159,14 +169,18 @@ class Furniture:
     def calculate_relative_position(self):
         div_max_ax = self.max_ax / (self.control_points_axis_0 + 1)
         div_min_ax = self.min_ax / (self.control_points_axis_1 + 1)
-        radius = sqrt((div_max_ax ** 2) + (div_min_ax ** 2))
+        radius = sqrt((div_max_ax**2) + (div_min_ax**2))
         relative_control_point_pos = np.zeros((self.num_control_points, 2))
 
         k = 0
         for j in range(self.control_points_axis_1):
             for i in range(self.control_points_axis_0):
-                relative_control_point_pos[k, 0] = (div_max_ax * (i + 1)) - (self.max_ax / 2)
-                relative_control_point_pos[k, 1] = (div_min_ax * (j + 1)) - (self.min_ax / 2)
+                relative_control_point_pos[k, 0] = (div_max_ax * (i + 1)) - (
+                    self.max_ax / 2
+                )
+                relative_control_point_pos[k, 1] = (div_min_ax * (j + 1)) - (
+                    self.min_ax / 2
+                )
                 k += 1
 
         return relative_control_point_pos, radius
@@ -231,7 +245,9 @@ class Furniture:
         self.goal_container.orientation = ori
 
 
-def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5):
+def get_weight_from_gamma(
+    gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
+):
     weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
     weights = weights / frac_gamma_nth
     weights = 1.0 / weights
@@ -244,11 +260,11 @@ class FurnitureDynamics:
     dim = 2
 
     def __init__(
-            self,
-            # initial_dynamics: DynamicalSystem,
-            # environment,
-            furniture_env: FurnitureContainer,
-            maximum_speed: float = None,
+        self,
+        # initial_dynamics: DynamicalSystem,
+        # environment,
+        furniture_env: FurnitureContainer,
+        maximum_speed: float = None,
     ):
         # self.initial_dynamics = initial_dynamics
         self.environment = None
@@ -261,7 +277,7 @@ class FurnitureDynamics:
             self.environment.append(furniture.furniture_container)
 
     def env_slicer(self, obs_index):
-        temp_env = self.furniture_env[0:obs_index] + self.furniture_env[obs_index + 1:]
+        temp_env = self.furniture_env[0:obs_index] + self.furniture_env[obs_index + 1 :]
         return temp_env
 
     @staticmethod
@@ -297,7 +313,9 @@ class FurnitureDynamics:
         gamma_values = np.zeros(num_ctl_pts)
 
         for cp in range(num_ctl_pts):
-            gamma_values[cp] = self.get_gamma_product_furniture(control_points[cp, :], env)
+            gamma_values[cp] = self.get_gamma_product_furniture(
+                control_points[cp, :], env
+            )
 
         return gamma_values
 
@@ -316,18 +334,22 @@ class FurnitureDynamics:
             if furniture.num_control_points == 0:
                 break
             temp_env = self.env_slicer(index)
-            gamma_values = self.get_gamma_at_point(control_points[index], index, temp_env)
+            gamma_values = self.get_gamma_at_point(
+                control_points[index], index, temp_env
+            )
 
             ctl_point_weight = np.zeros(gamma_values.shape)
             ind_nonzero = gamma_values < cutoff_gamma
             if not any(ind_nonzero):
                 # ctl_point_weight[-1] = 1
-                ctl_point_weight = np.full(gamma_values.shape, 1/furniture.num_control_points)
+                ctl_point_weight = np.full(
+                    gamma_values.shape, 1 / furniture.num_control_points
+                )
             # for index in range(len(gamma_values)):
             ctl_point_weight[ind_nonzero] = get_weight_from_gamma(
                 gamma_values[ind_nonzero],
                 cutoff_gamma=cutoff_gamma,
-                n_points=furniture.num_control_points
+                n_points=furniture.num_control_points,
             )
 
             ctl_point_weight_sum = np.sum(ctl_point_weight)
@@ -340,14 +362,26 @@ class FurnitureDynamics:
 
         return ctl_weight_list
 
-    def evaluate_furniture(self, position: np.ndarray, selected_furniture) -> np.ndarray:
-        initial_velocities = np.zeros((self.furniture_env[selected_furniture].num_control_points, self.dim))
+    def evaluate_furniture(
+        self, position: np.ndarray, selected_furniture
+    ) -> np.ndarray:
+        initial_velocities = np.zeros(
+            (self.furniture_env[selected_furniture].num_control_points, self.dim)
+        )
         for ctl_pt in range(self.furniture_env[selected_furniture].num_control_points):
-            initial_velocities[ctl_pt, :] = self.furniture_env[selected_furniture].initial_dynamic[ctl_pt].evaluate(position[ctl_pt, :])
+            initial_velocities[ctl_pt, :] = (
+                self.furniture_env[selected_furniture]
+                .initial_dynamic[ctl_pt]
+                .evaluate(position[ctl_pt, :])
+            )
         temp_env = self.env_slicer(selected_furniture)
-        updated_velocities = np.zeros((self.furniture_env[selected_furniture].num_control_points, self.dim))
+        updated_velocities = np.zeros(
+            (self.furniture_env[selected_furniture].num_control_points, self.dim)
+        )
         for ctl_pt in range(self.furniture_env[selected_furniture].num_control_points):
-            updated_velocities[ctl_pt, :] = self.avoid_furniture(position[ctl_pt, :], initial_velocities[ctl_pt, :], temp_env)
+            updated_velocities[ctl_pt, :] = self.avoid_furniture(
+                position[ctl_pt, :], initial_velocities[ctl_pt, :], temp_env
+            )
         return updated_velocities
 
     # def evaluate_furniture(self, position: np.ndarray, selected_ctl_pt, env) -> np.ndarray:
@@ -361,7 +395,13 @@ class FurnitureDynamics:
     #     initial_velocity = self.initial_dynamics[selected_ctl_pt].evaluate(position)
     #     return self.avoid_furniture(position=position, initial_velocity=initial_velocity, env=env)
 
-    def avoid_furniture(self, position: np.ndarray, initial_velocity: np.ndarray, env, const_speed: bool = True) -> np.ndarray:
+    def avoid_furniture(
+        self,
+        position: np.ndarray,
+        initial_velocity: np.ndarray,
+        env,
+        const_speed: bool = True,
+    ) -> np.ndarray:
         # obs = ObstacleContainer()
         # for furniture in env:
         #     obs.append(furniture.furniture_container)
@@ -392,7 +432,9 @@ class FurnitureDynamics:
 
     def set_attractor_position(self, position_list, selected_furniture):
         for ii, position in enumerate(position_list):
-            self.furniture_env[selected_furniture].initial_dynamic[ii].attractor_position = position
+            self.furniture_env[selected_furniture].initial_dynamic[
+                ii
+            ].attractor_position = position
 
 
 class FurnitureAttractorDynamics:
@@ -400,10 +442,10 @@ class FurnitureAttractorDynamics:
     dim = 2
 
     def __init__(
-            self,
-            furniture_env: FurnitureContainer,
-            cutoff_distance=5,
-            max_repulsion=1,
+        self,
+        furniture_env: FurnitureContainer,
+        cutoff_distance=5,
+        max_repulsion=1,
     ):
         self.furniture_env = furniture_env
         self.cutoff_distance = cutoff_distance
@@ -425,18 +467,32 @@ class FurnitureAttractorDynamics:
             environment.append(furniture.furniture_container)
         return environment
 
-    def evaluate_attractor(self, position: np.ndarray, selected_attractor, selected_furniture) -> np.ndarray:
-        direction_vect = position - self.furniture_env[self.person_index].furniture_container.center_position
-        distance_vect = self.furniture_env[self.person_index].furniture_container.get_gamma(position, in_global_frame=True)
+    def evaluate_attractor(
+        self, position: np.ndarray, selected_attractor, selected_furniture
+    ) -> np.ndarray:
+        direction_vect = (
+            position
+            - self.furniture_env[self.person_index].furniture_container.center_position
+        )
+        distance_vect = self.furniture_env[
+            self.person_index
+        ].furniture_container.get_gamma(position, in_global_frame=True)
 
         if distance_vect < 1:
             print("attractor got run over :'(")
             # TODO: no theoretical value
             return np.zeros(self.dim)
 
-        temp_env = self.reduced_env[:selected_furniture] + self.reduced_env[selected_furniture + 1:]
+        temp_env = (
+            self.reduced_env[:selected_furniture]
+            + self.reduced_env[selected_furniture + 1 :]
+        )
         unit_direction_vect = direction_vect / np.linalg.norm(direction_vect)
-        unit_person_linear_velocity = self.furniture_env[self.person_index].furniture_container.linear_velocity / np.linalg.norm(self.furniture_env[self.person_index].furniture_container.linear_velocity)
+        unit_person_linear_velocity = self.furniture_env[
+            self.person_index
+        ].furniture_container.linear_velocity / np.linalg.norm(
+            self.furniture_env[self.person_index].furniture_container.linear_velocity
+        )
         max_repulsion = np.dot(unit_direction_vect, unit_person_linear_velocity)
 
         if max_repulsion <= 0:
@@ -450,16 +506,20 @@ class FurnitureAttractorDynamics:
         offset = max_repulsion - (slope * self.min_dist)
         repulsion_magnitude = (slope * distance_vect) + offset
 
-        if repulsion_magnitude <= 0.:
+        if repulsion_magnitude <= 0.0:
             return np.zeros(self.dim)
 
         base_attractor_velocity = repulsion_magnitude * unit_direction_vect
-        eigenvector_person = np.array([-unit_person_linear_velocity[1], unit_person_linear_velocity[0]])
+        eigenvector_person = np.array(
+            [-unit_person_linear_velocity[1], unit_person_linear_velocity[0]]
+        )
         e_matrix = np.array([unit_person_linear_velocity, eigenvector_person])
         a_matrix = np.eye(self.dim)
         a_matrix[1] *= self.lambda_p
         attractor_velocity = e_matrix.T @ a_matrix @ e_matrix @ base_attractor_velocity
-        mod_attractor_velocity = self.avoid_attractor(position, attractor_velocity, temp_env)
+        mod_attractor_velocity = self.avoid_attractor(
+            position, attractor_velocity, temp_env
+        )
 
         # if self.furniture_env[selected_furniture].attractor_state == "idle":
         #     unit_direction_vect = direction_vect / np.linalg.norm(direction_vect)
@@ -537,7 +597,13 @@ class FurnitureAttractorDynamics:
 
         return mod_attractor_velocity
 
-    def avoid_attractor(self, position: np.ndarray, initial_velocity: np.ndarray, furn_env, const_speed: bool = True):
+    def avoid_attractor(
+        self,
+        position: np.ndarray,
+        initial_velocity: np.ndarray,
+        furn_env,
+        const_speed: bool = True,
+    ):
         env = self.generate_temp_environment(furn_env)
         vel = obs_avoidance_interpolation_moving(
             position=position, initial_velocity=initial_velocity, obs=env
@@ -582,23 +648,28 @@ class FurnitureAttractorDynamics:
     def get_weights_attractors(self, attractor_points, selected_furniture):
         num_attractors = self.furniture_env[selected_furniture].num_control_points
 
-        temp_env = self.furniture_env[:selected_furniture] + self.furniture_env[selected_furniture + 1:]
+        temp_env = (
+            self.furniture_env[:selected_furniture]
+            + self.furniture_env[selected_furniture + 1 :]
+        )
 
         gamma_list = np.zeros(num_attractors)
         # for the moment only take into account the person/qolo/agent
         for ii in range(num_attractors):
-            gamma_list[ii] = self.get_gamma_product_attractor(attractor_points[ii, :], temp_env)
+            gamma_list[ii] = self.get_gamma_product_attractor(
+                attractor_points[ii, :], temp_env
+            )
 
         attractor_weights = np.zeros(gamma_list.shape)
         ind_nonzero = gamma_list < self.cutoff_distance
         if not any(ind_nonzero):
-            attractor_weights = np.full(num_attractors, 1/num_attractors)
+            attractor_weights = np.full(num_attractors, 1 / num_attractors)
             return attractor_weights
 
         attractor_weights[ind_nonzero] = get_weight_from_gamma(
             gamma_list[ind_nonzero],
             cutoff_gamma=self.cutoff_distance,
-            n_points=num_attractors
+            n_points=num_attractors,
         )
 
         attractor_weights_sum = np.sum(attractor_weights)
@@ -609,7 +680,9 @@ class FurnitureAttractorDynamics:
 
         return attractor_weights
 
-    def get_goal_velocity(self, attractor_pos, attractor_velocities, attractor_weights, selected_furniture):
+    def get_goal_velocity(
+        self, attractor_pos, attractor_velocities, attractor_weights, selected_furniture
+    ):
         num_attractors = self.furniture_env[selected_furniture].num_control_points
         lin_vel = np.zeros(2)
         for ii in range(num_attractors):
@@ -618,22 +691,35 @@ class FurnitureAttractorDynamics:
         angular_vel = np.zeros(num_attractors)
         for attractor in range(num_attractors):
             angular_vel[attractor] = attractor_weights[attractor] * np.cross(
-                (self.furniture_env[selected_furniture].furniture_container.center_position - attractor_pos[attractor, :]),
-                (attractor_velocities[attractor, :] - lin_vel)
+                (
+                    self.furniture_env[
+                        selected_furniture
+                    ].furniture_container.center_position
+                    - attractor_pos[attractor, :]
+                ),
+                (attractor_velocities[attractor, :] - lin_vel),
             )
         angular_vel_sum = angular_vel.sum()
 
         return lin_vel, angular_vel_sum
 
     def evaluate_furniture_attractor(self, position_list, selected_furniture):
-        attractor_velocities = np.zeros((self.furniture_env[selected_furniture].num_control_points, self.dim))
+        attractor_velocities = np.zeros(
+            (self.furniture_env[selected_furniture].num_control_points, self.dim)
+        )
 
         for ii, attractor in enumerate(position_list):
-            attractor_velocities[ii, :] = self.evaluate_attractor(attractor, ii, selected_furniture)
+            attractor_velocities[ii, :] = self.evaluate_attractor(
+                attractor, ii, selected_furniture
+            )
             # print(f"state of furniture {selected_furniture} and attractor {ii}: {self.attractor_state[selected_furniture][ii]} \n")
 
-        attractor_weights = self.get_weights_attractors(position_list, selected_furniture)
-        goal_velocity, goal_rotation = self.get_goal_velocity(position_list, attractor_velocities, attractor_weights, selected_furniture)
+        attractor_weights = self.get_weights_attractors(
+            position_list, selected_furniture
+        )
+        goal_velocity, goal_rotation = self.get_goal_velocity(
+            position_list, attractor_velocities, attractor_weights, selected_furniture
+        )
         self.set_attractor_state(selected_furniture, goal_velocity, goal_rotation)
 
         return goal_velocity, goal_rotation
@@ -642,9 +728,11 @@ class FurnitureAttractorDynamics:
         current_state = self.furniture_env[selected_furniture].attractor_state
         if "avoid" in self.attractor_state[selected_furniture]:
             self.furniture_env[selected_furniture].attractor_state = "avoid"
-        elif "avoid" not in self.attractor_state[selected_furniture] and current_state == "avoid":
+        elif (
+            "avoid" not in self.attractor_state[selected_furniture]
+            and current_state == "avoid"
+        ):
             self.furniture_env[selected_furniture].attractor_state = "regroup"
         elif current_state == "regroup":
             if np.sum(np.abs(goal_velocity)) < 1e-2 and np.abs(goal_rotation) < 1e-2:
                 self.furniture_env[selected_furniture].attractor_state = "idle"
-

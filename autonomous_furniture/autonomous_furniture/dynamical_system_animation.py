@@ -8,7 +8,6 @@ import json
 
 
 class DynamicalSystemAnimation(Animator):
-
     def __init__(
         self,
         it_max: int = 100,
@@ -24,7 +23,9 @@ class DynamicalSystemAnimation(Animator):
 
         # For metrics
         self.metrics_json = {}
-        self.it_final = it_max-1 # By default set to it_max, value is changed in metrics method
+        self.it_final = (
+            it_max - 1
+        )  # By default set to it_max, value is changed in metrics method
 
     def setup(
         self,
@@ -88,9 +89,11 @@ class DynamicalSystemAnimation(Animator):
                 self.y_lim,
                 showLabel=False,
             )
-            
+
         for jj in range(self.number_agent):
-            self.agent[jj].update_velocity(mini_drag=mini_drag, version=version, emergency_stop=True)
+            self.agent[jj].update_velocity(
+                mini_drag=mini_drag, version=version, emergency_stop=True
+            )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 
@@ -126,7 +129,7 @@ class DynamicalSystemAnimation(Animator):
                     return False
 
         self.converged = True  # All the agents has converged
-        self.it_final = it +1 # Because it starts at 0 
+        self.it_final = it + 1  # Because it starts at 0
         return True
 
     def logs(self, nb_furniture: int, mini_drag: str, version: str = "v1"):
@@ -159,10 +162,10 @@ class DynamicalSystemAnimation(Animator):
                     {"direct_dist": [self.agent[ii].direct_distance]}
                 )
                 self.metrics_json[f"agent_{ii}"].update(
-                    {"prox": [1-1/self.it_final*self.agent[ii]._proximity] }
+                    {"prox": [1 - 1 / self.it_final * self.agent[ii]._proximity]}
                 )
                 self.metrics_json[f"agent_{ii}"].update(
-                    {"list_prox":self.agent[ii]._list_prox}
+                    {"list_prox": self.agent[ii]._list_prox}
                 )
             else:
                 self.metrics_json[f"agent_{ii}"]["direct_dist"].append(
@@ -175,7 +178,7 @@ class DynamicalSystemAnimation(Animator):
                     self.agent[ii].time_conv_direct
                 )
                 self.metrics_json[f"agent_{ii}"]["prox"].append(
-                    1-1/self.it_final*self.agent[ii]._proximity
+                    1 - 1 / self.it_final * self.agent[ii]._proximity
                 )
 
             if "total_dist" in self.metrics_json[f"agent_{ii}"]:
@@ -188,7 +191,7 @@ class DynamicalSystemAnimation(Animator):
                 ]
 
         json_name = (
-            "distance_" + f"nb{nb_furniture}_" + mini_drag +"_" + version + ".json"
+            "distance_" + f"nb{nb_furniture}_" + mini_drag + "_" + version + ".json"
         )
         with open(json_name, "w") as outfile:
             print(json.dump(self.metrics_json, outfile, indent=4))

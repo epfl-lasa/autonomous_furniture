@@ -1,19 +1,29 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    PathJoinSubstitution,
+    LaunchConfiguration,
+)
 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration("use_sim_time", default="false")
 
     robot_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_ ",
             "connected_to:='' ",
@@ -22,7 +32,10 @@ def generate_launch_description():
             "fixed:='0' ",
         ]
     )
-    robot_description = {"use_sim_time": use_sim_time, "robot_description": robot_description_content}
+    robot_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": robot_description_content,
+    }
 
     robot_state_pub_node = Node(
         package="robot_state_publisher",
@@ -32,27 +45,30 @@ def generate_launch_description():
     )
 
     state_pub_node = Node(
-        package='autonomous_furniture',
-        executable='state_publisher',
-        name='state_publisher',
-        output='screen',
-        parameters=[
-            {"prefix": "h_bed_"}
-        ],
+        package="autonomous_furniture",
+        executable="state_publisher",
+        name="state_publisher",
+        output="screen",
+        parameters=[{"prefix": "h_bed_"}],
     )
 
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/object_move.rviz"])],
+        arguments=[
+            "-d",
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "rviz/object_move.rviz"]
+            ),
+        ],
         output="log",
     )
 
     sim_arg = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation (Gazebo) clock if true'
+        "use_sim_time",
+        default_value="false",
+        description="Use simulation (Gazebo) clock if true",
     )
 
     nodes = [

@@ -10,7 +10,12 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed1_ ",
             "connected_to:='' ",
@@ -25,7 +30,12 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed2_ ",
             "connected_to:='' ",
@@ -40,7 +50,12 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed3_ ",
             "connected_to:='' ",
@@ -55,7 +70,12 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed4_ ",
             "connected_to:='' ",
@@ -70,7 +90,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]
+            ),
             " ",
             "prefix:=qolo_ ",
             "connected_to:='' ",
@@ -125,7 +147,15 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/multiple_hospital.rviz"])],
+        arguments=[
+            "-d",
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "rviz/multiple_hospital.rviz",
+                ]
+            ),
+        ],
         output="log",
     )
 

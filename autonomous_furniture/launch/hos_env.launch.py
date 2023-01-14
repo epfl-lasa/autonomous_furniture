@@ -1,109 +1,169 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    PathJoinSubstitution,
+    LaunchConfiguration,
+)
 
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration("use_sim_time", default="false")
 
     qolo_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]
+            ),
             " ",
             "prefix:=qolo_human_ ",
             "fixed:='0' ",
         ]
     )
-    qolo_description = {"use_sim_time": use_sim_time, "robot_description": qolo_description_content}
+    qolo_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": qolo_description_content,
+    }
 
     h_bed_1_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_1_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_1_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_1_description_content}
+    h_bed_1_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_1_description_content,
+    }
 
     h_bed_2_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_2_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_2_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_2_description_content}
+    h_bed_2_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_2_description_content,
+    }
 
     h_bed_3_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_3_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_3_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_3_description_content}
+    h_bed_3_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_3_description_content,
+    }
 
     h_bed_4_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_4_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_4_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_4_description_content}
+    h_bed_4_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_4_description_content,
+    }
 
     h_bed_5_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_5_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_5_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_5_description_content}
+    h_bed_5_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_5_description_content,
+    }
 
     h_bed_6_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/hospital_bed.urdf.xacro"]),
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("objects_descriptions"),
+                    "urdf/hospital_bed.urdf.xacro",
+                ]
+            ),
             " ",
             "prefix:=h_bed_6_ ",
             "fixed:='0' ",
             "rpy:='-1.57 0 0' ",
         ]
     )
-    h_bed_6_description = {"use_sim_time": use_sim_time, "robot_description": h_bed_6_description_content}
+    h_bed_6_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": h_bed_6_description_content,
+    }
 
     wall_1_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+            ),
             " ",
             "prefix:=wall_1_ ",
             "fixed:='1' ",
@@ -113,13 +173,18 @@ def generate_launch_description():
             "dim:='12 0.1 2' ",
         ]
     )
-    wall_1_description = {"use_sim_time": use_sim_time, "robot_description": wall_1_description_content}
+    wall_1_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": wall_1_description_content,
+    }
 
     wall_2_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+            ),
             " ",
             "prefix:=wall_2_ ",
             "fixed:='1' ",
@@ -129,13 +194,18 @@ def generate_launch_description():
             "dim:='0.1 10 1' ",
         ]
     )
-    wall_2_description = {"use_sim_time": use_sim_time, "robot_description": wall_2_description_content}
+    wall_2_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": wall_2_description_content,
+    }
 
     wall_3_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+            ),
             " ",
             "prefix:=wall_3_ ",
             "fixed:='1' ",
@@ -145,13 +215,18 @@ def generate_launch_description():
             "dim:='12 0.1 1' ",
         ]
     )
-    wall_3_description = {"use_sim_time": use_sim_time, "robot_description": wall_3_description_content}
+    wall_3_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": wall_3_description_content,
+    }
 
     wall_4_description_content = Command(
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+            ),
             " ",
             "prefix:=wall_4_ ",
             "fixed:='1' ",
@@ -161,7 +236,10 @@ def generate_launch_description():
             "dim:='0.1 10 2' ",
         ]
     )
-    wall_4_description = {"use_sim_time": use_sim_time, "robot_description": wall_4_description_content}
+    wall_4_description = {
+        "use_sim_time": use_sim_time,
+        "robot_description": wall_4_description_content,
+    }
 
     qolo_state_pub_node = Node(
         package="robot_state_publisher",
@@ -255,14 +333,19 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/hos_env.rviz"])],
+        arguments=[
+            "-d",
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "rviz/hos_env.rviz"]
+            ),
+        ],
         output="log",
     )
 
     sim_arg = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='false',
-        description='Use simulation (Gazebo) clock if true'
+        "use_sim_time",
+        default_value="false",
+        description="Use simulation (Gazebo) clock if true",
     )
 
     nodes = [

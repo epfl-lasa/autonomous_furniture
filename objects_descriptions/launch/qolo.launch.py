@@ -10,7 +10,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]),
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "urdf/qolo.urdf.xacro"]
+            ),
             " ",
             "prefix:=qolo_ ",
             "connected_to:='' ",
@@ -32,7 +34,12 @@ def generate_launch_description():
         package="rviz2",
         executable="rviz2",
         name="rviz2",
-        arguments=["-d", PathJoinSubstitution([FindPackageShare("objects_descriptions"), "rviz/object_fixed.rviz"])],
+        arguments=[
+            "-d",
+            PathJoinSubstitution(
+                [FindPackageShare("objects_descriptions"), "rviz/object_fixed.rviz"]
+            ),
+        ],
         output="log",
     )
 

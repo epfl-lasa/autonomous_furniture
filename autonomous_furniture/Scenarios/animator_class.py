@@ -1,6 +1,6 @@
 from math import pi, cos, sin, sqrt
 
-import numpy as np 
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -12,6 +12,7 @@ from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
 from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
+
 
 class DynamicalSystemAnimation(Animator):
     dim = 2
@@ -28,13 +29,15 @@ class DynamicalSystemAnimation(Animator):
         num_obs = len(obstacle_environment)
 
         if y_lim is None:
-            y_lim = [-3., 3.]
+            y_lim = [-3.0, 3.0]
         if x_lim is None:
-            x_lim = [-3., 3.]
+            x_lim = [-3.0, 3.0]
         if start_position is None:
             start_position = np.zeros((num_obs, self.dim))
         if walls is True:
-            walls_center_position = np.array([[0., y_lim[0]], [x_lim[0], 0.], [0., y_lim[1]], [x_lim[1], 0.]])
+            walls_center_position = np.array(
+                [[0.0, y_lim[0]], [x_lim[0], 0.0], [0.0, y_lim[1]], [x_lim[1], 0.0]]
+            )
             x_length = x_lim[1] - x_lim[0]
             y_length = y_lim[1] - y_lim[0]
             wall_margin = obstacle_environment[-1].margin_absolut
@@ -46,7 +49,7 @@ class DynamicalSystemAnimation(Animator):
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+                    linear_velocity=np.array([0.0, 0.0]),
                     is_boundary=False,
                 ),
                 Cuboid(
@@ -56,7 +59,7 @@ class DynamicalSystemAnimation(Animator):
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+                    linear_velocity=np.array([0.0, 0.0]),
                 ),
                 Cuboid(
                     axes_length=[x_length, 0.1],
@@ -65,7 +68,7 @@ class DynamicalSystemAnimation(Animator):
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+                    linear_velocity=np.array([0.0, 0.0]),
                 ),
                 Cuboid(
                     axes_length=[0.1, y_length],
@@ -74,19 +77,19 @@ class DynamicalSystemAnimation(Animator):
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
-                )
+                    linear_velocity=np.array([0.0, 0.0]),
+                ),
             ]
             new_obstacle_environment = ObstacleContainer()
             new_obstacle_environment.append(
                 Cuboid(
                     axes_length=[4.1, 5.2],
-                    center_position=np.array([0., 0.]),
+                    center_position=np.array([0.0, 0.0]),
                     margin_absolut=0.6,
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+                    linear_velocity=np.array([0.0, 0.0]),
                 )
             )
             new_obstacle_environment = new_obstacle_environment + walls_cont
@@ -95,12 +98,12 @@ class DynamicalSystemAnimation(Animator):
             new_obstacle_environment.append(
                 Cuboid(
                     axes_length=[4.1, 5.2],
-                    center_position=np.array([0., 0.]),
+                    center_position=np.array([0.0, 0.0]),
                     margin_absolut=0.6,
                     orientation=0,
                     tail_effect=False,
                     repulsion_coeff=1,
-                    linear_velocity=np.array([0., 0.]),
+                    linear_velocity=np.array([0.0, 0.0]),
                 )
             )
 
@@ -134,16 +137,18 @@ class DynamicalSystemAnimation(Animator):
 
         # Update obstacles
         self.obstacle_environment.do_velocity_step(delta_time=self.dt_simulation)
-        self.real_obstacle_environment[-1].center_position = self.position_list[:, ii + 1]
+        self.real_obstacle_environment[-1].center_position = self.position_list[
+            :, ii + 1
+        ]
 
         self.ax.clear()
 
         # Drawing and adjusting of the axis
         self.ax.plot(
-            self.position_list[0, :ii + 1],
-            self.position_list[1, :ii + 1],
+            self.position_list[0, : ii + 1],
+            self.position_list[1, : ii + 1],
             ":",
-            color="#135e08"
+            color="#135e08",
         )
         self.ax.plot(
             self.position_list[0, ii + 1],
@@ -160,7 +165,7 @@ class DynamicalSystemAnimation(Animator):
             self.real_obstacle_environment,
             self.x_lim,
             self.y_lim,
-            showLabel=False
+            showLabel=False,
         )
 
         self.ax.plot(

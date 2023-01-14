@@ -44,7 +44,9 @@ def multi_simulation(
 
     for ii in scenarios:
         random.seed(ii)
-        my_animation.it_final = my_animation.it_max # We need to reset to this value to compute correctly the proximity
+        my_animation.it_final = (
+            my_animation.it_max
+        )  # We need to reset to this value to compute correctly the proximity
         my_scenario.creation()
 
         anim_name_pre = f"{args.name}_scen{ii}_nb{nb_furniture}_"
@@ -92,7 +94,9 @@ def single_simulation(
     )
 
     random.seed(scen)
-    my_animation.it_final = my_animation.it_max # We need to reset to this value to compute correctly the proximity
+    my_animation.it_final = (
+        my_animation.it_max
+    )  # We need to reset to this value to compute correctly the proximity
 
     my_scenario = ScenarioLauncher(nb_furniture=nb_furniture)
     my_scenario.creation()
@@ -125,7 +129,7 @@ def single_simulation(
 
 def main():
     # List of environment shared by all the furniture/agent
-    scenarios = range(155,250)
+    scenarios = range(155, 250)
 
     for nb_furniture in [3]:
         for version in ["v2"]:
@@ -147,5 +151,5 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    #main()
+    # main()
     run_single()

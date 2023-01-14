@@ -37,27 +37,56 @@ def run_turning_around():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([6, 2]), orientation=np.pi/2)
+    goal = ObjectPose(position=np.array([6, 2]), orientation=np.pi / 2)
 
-    table_shape = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                           center_position=np.array([-1, 1]),
-                           margin_absolut=1,
-                           orientation=np.pi/2,
-                           tail_effect=False,)
+    table_shape = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([-1, 1]),
+        margin_absolut=1,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
 
     goal_pers = ObjectPose(position=np.array([2, 5.5]), orientation=0)
 
-    goal2 = ObjectPose(position=np.array([2, 1]), orientation=np.pi/2)
-    table_shape2 = CuboidXd(axes_length=[max_ax_len, min_ax_len],
-                            center_position=goal2.position,
-                            margin_absolut=1,
-                            orientation=goal2.orientation,
-                            tail_effect=False,)
+    goal2 = ObjectPose(position=np.array([2, 1]), orientation=np.pi / 2)
+    table_shape2 = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=goal2.position,
+        margin_absolut=1,
+        orientation=goal2.orientation,
+        tail_effect=False,
+    )
 
-    my_furniture = [Person(center_position=[2, 5.5],
-                           radius=0.8, obstacle_environment=obstacle_environment, goal_pose=goal_pers, priority_value=1, margin=1, static=False, name="pers"),
-                    Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur"),
-                    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2, priority_value=1, static=True, name="static")]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
+    my_furniture = [
+        Person(
+            center_position=[2, 5.5],
+            radius=0.8,
+            obstacle_environment=obstacle_environment,
+            goal_pose=goal_pers,
+            priority_value=1,
+            margin=1,
+            static=False,
+            name="pers",
+        ),
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal,
+            priority_value=1,
+            name="fur",
+        ),
+        Furniture(
+            shape=table_shape2,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal2,
+            priority_value=1,
+            static=True,
+            name="static",
+        ),
+    ]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
 
     my_animation = DynamicalSystemAnimation(
         it_max=450,
@@ -67,18 +96,16 @@ def run_turning_around():
     )
 
     my_animation.setup(
-        obstacle_environment,
-        agent=my_furniture,
-        x_lim=[-3, 8],
-        y_lim=[-2, 7]
+        obstacle_environment, agent=my_furniture, x_lim=[-3, 8], y_lim=[-2, 7]
     )
 
     version = "v2"
-    do_drag= "dragdist"
+    do_drag = "dragdist"
 
     my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
     my_animation.logs(len(my_furniture), do_drag, version=version)
-    #print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
+    # print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
+
 
 if __name__ == "__main__":
     plt.close("all")

@@ -9,9 +9,24 @@ import argparse
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--num_ctl_x", action="store", default=2, help="int of number of control points in the furniture on x axis")
-parser.add_argument("--num_ctl_y", action="store", default=1, help="int of number of control points in the furniture on y axis")
-parser.add_argument("--rect_size", action="store", default="2,1", help="x,y of the max size of the furniture")
+parser.add_argument(
+    "--num_ctl_x",
+    action="store",
+    default=2,
+    help="int of number of control points in the furniture on x axis",
+)
+parser.add_argument(
+    "--num_ctl_y",
+    action="store",
+    default=1,
+    help="int of number of control points in the furniture on y axis",
+)
+parser.add_argument(
+    "--rect_size",
+    action="store",
+    default="2,1",
+    help="x,y of the max size of the furniture",
+)
 args = parser.parse_args()
 
 num_ctl_x = int(args.num_ctl_x)
@@ -22,7 +37,7 @@ ax_min = min(axis)
 ax_max = max(axis)
 div_x = ax_max / (num_ctl_x + 1)
 div_y = ax_min / (num_ctl_y + 1)
-radius = math.sqrt((div_y ** 2) + (div_x ** 2))
+radius = math.sqrt((div_y**2) + (div_x**2))
 rectangle = Polygon([[0, 0], [ax_max, 0], [ax_max, ax_min], [0, ax_min], [0, 0]])
 
 shapes = []
@@ -39,8 +54,8 @@ plt.close("all")
 plt.ion()
 fig, ax = plt.subplots()
 ax.set_aspect(1.0)
-plt.xlim([-.2, 0.8])
-plt.ylim([-.2, 0.7])
+plt.xlim([-0.2, 0.8])
+plt.ylim([-0.2, 0.7])
 
 plt.plot(*rectangle.exterior.xy, "r")
 
