@@ -136,6 +136,13 @@ cd lib/various_tools/
 git pull origin main
 ```
 
+### Docker - Cannot connect to host
+Add the xhost set to your `.profile` setup file by running:
+``` shell
+echo "xhost + local:" >> ~/.profile
+```
+
+
 **References**     
 > [1] Lukas Huber, Aude Billard, and Jean-Jacques E. Slotine. "Avoidance of Convex and Concave Obstacles with Convergence ensured through Contraction." IEEE Robotics and Automation Letters (2019).
 > 

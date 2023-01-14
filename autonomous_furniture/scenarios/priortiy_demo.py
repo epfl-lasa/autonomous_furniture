@@ -97,14 +97,16 @@ def priority_demo():
     )
 
     my_animation.setup(
-        obstacle_environment, agent=my_furniture, x_lim=[-3, 8], y_lim=[-2, 7]
+        obstacle_environment,
+        agent=my_furniture,
+        x_lim=[-3, 8],
+        y_lim=[-2, 7],
+        version="v2",
+        mini_drag="dragdist",
     )
 
-    version = "v2"
-    do_drag = "dragdist"
-
-    my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
-    my_animation.logs(len(my_furniture), do_drag, version=version)
+    my_animation.run(save_animation=args.rec)
+    my_animation.logs(len(my_furniture))
 
 
 if __name__ == "__main__":

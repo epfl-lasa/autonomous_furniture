@@ -189,24 +189,27 @@ class BaseAgent(ABC):
     def get_global_control_points(self):
         return np.array(
             [
-                self._shape.pose.transform_position_from_local_to_reference(ctp)
+                self._shape.pose.transform_position_from_relative(ctp)
                 for ctp in self._control_points
             ]
         ).T
 
     def get_goal_control_points(self):
+        """Get gaol-control-points in global frame."""
         return np.array(
             [
-                self._goal_pose.transform_position_from_local_to_reference(ctp)
+                self._goal_pose.transform_position_from_relative(ctp)
                 for ctp in self._control_points
             ]
         ).T
 
     def get_veloctity_in_global_frame(self, velocity: npt.ArrayLike) -> np.ndarray:
+        """Returns the transform of the velocity from relative to global frame."""
         return self._shape.pose.transform_direction_from_relative(np.array(velocity))
 
     def get_velocity_in_local_frame(self, velocity):
-        return self._shape.pose.transform_direction_from_reference_to_local(velocity)
+        """Returns the transform of the velocity from global to relative frame."""
+        return self._shape.pose.transform_direction_to_relative(velocity)
 
     @staticmethod
     def get_weight_from_gamma(
