@@ -281,7 +281,11 @@ class FurnitureDynamics:
         return temp_env
 
     @staticmethod
-    def get_gamma_product_furniture(position, env, gamma_type=GammaType.EUCLEDIAN):
+    def get_gamma_product_furniture(
+        position: np.ndarray,
+        env: ObstacleContainer,
+        gamma_type: GammaType = GammaType.EUCLEDIAN,
+    ):
         if not len(env):
             # Very large number
             return 1e20
@@ -289,8 +293,9 @@ class FurnitureDynamics:
         gamma_list = np.zeros(len(env))
         for ii, obs in enumerate(env):
             # gamma_type needs to be implemented for all obstacles
+            # position, in_global_frame=True, gamma_type=gamma_type
             gamma_list[ii] = obs.furniture_container.get_gamma(
-                position, in_global_frame=True, gamma_type=gamma_type
+                position, in_global_frame=True
             )
 
         n_obs = len(gamma_list)

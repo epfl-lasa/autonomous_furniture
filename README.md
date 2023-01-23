@@ -3,14 +3,42 @@
 ---
 This repository contains an implementation of dynamic obstacle avoidance algorithm for autonomous furniture as developped in [1], [2], and [3]
 ---
-Requirements: python, pipenv, ROS2
 
-## Setup
+## Setup using Docker
+It is advised to use ubuntu, as the docker virtual images have the best compatibility with it.
+For this check
+https://docs.docker.com/engine/install/ubuntu/
+
+Once installed, build the docker:
+
+``` shell
+bash docker-build.sh
+```
+
+And finally run the docker in a command line:
+``` shell
+bash docker-run.sh
+```
+
+Now, check out files in the `scripts` folder, which can be run. For example
+``` shell
+python3 corner_case.py
+```
+
+Make sure, the visualization is enabled (check issues below).
+
+The docker is setup, such that it automatically shares updates local changes.
+
+
+## Setup on Host / Main computer
+Requirements: python, ROS2
+
 To setup the repository create "workspace/src" directory then clone the repository into the "src" directory:
 ```shell
 cd workspace 
 ```
-```
+
+```shell
 git clone --recurse-submodules git@github.com:epfl-lasa/autonomous_furniture.git ./src
 ```
 (Make sure that the submodule dynamic_obstacle_avoidance is in autonomous_furniture/libraries, and various_tools is in autonomous_furniture/libraries/dynamic_obstacle_avoidance/lib)
@@ -141,6 +169,13 @@ git checkout feat/mobilerobot
 cd lib/various_tools/
 git pull origin main
 ```
+
+### Docker - Cannot connect to host
+Add the xhost set to your `.profile` setup file by running:
+``` shell
+echo "xhost + local:" >> ~/.profile
+```
+
 
 **References**     
 > [1] Lukas Huber, Aude Billard, and Jean-Jacques E. Slotine. "Avoidance of Convex and Concave Obstacles with Convergence ensured through Contraction." IEEE Robotics and Automation Letters (2019).
