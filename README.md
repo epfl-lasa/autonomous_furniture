@@ -50,6 +50,8 @@ Go to file directory:
 ```shell
 cd src/autonomous_furniture
 ```
+
+## 
 Create a virtual environment and install the dependencies from the Pipfile:
 ```shell
 pipenv install
@@ -59,13 +61,17 @@ Once the virtual environment is setup start it with:
 ```shell
 pipenv shell
 ```
+
 Setup the obstacle avoidance and various tools libraries:
 ```shell
 cd libraries/dynamic_obstacle_avoidance/
+pip install -r requirements.txt
+pip install -e .
+cd libraries/various_tools/
 python setup.py develop
-cd lib/various_tools/
-python setup.py develop
+pip install -e .
 ```
+
 ### ROS2 install
 Build the ROS2 packages outside of the "pipenv shell":
 ```shell
