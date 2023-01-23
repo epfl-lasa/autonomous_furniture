@@ -1,3 +1,10 @@
+# Virtual environment setup
+.venv/**
+venv/**
+
+# Data-files
+autonomous_furniture/scripts/*.json
+
 **/*.egg-info/*
 **/__pycache__/**
 

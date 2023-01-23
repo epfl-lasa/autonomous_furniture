@@ -29,6 +29,15 @@ Make sure, the visualization is enabled (check issues below).
 
 The docker is setup, such that it automatically shares updates local changes.
 
+## Setup without ROS
+Following libraries are needed and need to be installed:
+
+``` shell
+https://github.com/epfl-lasa/dynamic_obstacle_avoidance
+```
+
+
+
 
 ## Setup on Host / Main computer
 Requirements: python, ROS2
