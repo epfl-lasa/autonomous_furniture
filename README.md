@@ -119,6 +119,13 @@ Don't forget to source the package:
 . install/setup.bash
 ```
 
+Build and run
+<!-- colcon build --symlink-install && ros2 launch autonomous_furniture example_launch.launch.py -->
+``` shell
+colcon build --symlink-install && ros2 launch autonomous_furniture assistive_environment.launch.py
+```
+
+
 ## Running 3D Environment
 To run the 3D env you have to open 2 terminal, 1 will run the launch file for RViz and the subscriber and 1 will run the publisher.
 In the first terminal install and source de ROS2 packages, then run:
