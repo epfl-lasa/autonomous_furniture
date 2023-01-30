@@ -63,6 +63,7 @@ Be sure your directory structure looks like this:
         └── objects_descriptions
 ```
 if not ROS2 will fail to build and through mising package errors.
+
 ### ROS2 Setup
 For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy and galactic.
 With the basic version of ROS2 there are a few missing packages needed to properly run the code.
@@ -135,30 +136,16 @@ The run the corresponding python publisher:
 python furniture_publisher/<env of choice>_state_publisher.py
 ```
 
-## Running 2D Environment
-You can run any of the record files in Scenarios and set the "rec" flag to "False", should be False by default:
-```shell
-cd workspace/src/autonomous_furniture/
-pipenv shell
-python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
-```
 
-## Updated Code
-I added a furniture class which is more elegant implementation of the smart furniture.
-New examples are provided as well as the corresponding ROS2 publishers.
 
 ### Publishers
-
 assistive_environment_state_publisher.py
-
 hospital_environment_state_publisher.py
 
 The publishers are compatible with the current launch files
 
 ### 2D Examples and Recorder
-
 assistive_environment.py
-
 hospital_environment.py
 
 record_hospital_environment.py
