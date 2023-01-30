@@ -12,25 +12,30 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 
+URDF_DIRECTORY = "objects_descriptions"
 
-def node_creator(furniture_name, urdf_file_name):
+
+def node_creator(furniture_name, urdf_file_name, topicspace=""):
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
 
-    path_to_urdf = (
-        get_package_share_path("objects_descriptions") / "urdf" / urdf_file_name
-    )
+    path_to_urdf = get_package_share_path(URDF_DIRECTORY) / "urdf" / urdf_file_name
 
     urdf = os.path.join(
-        get_package_share_directory("objects_descriptions"),
+        get_package_share_directory(URDF_DIRECTORY),
         os.path.join("urdf", urdf_file_name),
     )
+
+    if len(topicspace):
+        namespace = topicspace + "/" + furniture_name + "/"
+    else:
+        namespace = furniture_name + "/"
 
     new_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="screen",
-        namespace="furniture" + "/" + furniture_name,
+        namespace=namespace,
         parameters=[
             {
                 "use_sim_time": use_sim_time,
@@ -40,7 +45,7 @@ def node_creator(furniture_name, urdf_file_name):
                             "xacro ",
                             str(path_to_urdf),
                             " ",
-                            f"prefix:={furniture_name} ",
+                            f"prefix:={furniture_name}/ ",
                             "fixed:='0' ",
                         ]
                     ),
@@ -59,17 +64,15 @@ def create_wall_node(
     length: float = 1.0,
     orientation_in_degree: float = 0.0,
     urdf_file_name="wall.urdf.xacro",
-    # This is shared between all the instances and should not be set
+    # The 'wall_counter' is shared between all the instances and should not be set
     wall_counter=[0],
 ):
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
 
-    path_to_urdf = (
-        get_package_share_path("objects_descriptions") / "urdf" / urdf_file_name
-    )
+    path_to_urdf = get_package_share_path(URDF_DIRECTORY) / "urdf" / urdf_file_name
 
     urdf = os.path.join(
-        get_package_share_directory("objects_descriptions"),
+        get_package_share_directory(URDF_DIRECTORY),
         os.path.join("urdf", urdf_file_name),
     )
 
@@ -79,7 +82,7 @@ def create_wall_node(
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="screen",
-        namespace="furniture" + "/" + "wall" + str(wall_counter[0]),
+        namespace="wall" + str(wall_counter[0]),
         parameters=[
             {
                 "use_sim_time": use_sim_time,
@@ -89,7 +92,7 @@ def create_wall_node(
                             "xacro ",
                             str(path_to_urdf),
                             " ",
-                            f"prefix:=wall_{str(wall_counter[0])} ",
+                            f"prefix:=wall_{str(wall_counter[0])}/ ",
                             "fixed:='1' ",
                             f"xyz:='{position[0]} {position[1]} 1' ",
                             f"dim:='{length + 0.1} 0.1 2' ",

@@ -16,7 +16,7 @@ from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-from analysis.calc_time import (
+from autonomous_furniture.analysis.calc_time import (
     calculate_relative_position,
     relative2global,
     global2relative,
@@ -40,18 +40,15 @@ def euler_to_quaternion(roll, pitch, yaw):
     return Quaternion(x=qx, y=qy, z=qz, w=qw)
 
 
-def rotate_vector(vector, angle):
-    rot = np.array([[cos(angle), -sin(angle)], [sin(angle), cos(angle)]])
-    new_dir = np.dot(rot, vector)
-    return new_dir
-
-
 class DynamicalSystemRviz(Node):
     def __init__(self):
         self.animation_paused = True
         rclpy.init()
+
         super().__init__("DS_state_publisher")
+
         qos_profile = QoSProfile(depth=10)
+
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
         self.nodeName = self.get_name()
         self.odom_trans = TransformStamped()
@@ -65,14 +62,17 @@ class DynamicalSystemRviz(Node):
 
     def update_state_publisher(self, prefix, position, rotation):
         self.odom_trans.child_frame_id = prefix + "base_link"
+
         now = self.get_clock().now()
         self.odom_trans.header.stamp = now.to_msg()
         self.odom_trans.transform.translation.x = position[0]
         self.odom_trans.transform.translation.y = position[1]
         self.odom_trans.transform.translation.z = 0.0
         self.odom_trans.transform.rotation = euler_to_quaternion(0, 0, rotation)  # rpy
+
         if "table" in prefix:
             self.odom_trans.transform.translation.x = position[0] + 0.2
+
         if "qolo" in prefix:
             self.odom_trans.transform.translation.z = 0.2
             self.odom_trans.transform.rotation = euler_to_quaternion(
@@ -211,7 +211,7 @@ class DynamicalSystemRviz(Node):
         )
         dynamic_avoider = DynamicCrowdAvoider(
             initial_dynamics=initial_dynamics,
-            environment=obstacle_environment,
+            obstacle_environment=obstacle_environment,
             obs_multi_agent=obs_w_multi_agent,
         )
         position_list = np.zeros((num_agent, dim, it_max))
@@ -223,15 +223,9 @@ class DynamicalSystemRviz(Node):
                 start_position[obs_w_multi_agent[obs]], obstacle_environment[obs]
             )
 
-        obs_name = ["h_bed_1_", "h_bed_2_", "h_bed_3_", "h_bed_4_", "qolo_"]
-        obs_name = [
-            "chair_1_",
-            "chair_2_",
-            "chair_3_",
-            "chair_4_",
-            "table_",
-            "qolo_human_",
-        ]
+        n_chairs = 4
+        obs_name = ["furniture/chair" + str(ii) for ii in range(n_chairs)]
+        obs_name = obs_name + ["furniture/table", "qolo_human"]
         position_list[:, :, 0] = start_position
 
         fig, ax = plt.subplots()  # figsize=(10, 8)

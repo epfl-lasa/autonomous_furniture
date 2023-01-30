@@ -36,6 +36,26 @@ Following libraries are needed and need to be installed:
 https://github.com/epfl-lasa/dynamic_obstacle_avoidance
 ```
 
+## Run Rviz-Environment
+To run the example `assistive_environment.launch.py`
+``` shell
+ros2 launch autonomous_furniture assistive_environment.launch.py
+```
+
+Sometimes, the rviz does not open the correct configuration, in that case open it:
+`CTRL+o` -> go to `/home/ros/ros2_ws/autonomous_furniture/rviz/assistive_environment.rviz`
+
+
+Launch the obstacle avoidance simulation (from the autonomous_furniture folder):
+``` shell
+python3 furniture_publishers/assistive_environment.py
+```
+
+### Build and Run
+If you need to build AND run
+``` shell
+colcon build --symlink-install && ros2 launch autonomous_furniture assistive_environment.launch.py
+```
 
 ## Setup on Host / Main computer
 Requirements: python, ROS2
@@ -135,7 +155,7 @@ ros2 launch autonomous_furniture <env of choice>.launch.py
 Replace "env of choice" with any of the available environment in the launch directory.
 In the second terminal go to the autonomous_furniture directory and start the pipenv shell:
 ```shell
-cd workspace/src/autonomous_furniture/
+cd workspace/src/autonomous_furniture/l
 pipenv shell
 ```
 The run the corresponding python publisher:

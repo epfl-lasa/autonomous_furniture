@@ -1,18 +1,21 @@
 from math import sin, cos, pi
 import time
+
 import numpy as np
 import matplotlib.pyplot as plt
-
-from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
-from dynamic_obstacle_avoidance.containers import ObstacleContainer
-from dynamic_obstacle_avoidance.visualization import plot_obstacles
-from vartools.dynamical_systems import LinearSystem
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 from geometry_msgs.msg import Quaternion
 from tf2_ros import TransformBroadcaster, TransformStamped
+
+from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
+from dynamic_obstacle_avoidance.containers import ObstacleContainer
+from dynamic_obstacle_avoidance.visualization import plot_obstacles
+
+from vartools.dynamical_systems import LinearSystem
+
 
 from autonomous_furniture.furniture_class import (
     Furniture,
@@ -322,10 +325,10 @@ class DynamicalSystemRviz(Node):
             # Drawing and adjusting of the axis
             for jj, furniture in enumerate(furniture_env):
                 plot_obstacles(
-                    ax,
-                    obstacle_environment,
-                    x_lim,
-                    y_lim,
+                    ax=ax,
+                    obstacle_container=obstacle_environment,
+                    x_lim=x_lim,
+                    y_lim=y_lim,
                     showLabel=False,
                 )
 

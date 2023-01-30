@@ -3,9 +3,12 @@
 # Created: 2023-01-30
 # License: BSD
 
+import os
+
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from ament_index_python.packages import get_package_share_path
 
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import (
@@ -20,19 +23,28 @@ from autonomous_furniture.launch_helper_functions import create_qolo_nodes
 def generate_launch_description():
     furnite_nodes = []
     furnite_nodes.append(
-        node_creator(furniture_name="table", urdf_file_name="table.urdf.xacro")
+        node_creator(
+            furniture_name="table",
+            urdf_file_name="table.urdf.xacro",
+            topicspace="furniture",
+        )
     )
 
-    n_chairs = 2
+    n_chairs = 4
     for ii in range(n_chairs):
         furnite_nodes.append(
             node_creator(
-                furniture_name="chair" + str(ii), urdf_file_name="chair.urdf.xacro"
+                furniture_name="chair" + str(ii),
+                urdf_file_name="chair.urdf.xacro",
+                topicspace="furniture",
             )
         )
 
     wall_nodes = create_room_with_four_walls(room_axes=[7, 10])
     qolo_nodes = create_qolo_nodes()
+
+    # Rviz path -> this could be obtained if correctly installed..
+    rviz_base_path = "/home/ros/ros2_ws/src/autonomous_furniture"
 
     rviz_node = Node(
         package="rviz2",
@@ -40,12 +52,13 @@ def generate_launch_description():
         name="rviz2",
         arguments=[
             "-d",
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("autonomous_furniture"),
-                    "rviz/assistive_environment.rviz",
-                ]
-            ),
+            os.path.join(rviz_base_path, "config", "assistive_environment.rviz")
+            # PathJoinSubstitution(
+            #     [
+            #         FindPackageShare("autonomous_furniture"),
+            #         "config/assistive_environment.rviz",
+            #     ]
+            # ),
         ],
         output="log",
     )
