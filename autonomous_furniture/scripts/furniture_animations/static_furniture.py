@@ -1,22 +1,17 @@
 from math import pi, cos, sin, sqrt
+import argparse
 
 import numpy as np
-
 import matplotlib.pyplot as plt
-
-from animator_class import DynamicalSystemAnimation
-
-from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
-from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
 from vartools.dynamical_systems import LinearSystem
 
-import argparse
+# from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
+from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
+from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
+from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument("--rec", action="store", default=False, help="Record flag")
-args = parser.parse_args()
+from autonomous_furniture.animator_class import DynamicalSystemAnimation
 
 
 def calculate_relative_position(num_agent, max_ax, min_ax):
@@ -140,6 +135,11 @@ def run_person_avoiding_multiple_furniture():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--rec", action="store", default=False, help="Record flag")
+    args = parser.parse_args()
+
     plt.close("all")
     plt.ion()
 

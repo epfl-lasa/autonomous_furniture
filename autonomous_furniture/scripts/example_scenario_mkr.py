@@ -10,7 +10,7 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from autonomous_furniture.agent import BaseAgent
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
-from evaluation.scenario_launcher import ScenarioLauncher
+from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 
 import argparse
 
@@ -114,17 +114,19 @@ def single_simulation(
         x_lim=[-3, 8],
         y_lim=[-2, 7],
         anim=anim,
+        mini_drag=do_drag,
+        version=version,
     )
     print(
         f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | version : {version} | Number of fold : {scen}"
     )
 
     if anim:
-        my_animation.run(save_animation=args.rec, mini_drag=do_drag, version=version)
+        my_animation.run(save_animation=args.rec)
     else:
-        my_animation.run_no_clip(mini_drag=do_drag, version=version)
+        my_animation.run_no_clip()
 
-    my_animation.logs(nb_furniture, do_drag, version=version)
+    my_animation.logs(nb_furniture)
 
 
 def main():

@@ -88,6 +88,7 @@ class BaseAgent(ABC):
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
         self._parking_pose = parking_pose
+
         self._goal_pose = goal_pose
         # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
@@ -112,11 +113,16 @@ class BaseAgent(ABC):
 
     @property
     def position(self):
+        """Returns numpy-array position."""
         return self._shape.pose.position
 
     @property
-    def orientation(self):
-        return self._shape.pose.orientation
+    def orientation(self) -> float:
+        """Returns a (float) orientation (since uniquely 2d)"""
+        if self._shape.pose.orientation is None:
+            return 0
+        else:
+            return self._shape.pose.orientation
 
     @property
     def dimension(self):

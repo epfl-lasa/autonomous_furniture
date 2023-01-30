@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
-from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
+# from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
+from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
+from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from dynamic_obstacle_avoidance.avoidance import DynamicModulationAvoider
+from dynamic_obstacle_avoidance.avoidance import ModulationAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 
@@ -114,9 +116,9 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_environment = new_obstacle_environment
         self.initial_dynamics = initial_dynamics
 
-        self.dynamic_avoider = DynamicModulationAvoider(
+        self.dynamic_avoider = ModulationAvoider(
             initial_dynamics=self.initial_dynamics,
-            environment=self.obstacle_environment,
+            obstacle_environment=self.obstacle_environment,
         )
 
         self.position_list = np.zeros((self.dim, self.it_max))
@@ -161,10 +163,10 @@ class DynamicalSystemAnimation(Animator):
         self.ax.set_ylim(self.y_lim)
 
         plot_obstacles(
-            self.ax,
-            self.real_obstacle_environment,
-            self.x_lim,
-            self.y_lim,
+            ax=self.ax,
+            obstacle_container=self.real_obstacle_environment,
+            x_lim=self.x_lim,
+            y_lim=self.y_lim,
             showLabel=False,
         )
 
