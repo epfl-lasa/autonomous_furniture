@@ -37,8 +37,6 @@ https://github.com/epfl-lasa/dynamic_obstacle_avoidance
 ```
 
 
-
-
 ## Setup on Host / Main computer
 Requirements: python, ROS2
 

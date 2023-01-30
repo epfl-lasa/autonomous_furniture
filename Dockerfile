@@ -34,11 +34,11 @@ USER ros
 RUN mkdir -p ${HOME}/python
 WORKDIR ${HOME}/python
 
+# Enforce partial rebuild (temp fix -> remove in the future)
+RUN echo 5
+
 RUN git clone -b main --single-branch https://github.com/hubernikus/various_tools.git
 RUN git clone -b main --single-branch https://github.com/epfl-lasa/dynamic_obstacle_avoidance
-
-# Enforce partial rebuild (temp fix -> remove in the future)
-RUN echo 1
 
 # USER root
 WORKDIR ${HOME}/python/various_tools
