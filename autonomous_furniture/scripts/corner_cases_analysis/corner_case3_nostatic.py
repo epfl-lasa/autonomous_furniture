@@ -75,7 +75,7 @@ def corner_case():
             shape=table_shape2,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([9, 4]), orientation=np.pi/3),
+            goal_pose=ObjectPose(position=np.array([9, 4]), orientation=np.pi / 3),
             priority_value=1,
             name="move",
         ),
@@ -83,7 +83,9 @@ def corner_case():
             shape=table_shape3,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([5.0, 3.8]), orientation=-np.pi / 3.5),
+            goal_pose=ObjectPose(
+                position=np.array([5.0, 3.8]), orientation=-np.pi / 3.5
+            ),
             priority_value=1,
             name="move",
         ),
@@ -95,8 +97,8 @@ def corner_case():
         animation_name=args.name,
     )
 
-    version = "v2" #options are: v1 and v2
-    do_drag = "dragdist" #options are: nodrag, dragvel, dragdist
+    version = "v2"  # options are: v1 and v2
+    do_drag = "dragdist"  # options are: nodrag, dragvel, dragdist
 
     my_animation.setup(
         obstacle_environment,

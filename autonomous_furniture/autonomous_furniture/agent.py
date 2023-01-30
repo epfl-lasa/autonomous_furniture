@@ -3,18 +3,23 @@ from asyncio import get_running_loop
 import warnings
 
 import numpy as np
+from numpy import linalg as LA
 import numpy.typing as npt
 
 import matplotlib.pyplot as plt
-from numpy import linalg as LA
-from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
-from vartools.dynamical_systems.linear import ConstantValue
-from vartools.states import ObjectPose, ObjectTwist
-from dynamic_obstacle_avoidance.obstacles import Obstacle
-from dynamic_obstacle_avoidance.obstacles import Ellipse
-from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes
 
+
+from vartools.dynamical_systems.linear import ConstantValue
+
+from vartools.states import ObjectPose, ObjectTwist
 from vartools.dynamical_systems import LinearSystem
+
+# from dynamic_obstacle_avoidance.obstacles import Obstacle
+# from dynamic_obstacle_avoidance.obstacles import Ellipse
+from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes as Ellipse
+
+from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
@@ -28,6 +33,7 @@ def get_distance_to_obtacle_surface(
     margin_absolut: float = None,
     in_global_frame: bool = None,
 ) -> float:
+
     if in_global_frame is not None:
         in_obstacle_frame = not (in_global_frame)
 
@@ -558,7 +564,7 @@ class Furniture(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                get_distance_to_obtacle_surface(
+                get_distance_to_surface(
                     obstacle=obs,
                     position=self.position,
                     in_obstacle_frame=False,
@@ -756,7 +762,7 @@ class Person(BaseAgent):
         margin: float = 1,
         **kwargs
     ) -> None:
-        _shape = EllipseWithAxes(
+        _shape = Ellipse(
             center_position=np.array(center_position),
             margin_absolut=margin,
             orientation=0,
