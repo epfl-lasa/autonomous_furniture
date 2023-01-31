@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import rand
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
+from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes
+
 from vartools.states import ObjectPose
 
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
@@ -62,13 +64,20 @@ def corner_case():
         tail_effect=False,
     )
 
+    chair_shape = EllipseWithAxes(
+        axes_length=[0.8, 0.8],
+        center_position=np.array([8.7, 8.0]),
+        margin_absolut=2,
+        orientation=0.0,
+    )
+
     my_furniture = [
         Furniture(
-            shape=table_shape,
+            shape=chair_shape,
             obstacle_environment=obstacle_environment,
-            control_points=control_points,
+            control_points=np.array([[0.0, 0.0], [0.0, 0.0]]),
             goal_pose=goal,
-            priority_value=3,
+            priority_value=1,
             name="move",
         ),
         Furniture(
@@ -89,7 +98,7 @@ def corner_case():
         ),
     ]
     my_animation = DynamicalSystemAnimation(
-        it_max=100,
+        it_max=900,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
