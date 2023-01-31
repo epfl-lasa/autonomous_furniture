@@ -564,7 +564,7 @@ class Furniture(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                get_distance_to_surface(
+                get_distance_to_obtacle_surface(
                     obstacle=obs,
                     position=self.position,
                     in_obstacle_frame=False,
