@@ -1,5 +1,5 @@
 #!/bin/bash
-docker build -t ros2_autonomous_furniture .
+sudo docker build -t ros2_autonomous_furniture .
 
 # install ros package
 
