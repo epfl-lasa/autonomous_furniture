@@ -3,10 +3,9 @@ FROM osrf/ros:${ROS_DISTRO}-desktop
 # FROM osrf/ros:${ROS_DISTRO}-desktop
 # FROM osrf/ros:${ROS_DISTRO}-ros-base
 
-ARG HOME=/home/ros
+ARG USER=ros
+ARG HOME=/home/${USER}
 # ENV HOME /home/ros
-
-ARG USERNAME=ros
 
 ARG HOST_GID=1000
 ARG HOST_UID=1000
@@ -35,8 +34,14 @@ RUN python3 -m pip install pyqt5
 # Make python 3.10 the default
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
 
-RUN groupadd -g  ${HOST_GID} ros
-RUN useradd -d ${HOME} -s /bin/bash -m ros -u ${HOST_UID} -g ${HOST_GID}
+RUN addgroup --gid ${HOST_GID} ${USER}
+RUN adduser --gecos "ROS User" --uid ${HOST_UID} --gid ${HOST_GID} ${USER} && yes | passwd ${USER}
+RUN usermod -a -G dialout ${USER}
+RUN echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/99_aptget
+RUN chmod 0440 /etc/sudoers.d/99_aptget && chown root:root /etc/sudoers.d/99_aptget
+
+# RUN groupadd -g  ${HOST_GID} ros
+# RUN useradd -d ${HOME} -s /bin/bash -m ros -u ${HOST_UID} -g ${HOST_GID}
 
 # Install Python-Libraries
 USER ros
@@ -88,7 +93,7 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash; \
 # RUN echo 'Docker!' | passwd --stdin root 
 
 # USER ros
-USER root
+# USER root
 
 WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 # COPY setup_ros_env.sh ${HOME}/setup_ros_env.sh
