@@ -4,6 +4,10 @@ FROM osrf/ros:humble-desktop
 # FROM osrf/ros:${ROS_DISTRO}-ros-base
 
 ARG HOME=/home/ros
+ARG USERNAME=ros
+
+ARG HOST_GID=1000
+ARG HOST_UID=1000
 
 # INSTALL NECESSARY PACKAGES
 RUN apt update \
@@ -26,8 +30,8 @@ RUN apt-get install -y python3-pip
 # RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
 
 # Create a user called ROS
-RUN groupadd -g 1000 ros
-RUN useradd -d /home/ros -s /bin/bash -m ros -u 1000 -g 1000
+RUN groupadd -g  HOST_GID ros
+RUN useradd -d /home/ros -s /bin/bash -m ros -u HOST_UID -g HOST_GID
 
 # Install Python-Libraries
 USER ros
