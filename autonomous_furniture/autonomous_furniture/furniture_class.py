@@ -1,13 +1,19 @@
+import warnings
 from math import sqrt, cos, sin
+
 import numpy as np
 from numpy import linalg as LA
-import warnings
-from dynamic_obstacle_avoidance.obstacles import Cuboid, Ellipse
-from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
+
 from vartools.dynamical_systems import DynamicalSystem, LinearSystem
 
-from dynamic_obstacle_avoidance.obstacles import GammaType
+# from dynamic_obstacle_avoidance.obstacles import Cuboid, Ellipse
+from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
+from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
 
+from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
+
+# from dynamic_obstacle_avoidance.obstacles import GammaType
 from dynamic_obstacle_avoidance.avoidance.modulation import (
     obs_avoidance_interpolation_moving,
 )
@@ -284,7 +290,7 @@ class FurnitureDynamics:
     def get_gamma_product_furniture(
         position: np.ndarray,
         env: ObstacleContainer,
-        gamma_type: GammaType = GammaType.EUCLEDIAN,
+        # gamma_type: GammaType = GammaType.EUCLEDIAN,
     ):
         if not len(env):
             # Very large number
@@ -625,7 +631,11 @@ class FurnitureAttractorDynamics:
         self.lambda_p = lambda_p
 
     @staticmethod
-    def get_gamma_product_attractor(position, env, gamma_type=GammaType.EUCLEDIAN):
+    def get_gamma_product_attractor(
+        position,
+        env,
+        # gamma_type=GammaType.EUCLEDIAN
+    ):
         if not len(env):
             # Very large number
             return 1e20
@@ -633,7 +643,7 @@ class FurnitureAttractorDynamics:
         for ii, furniture in enumerate(env):
             # gamma_type needs to be implemented for all obstacles
             gamma_list[ii] = furniture.furniture_container.get_gamma(
-                position, in_global_frame=True, gamma_type=gamma_type
+                position, in_global_frame=True
             )
 
         n_obs = len(gamma_list)

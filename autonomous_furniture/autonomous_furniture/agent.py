@@ -3,18 +3,23 @@ from asyncio import get_running_loop
 import warnings
 
 import numpy as np
+from numpy import linalg as LA
 import numpy.typing as npt
 
 import matplotlib.pyplot as plt
-from numpy import linalg as LA
-from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
-from vartools.dynamical_systems.linear import ConstantValue
-from vartools.states import ObjectPose, ObjectTwist
-from dynamic_obstacle_avoidance.obstacles import Obstacle
-from dynamic_obstacle_avoidance.obstacles import Ellipse
-from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes
 
+
+from vartools.dynamical_systems.linear import ConstantValue
+
+from vartools.states import ObjectPose, ObjectTwist
 from vartools.dynamical_systems import LinearSystem
+
+# from dynamic_obstacle_avoidance.obstacles import Obstacle
+# from dynamic_obstacle_avoidance.obstacles import Ellipse
+from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes as Ellipse
+
+from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleContainer
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
@@ -28,6 +33,7 @@ def get_distance_to_obtacle_surface(
     margin_absolut: float = None,
     in_global_frame: bool = None,
 ) -> float:
+
     if in_global_frame is not None:
         in_obstacle_frame = not (in_global_frame)
 
@@ -88,6 +94,7 @@ class BaseAgent(ABC):
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
         self._parking_pose = parking_pose
+
         self._goal_pose = goal_pose
         # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
@@ -112,11 +119,16 @@ class BaseAgent(ABC):
 
     @property
     def position(self):
+        """Returns numpy-array position."""
         return self._shape.pose.position
 
     @property
-    def orientation(self):
-        return self._shape.pose.orientation
+    def orientation(self) -> float:
+        """Returns a (float) orientation (since uniquely 2d)"""
+        if self._shape.pose.orientation is None:
+            return 0
+        else:
+            return self._shape.pose.orientation
 
     @property
     def dimension(self):
@@ -552,7 +564,7 @@ class Furniture(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                get_distance_to_obtacle_surface(
+                get_distance_to_surface(
                     obstacle=obs,
                     position=self.position,
                     in_obstacle_frame=False,
@@ -750,7 +762,7 @@ class Person(BaseAgent):
         margin: float = 1,
         **kwargs
     ) -> None:
-        _shape = EllipseWithAxes(
+        _shape = Ellipse(
             center_position=np.array(center_position),
             margin_absolut=margin,
             orientation=0,

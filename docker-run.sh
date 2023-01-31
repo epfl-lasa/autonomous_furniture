@@ -12,10 +12,10 @@ docker run \
 	   -v "$(pwd)"/objects_descriptions/:/home/ros/ros2_ws/src/objects_descriptions:rw\
 	   ros2_autonomous_furniture
 
-# Local libraries 
+# Local libraries
 # -v ~/Code/dynamic_obstacle_avoidance/dynamic_obstacle_avoidance:/home/ros/python/dynamic_obstacle_avoidance/dynamic_obstacle_avoidance\
-# -v ~/Code/various_tools/vartools:/home/ros/python/various_tools/vartools\
-   
+	# -v ~/Code/various_tools/vartools:/home/ros/python/various_tools/vartools\
+	
 # Alternative mounting?!
 # --mount type=bind,source="$(pwd)"/visualization,target=/home/ros/rviz \
 

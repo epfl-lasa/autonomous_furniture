@@ -105,7 +105,6 @@ def corner_case():
         #     priority_value=1,
         #     name="move",
         # ),
-
     ]
     my_animation = DynamicalSystemAnimation(
         it_max=450,
@@ -114,8 +113,8 @@ def corner_case():
         animation_name=args.name,
     )
 
-    version = "v2" #options are: v1 and v2
-    do_drag = "dragdist" #options are: nodrag, dragvel, dragdist
+    version = "v2"  # options are: v1 and v2
+    do_drag = "dragdist"  # options are: nodrag, dragvel, dragdist
 
     my_animation.setup(
         obstacle_environment,

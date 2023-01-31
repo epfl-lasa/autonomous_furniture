@@ -36,8 +36,26 @@ Following libraries are needed and need to be installed:
 https://github.com/epfl-lasa/dynamic_obstacle_avoidance
 ```
 
+## Run Rviz-Environment
+To run the example `assistive_environment.launch.py`
+``` shell
+ros2 launch autonomous_furniture assistive_environment.launch.py
+```
+
+Sometimes, the rviz does not open the correct configuration, in that case open it:
+`CTRL+o` -> go to `/home/ros/ros2_ws/autonomous_furniture/rviz/assistive_environment.rviz`
 
 
+Launch the obstacle avoidance simulation (from the autonomous_furniture folder):
+``` shell
+python3 furniture_publishers/assistive_environment.py
+```
+
+### Build and Run
+If you need to build AND run
+``` shell
+colcon build --symlink-install && ros2 launch autonomous_furniture assistive_environment.launch.py
+```
 
 ## Setup on Host / Main computer
 Requirements: python, ROS2
@@ -65,6 +83,7 @@ Be sure your directory structure looks like this:
         └── objects_descriptions
 ```
 if not ROS2 will fail to build and through mising package errors.
+
 ### ROS2 Setup
 For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy and galactic.
 With the basic version of ROS2 there are a few missing packages needed to properly run the code.
@@ -120,6 +139,13 @@ Don't forget to source the package:
 . install/setup.bash
 ```
 
+Build and run
+<!-- colcon build --symlink-install && ros2 launch autonomous_furniture example_launch.launch.py -->
+``` shell
+colcon build --symlink-install && ros2 launch autonomous_furniture assistive_environment.launch.py
+```
+
+
 ## Running 3D Environment
 To run the 3D env you have to open 2 terminal, 1 will run the launch file for RViz and the subscriber and 1 will run the publisher.
 In the first terminal install and source de ROS2 packages, then run:
@@ -129,7 +155,7 @@ ros2 launch autonomous_furniture <env of choice>.launch.py
 Replace "env of choice" with any of the available environment in the launch directory.
 In the second terminal go to the autonomous_furniture directory and start the pipenv shell:
 ```shell
-cd workspace/src/autonomous_furniture/
+cd workspace/src/autonomous_furniture/l
 pipenv shell
 ```
 The run the corresponding python publisher:
@@ -137,30 +163,16 @@ The run the corresponding python publisher:
 python furniture_publisher/<env of choice>_state_publisher.py
 ```
 
-## Running 2D Environment
-You can run any of the record files in Scenarios and set the "rec" flag to "False", should be False by default:
-```shell
-cd workspace/src/autonomous_furniture/
-pipenv shell
-python Scenarios/rec_anim_<script of choice>.py --rec=<False or True>
-```
 
-## Updated Code
-I added a furniture class which is more elegant implementation of the smart furniture.
-New examples are provided as well as the corresponding ROS2 publishers.
 
 ### Publishers
-
 assistive_environment_state_publisher.py
-
 hospital_environment_state_publisher.py
 
 The publishers are compatible with the current launch files
 
 ### 2D Examples and Recorder
-
 assistive_environment.py
-
 hospital_environment.py
 
 record_hospital_environment.py

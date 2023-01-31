@@ -3,8 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import rand
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
-from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes
-
 from vartools.states import ObjectPose
 
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
@@ -26,7 +24,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def corner_case():
+def run_turning_around():
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
@@ -39,89 +37,80 @@ def corner_case():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([9, 0]), orientation=0)
+    goal = ObjectPose(position=np.array([6, 2]), orientation=np.pi / 2)
 
     table_shape = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([8.7, 8]),
+        center_position=np.array([-1, 1]),
         margin_absolut=1,
-        orientation=0,
+        orientation=np.pi / 2,
         tail_effect=False,
     )
 
+    goal_pers = ObjectPose(position=np.array([2, 5.5]), orientation=0)
+
+    goal2 = ObjectPose(position=np.array([2, 1]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([9, 4]),
+        center_position=goal2.position,
         margin_absolut=1,
-        orientation=np.pi / 3,
+        orientation=goal2.orientation,
         tail_effect=False,
-    )
-    table_shape3 = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([5.0, 3.8]),
-        margin_absolut=1,
-        orientation=-np.pi / 3.5,
-        tail_effect=False,
-    )
-
-    chair_shape = EllipseWithAxes(
-        axes_length=[0.8, 0.8],
-        center_position=np.array([8.7, 8.0]),
-        margin_absolut=2,
-        orientation=0.0,
     )
 
     my_furniture = [
-        Furniture(
-            shape=chair_shape,
+        Person(
+            center_position=[2, 5.5],
+            radius=0.8,
             obstacle_environment=obstacle_environment,
-            control_points=np.array([[0.0, 0.0], [0.0, 0.0]]),
+            goal_pose=goal_pers,
+            priority_value=1,
+            margin=1,
+            static=False,
+            name="pers",
+        ),
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
             goal_pose=goal,
             priority_value=1,
-            name="move",
+            name="fur",
         ),
         Furniture(
             shape=table_shape2,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([9, 4]), orientation=np.pi/3),
+            goal_pose=goal2,
             priority_value=1,
-            name="move",
+            static=True,
+            name="static",
         ),
-        Furniture(
-            shape=table_shape3,
-            obstacle_environment=obstacle_environment,
-            control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([5.0, 3.8]), orientation=-np.pi / 3.5),
-            priority_value=1,
-            name="move",
-        ),
-    ]
+    ]  # ,    Furniture(shape=table_shape2, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal2)]
+
     my_animation = DynamicalSystemAnimation(
-        it_max=900,
+        it_max=450,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
     )
 
-    version = "v2" #options are: v1 and v2
-    do_drag = "dragdist" #options are: nodrag, dragvel, dragdist
-
     my_animation.setup(
         obstacle_environment,
         agent=my_furniture,
-        x_lim=[0, 14],
-        y_lim=[0, 14],
-        mini_drag=do_drag,
-        version=version,
+        x_lim=[-3, 8],
+        y_lim=[-2, 7],
+        version="v2",
+        mini_drag="dragdist",
     )
 
     my_animation.run(save_animation=args.rec)
     my_animation.logs(len(my_furniture))
+    # print(f"PROXIMITY : {1- 1/my_furniture[0].time_sim*my_furniture[0]._proximity}")
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    corner_case()
+    run_turning_around()

@@ -1,13 +1,39 @@
+from typing import Optional
+
 import random
-from turtle import position
-from autonomous_furniture.agent import Furniture, Person
-from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
-from dynamic_obstacle_avoidance.obstacles import Obstacle
+import numpy as np
+
+# from turtle import position
+
+
 from vartools.states import ObjectPose
+
+from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 
-from grid import Grid
-import numpy as np
+from autonomous_furniture.agent import Furniture, Person
+
+from .grid import Grid
+
+
+def is_position_in_obstacle(
+    position: np.ndarray,
+    obstacle: Obstacle,
+    margin: Optional[float] = None,
+    in_global_frame: bool = True,
+) -> float:
+    if margin is None:
+        return obstacle.get_gamma(position, in_global_frame=in_global_frame) < 1
+
+    # Temporarily change the margin [this is not very clean..]
+    real_margin = obstacle.margin_absolut
+    # (!) we're accessing hidden variable - as no additional check should be made
+    obstacle._margin_absolut = margin
+    gamma = obstacle.get_gamma(position, in_global_frame=in_global_frame) < 1
+    obstacle._margin_absolut = real_margin
+
+    return gamma
 
 
 class ScenarioLauncher:
@@ -73,7 +99,7 @@ class ScenarioLauncher:
         self, free_space: list = None, occupied_space: list = None
     ) -> ObjectPose:
         # Pose of the furniture that will be randomly placed in the arena
-        new_pose = ObjectPose()
+        new_pose = ObjectPose(position=np.zeros(2))
 
         is_placed = False
         nb_tries = 1
@@ -107,7 +133,10 @@ class ScenarioLauncher:
                 position = self.grid._grid[idx]
 
                 # Checking if the tuple position is inside the new furniture
-                if self._fur_shape.is_inside(position, margin=1.5):
+                if is_position_in_obstacle(
+                    position=position, obstacle=self._fur_shape, margin=1.5
+                ):
+                    # if self._fur_shape.is_inside(position, margin=1.5):
                     cells_new_fur.append(idx)
 
             if any(cell in cells_new_fur for cell in occupied_space):

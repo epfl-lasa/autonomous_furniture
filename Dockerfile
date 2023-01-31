@@ -34,6 +34,9 @@ USER ros
 RUN mkdir -p ${HOME}/python
 WORKDIR ${HOME}/python
 
+# Enforce partial rebuild (temp fix -> remove in the future)
+RUN echo 5
+
 RUN git clone -b main --single-branch https://github.com/hubernikus/various_tools.git
 RUN git clone -b main --single-branch https://github.com/epfl-lasa/dynamic_obstacle_avoidance
 
@@ -77,15 +80,18 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash; \
 	source ~/ros2_ws/install/setup.bash" | cat - ${HOME}/.bashrc > tmp && mv tmp ${HOME}/.bashrc
 # RUN echo "source /opt/ros/humble/setup.bash" >> ${HOME}/.bashrc
 
-
 # Matplotlib setup
 USER root
 RUN apt-get install python3-tk
 RUN python3 -m pip install pyqt5
 
+# Update repos & Install xacro
+RUN apt update 
+RUN apt install ros-humble-xacro
+
+# USER ros
 USER root
 WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
-
 # COPY setup_ros_env.sh ${HOME}/setup_ros_env.sh
 # RUN echo "bash ~/setup_ros_env.sh" >> ~/.bashrc
 

@@ -214,10 +214,10 @@ class DynamicFurniture:
 
             for jj, furniture in enumerate(furniture_env):
                 plot_obstacles(
-                    ax,
-                    obstacle_environment,
-                    x_lim,
-                    y_lim,
+                    ax=ax,
+                    obstacle_container=obstacle_environment,
+                    x_lim=x_lim,
+                    y_lim=y_lim,
                     showLabel=False,
                 )
 

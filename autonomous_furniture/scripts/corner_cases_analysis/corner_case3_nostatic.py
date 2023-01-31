@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import rand
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
+from dynamic_obstacle_avoidance.obstacles.ellipse_xd import EllipseWithAxes
+
 from vartools.states import ObjectPose
 
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
@@ -62,21 +64,27 @@ def corner_case():
         tail_effect=False,
     )
 
+    chair_shape = EllipseWithAxes(
+        axes_length=[0.8, 0.8],
+        center_position=np.array([8.7, 8.0]),
+        margin_absolut=2,
+        orientation=0.0,
+    )
+
     my_furniture = [
-        Person(
-            center_position=[8.5, 8],
-            radius=0.8,
+        Furniture(
+            shape=chair_shape,
             obstacle_environment=obstacle_environment,
+            control_points=np.array([[0.0, 0.0], [0.0, 0.0]]),
             goal_pose=goal,
             priority_value=1,
-            margin=1,
-            static=False,
-            name="elder",
-        ),        Furniture(
+            name="move",
+        ),
+        Furniture(
             shape=table_shape2,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([9, 4]), orientation=np.pi/3),
+            goal_pose=ObjectPose(position=np.array([9, 4]), orientation=np.pi / 3),
             priority_value=1,
             name="move",
         ),
@@ -84,20 +92,22 @@ def corner_case():
             shape=table_shape3,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=ObjectPose(position=np.array([5.0, 3.8]), orientation=-np.pi / 3.5),
+            goal_pose=ObjectPose(
+                position=np.array([5.0, 3.8]), orientation=-np.pi / 3.5
+            ),
             priority_value=1,
             name="move",
         ),
     ]
     my_animation = DynamicalSystemAnimation(
-        it_max=450,
+        it_max=900,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
     )
 
-    version = "v2" #options are: v1 and v2
-    do_drag = "dragdist" #options are: nodrag, dragvel, dragdist
+    version = "v2"  # options are: v1 and v2
+    do_drag = "dragdist"  # options are: nodrag, dragvel, dragdist
 
     my_animation.setup(
         obstacle_environment,

@@ -85,7 +85,11 @@ class DynamicalSystemAnimation(Animator):
         self.ax.set_ylim(self.y_lim)
 
         plot_obstacles(
-            self.ax, self.obstacle_environment, self.x_lim, self.y_lim, showLabel=False
+            ax=self.ax,
+            obstacle_container=self.obstacle_environment,
+            x_lim=self.x_lim,
+            y_lim=self.y_lim,
+            showLabel=False,
         )
 
         for jj in range(self.number_agent):

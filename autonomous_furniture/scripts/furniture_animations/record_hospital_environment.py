@@ -1,17 +1,16 @@
+import argparse
 import time
 from math import pi, cos, sin, sqrt
 
 import numpy as np
-
 import matplotlib.pyplot as plt
-
-from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
-from dynamic_obstacle_avoidance.containers import ObstacleContainer
-
-from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
+
+from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
+from dynamic_obstacle_avoidance.containers import ObstacleContainer
+from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from autonomous_furniture.furniture_class import (
     Furniture,
@@ -19,13 +18,6 @@ from autonomous_furniture.furniture_class import (
     FurnitureContainer,
     FurnitureAttractorDynamics,
 )
-
-import argparse
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument("--rec", action="store", default=False, help="Record flag")
-args = parser.parse_args()
 
 
 class DynamicalSystemAnimation(Animator):
@@ -223,10 +215,10 @@ class DynamicalSystemAnimation(Animator):
 
         for jj, furniture in enumerate(self.furniture_env):
             plot_obstacles(
-                self.ax,
-                obstacle_environment,
-                self.x_lim,
-                self.y_lim,
+                ax=self.ax,
+                obstacle_container=obstacle_environment,
+                x_lim=self.x_lim,
+                y_lim=self.y_lim,
                 showLabel=False,
             )
 
@@ -327,6 +319,10 @@ def run_multiple_furniture_avoiding_person():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--rec", action="store", default=False, help="Record flag")
+    args = parser.parse_args()
+
     plt.close("all")
     plt.ion()
 
