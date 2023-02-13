@@ -338,6 +338,7 @@ class Furniture(BaseAgent):
         init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
 
         if not self._static:
+            ### CALCULATE INITIAL LINEAR AND ANGULAR VELOCITY OF THE AGENT FOR THE SOFT DECOUPLING ###
             # TODO : Do we want to enable rotation along other axis in the futur ?
             angular_vel = np.zeros((1, self._control_points.shape[1]))
 
@@ -358,8 +359,8 @@ class Furniture(BaseAgent):
 
             initial_magnitude = LA.norm(initial_velocity)
 
-            # Computing the weights of the angle to reach
-            if mini_drag == "dragvel":
+            # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
+            if mini_drag == "dragvel": #a1 computed depending on the velocity
 
                 w1_hat = self.virtual_drag
                 w2_hat_max = 1000
@@ -374,14 +375,14 @@ class Furniture(BaseAgent):
 
                 w1 = w1_hat / (w1_hat + w2_hat)
                 w2 = 1 - w1
-            elif mini_drag == "dragdist":
+            elif mini_drag == "dragdist": #a1 computed as in the paper depending on the distance
 
                 d = LA.norm(self.position - self._goal_pose.position)
                 kappa = self.virtual_drag
                 w1 = 1 / 2 * (1 + np.tanh((d * kappa - 1.5 * kappa) / 2))
                 w2 = 1 - w1
 
-            elif mini_drag == "nodrag":
+            elif mini_drag == "nodrag": #no virtual drag
                 w1 = 0
                 w2 = 1
             else:
@@ -401,7 +402,7 @@ class Furniture(BaseAgent):
             # Case where we consider for instance PI-symetry for the furniture
             if (
                 np.abs(drag_angle) > np.pi / 2
-            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we have to change this value
                 if self.orientation > 0:
                     orientation_sym = self.orientation - np.pi
                 else:
@@ -432,6 +433,7 @@ class Furniture(BaseAgent):
             # Initial angular_velocity is computed
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
 
+            ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
             for ii in range(self._control_points.shape[1]):
                 # doing the cross product formula by "hand" than using the funct
                 tang_vel = [
@@ -453,6 +455,7 @@ class Furniture(BaseAgent):
                 # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
                 #           ii], head_width=0.1, head_length=0.2, color='m')
 
+            ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ### 
             self.linear_velocity = np.sum(
                 velocities * np.tile(weights, (self.dimension, 1)), axis=1
             )
@@ -472,6 +475,7 @@ class Furniture(BaseAgent):
 
             self.angular_velocity = np.sum(angular_vel)
 
+            ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
             if emergency_stop:
                 self.gamma_critic = 2
 
@@ -497,15 +501,15 @@ class Furniture(BaseAgent):
                     if gamma_values[ii] < self.gamma_critic:
                         list_critic_gammas.append(ii)
                         self.color = "k"  # np.array([221, 16, 16]) / 255.0
-                    if gamma_values[ii] <= 1.05:
-                        # print("EMERGENCY STOP")
-                        # self.stop = True
-                        # environment_without_me[obs_idx[ii]].danger=True
+                    if gamma_values[ii] <= 1.1:
+                        print("EMERGENCY STOP")
+                        self.stop = True
+                        environment_without_me[obs_idx[ii]].danger=True
                         pass
 
                 if self.stop:
-                    if all(gamma_values > 2.5):
-                        # self.stop = False
+                    if all(gamma_values > self.gamma_critic):
+                        self.stop = False
                         pass
                     else:
                         self.angular_velocity = 0
@@ -538,7 +542,7 @@ class Furniture(BaseAgent):
                         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
                         #             head_width=0.1, head_length=0.2, color='r')
                         if np.dot(instant_velocity, normal) < 0:
-                            # print("Collision trajectory")
+                            print("Collision trajectory")
                             self.angular_velocity *= (
                                 1 / (self.gamma_critic - 1) * (gamma_values[ii] - 1)
                             )
@@ -547,7 +551,7 @@ class Furniture(BaseAgent):
                             )
                         else:
                             pass
-                            # print("Not in collision trajectory")
+                            print("Not in collision trajectory")
         else:
             self.linear_velocity = [0, 0]
             self.angular_velocity = 0
