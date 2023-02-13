@@ -47,14 +47,14 @@ print(os.getcwd())
 #     # Sort the list and keep their old index which corresponds to the number of the scenario
 #     sort_dist = sorted(enumerate(temp), key=lambda i: i[1])
 
-folder = "autonomous_furniture/metrics/w_proximity"
+folder = "autonomous_furniture/metrics/newmetrics"
 
 
 def compare_v2_vs_v1():
     diff_dist = []
-    list_algo = ["drag"]
-    list_vers = ["v2", "v1"]
-    list_fur = [2, 3, 4, 5, 6, 7]
+    list_algo = ["dragvel"]
+    list_vers = ["v1", "v2"]
+    list_fur = [3]
     converg_data = np.zeros((len(list_vers), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
@@ -288,11 +288,7 @@ def plot_bar(data, label):
     plt.xticks(
         [r + barWidth for r in range(len(drag))],
         [
-            2,
             3,
-            4,
-            5,
-            6,
         ],
     )
 
@@ -628,9 +624,9 @@ def plot_time():
 
 
 if __name__ == "__main__":
-    # compare_v2_vs_v1()
+    compare_v2_vs_v1()
     # compare_drag_vs_nodrag()
-    plot_collisions()
+    # plot_collisions()
     # plot_prox_graph()
     # plot_proximity()
     # plot_time()

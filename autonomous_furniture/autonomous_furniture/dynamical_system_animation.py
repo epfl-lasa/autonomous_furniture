@@ -208,11 +208,11 @@ class DynamicalSystemAnimation(Animator):
         --- this function has been recreated what I expected it to be..."""
         self.it_count = 0
         while self.it_max is None or self.it_count < self.it_max:
-            self.update_step(self.it_count)
+            self.update_step(self.it_count, anim=False)
 
             # Check convergence
             if self.has_converged(self.it_count):
-                print(f"All trajectories converged at it={self.it_count}.")
+                print(f"All trajectories converged at iteration={self.it_count}.")
                 break
 
             self.it_count += 1

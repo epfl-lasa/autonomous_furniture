@@ -75,9 +75,9 @@ def multi_simulation(
             )
         else:
             # save_animation=args.rec,
-            my_animation.run_no_clip(mini_drag=do_drag, version=version)
+            my_animation.run_no_clip()
 
-        my_animation.logs(nb_furniture, do_drag, version=version)
+        my_animation.logs(nb_furniture)
         # Reset of the collisions counter (TODO: To be changed it's ugly)
         BaseAgent.number_collisions = 0
         BaseAgent.number_serious_collisions = 0
@@ -87,7 +87,7 @@ def single_simulation(
     scen: int, nb_furniture: int, do_drag: str, version: str = "v1", anim: bool = True
 ):
     my_animation = DynamicalSystemAnimation(
-        it_max=250,
+        it_max=1000,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -153,5 +153,5 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    # main()
-    run_single()
+    main()
+    # run_single()
