@@ -379,7 +379,10 @@ class Furniture(BaseAgent):
 
                 d = LA.norm(self.position - self._goal_pose.position)
                 kappa = self.virtual_drag
-                w1 = 1 / 2 * (1 + np.tanh((d * kappa - 1.5 * kappa) / 2))
+                k = 0.01
+                r = d/(d+k)
+                alpha = 1.5
+                w1 = 1 / 2 * (1 + np.tanh(kappa*(d - alpha)))*r
                 w2 = 1 - w1
 
             elif mini_drag == "nodrag": #no virtual drag
@@ -430,7 +433,7 @@ class Furniture(BaseAgent):
 
             # TODO Very clunky : Rather make a function out of it
             K = 3  # K proportionnal parameter for the speed
-            # Initial angular_velocity is computed
+            # Initial angular_velocity is computedenv
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
 
             ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
@@ -477,8 +480,14 @@ class Furniture(BaseAgent):
 
             ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
             if emergency_stop:
-                self.gamma_critic = 2
-
+                d_critic = 0.5 # distance from which gamma_critic starts shrinking
+                gamma_critic_max = 2 # value of gamma_critic before being closer than d_critic
+                gamma_critic_min = 1.1 # minimal value of gamma_critic as it should stay vigilant and make space even at the goal
+                if d > d_critic:
+                    self.gamma_critic = gamma_critic_max
+                else:
+                    self.gamma_critic = gamma_critic_min + d*(gamma_critic_max-gamma_critic_min)/d_critic
+                print("gamma_critic = ", self.gamma_critic)
                 gamma_values = np.zeros(
                     global_control_points.shape[1]
                 )  # Store the min Gamma of each control point
@@ -523,35 +532,78 @@ class Furniture(BaseAgent):
                     for ii in list_critic_gammas:
 
                         # This only works if control points are on the longest axis of the cuboid, calculation of Omega x R + linear_velocity
-                        instant_velocity = [
-                            0,
-                            self.angular_velocity * self._control_points[0][ii],
-                        ] + self.get_velocity_in_local_frame(self.linear_velocity)
+                        instant_velocity = velocities[:,ii]
 
                         # temp = [0, self.angular_velocity*self._control_points[ii][0]]
 
-                        normal = environment_without_me[
-                            obs_idx[ii]
-                        ].get_normal_direction(
-                            self.get_global_control_points()[:, ii],
-                            in_obstacle_frame=False,
-                        )
-                        # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
-                        #             instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
+                        #get all the critical normal directions for the given control point
+                        normal_list = []
+                        gamma_list = []
+                        for j, obs in enumerate(environment_without_me):
+                            # gamma_type needs to be implemented for all obstacles
+                            gamma = obs.get_gamma(global_control_points[:, ii],in_global_frame=True)
+                            if gamma < self.gamma_critic:
+                                normal = environment_without_me[obs_idx[ii]].get_normal_direction(self.get_global_control_points()[:, ii], in_obstacle_frame=False)
+                                normal_list.append(normal)
+                                gamma_list.append(gamma)
+                        # weight the critical normal directions depending on its gamma value
+                        n_obs_critic = len(normal_list)
+                        weight_list = []
+                        for j in range(n_obs_critic):
+                            weight = 1/(gamma_list[j]-1)
+                            weight_list.append(weight)
+                        weight_list = weight_list/np.sum(weight_list)
+                        # calculate the escape direction to avoid collision
+                        # print(normal_list)
+                        # print(gamma_list)
+                        # print(weight_list)
+                        # print(n_obs_critic)
+                        normal = np.sum(normal_list * np.tile(weight_list, (self.dimension, 1)).transpose(), axis=0)
+                        normal = normal/LA.norm(normal)
+                        print(normal)
+                        
+                        plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
+                                    instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
-                        # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
-                        #             head_width=0.1, head_length=0.2, color='r')
+                        plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
+                                    head_width=0.1, head_length=0.2, color='r')
+                        
                         if np.dot(instant_velocity, normal) < 0:
                             print("Collision trajectory")
-                            self.angular_velocity *= (
-                                1 / (self.gamma_critic - 1) * (gamma_values[ii] - 1)
-                            )
-                            self.linear_velocity *= (
-                                1 / (self.gamma_critic - 1) * (gamma_values[ii] - 1)
-                            )
+                            s = 1.0
+                            b = -s/gamma_values[ii]*(np.dot(normal,self.linear_velocity)) #smaller when further away from obstacle
+                            b = 1/((self.gamma_critic-1)*(gamma_values[ii]-1))
+                            self.linear_velocity += self.linear_velocity + b*normal #correct linear velocity to deviate it away from collision trajectory
+                            if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
+                                self.linear_velocity *= self._dynamics.maximum_velocity/LA.norm(self.linear_velocity)
+                            # velocities[:, ii] = instant_velocity
+                            
+                            # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
+                            # instant_velocity[1], head_width=0.1, head_length=0.2, color='g')
+
                         else:
                             pass
                             print("Not in collision trajectory")
+                        
+                    # self.linear_velocity = np.sum(
+                    #     velocities * np.tile(weights, (self.dimension, 1)), axis=1
+                    # )
+
+                    # # normalization to the initial velocity
+                    # self.linear_velocity = (
+                    #     initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+                    # )
+                    # # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+                    # #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+
+                    # for ii in range(self._control_points.shape[1]):
+                    #     angular_vel[0, ii] = weights[ii] * np.cross(
+                    #         global_control_points[:, ii] - self._shape.center_position,
+                    #         velocities[:, ii] - self.linear_velocity,
+                    #     )
+
+                    # self.angular_velocity = np.sum(angular_vel)
+
         else:
             self.linear_velocity = [0, 0]
             self.angular_velocity = 0
