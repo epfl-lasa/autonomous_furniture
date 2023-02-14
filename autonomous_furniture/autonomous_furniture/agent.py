@@ -487,7 +487,7 @@ class Furniture(BaseAgent):
                     self.gamma_critic = gamma_critic_max
                 else:
                     self.gamma_critic = gamma_critic_min + d*(gamma_critic_max-gamma_critic_min)/d_critic
-                print("gamma_critic = ", self.gamma_critic)
+                # print("gamma_critic = ", self.gamma_critic)
                 gamma_values = np.zeros(
                     global_control_points.shape[1]
                 )  # Store the min Gamma of each control point
@@ -562,16 +562,16 @@ class Furniture(BaseAgent):
                         normal = normal/LA.norm(normal)
                         print(normal)
                         
-                        plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
-                                    instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
+                        # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
+                        #             instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
-                        plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
-                                    head_width=0.1, head_length=0.2, color='r')
+                        # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
+                        #             head_width=0.1, head_length=0.2, color='r')
                         
                         if np.dot(instant_velocity, normal) < 0:
                             print("Collision trajectory")
-                            s = 1.0
-                            b = -s/gamma_values[ii]*(np.dot(normal,self.linear_velocity)) #smaller when further away from obstacle
+                            # s = 2.0
+                            # b = -s/gamma_values[ii]*(np.dot(normal,self.linear_velocity)) #smaller when further away from obstacle
                             b = 1/((self.gamma_critic-1)*(gamma_values[ii]-1))
                             self.linear_velocity += self.linear_velocity + b*normal #correct linear velocity to deviate it away from collision trajectory
                             if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
