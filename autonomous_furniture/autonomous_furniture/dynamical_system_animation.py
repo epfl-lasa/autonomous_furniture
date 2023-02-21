@@ -54,11 +54,21 @@ class DynamicalSystemAnimation(Animator):
         self.agent = agent
         self.x_lim = x_lim
         self.y_lim = y_lim
+        
+        self.agent_pos_saver = []
+        for i in range(self.number_agent):
+            self.agent_pos_saver.append([])
+        for i in range(self.number_agent):
+            self.agent_pos_saver[i].append(self.agent[i].position)
 
         self.obstacle_environment = obstacle_environment
-
+        self.obstacle_color = []
+        # for i in range(len(obstacle_environment)):
+        #     self.obstacle_color.append(np.array(np.random.choice(range(255),size=3))/254)
+        self.obstacle_color = ["orange", "blue", "red"]
+        
         if anim:
-            self.fig, self.ax = plt.subplots()
+            self.fig, self.ax = plt.subplots(figsize=(2.5,2.5), dpi=120)
 
         self.converged: bool = False  # IF all the agent has converged
 
@@ -83,15 +93,9 @@ class DynamicalSystemAnimation(Animator):
 
             self.ax.set_xlim(self.x_lim)
             self.ax.set_ylim(self.y_lim)
-
-            plot_obstacles(
-                ax=self.ax,
-                obstacle_container=self.obstacle_environment, #should be a list
-                x_lim=self.x_lim,
-                y_lim=self.y_lim,
-                showLabel=False,
-            )
-
+            self.ax.set_xlabel("x [m]", fontsize=9)
+            self.ax.set_ylabel("y [m]", fontsize=9)
+            
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
                 mini_drag=self.mini_drag, version=self.version, emergency_stop=True
@@ -100,17 +104,35 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].do_velocity_step(self.dt_simulation)
         
             if anim:
-                global_crontrol_points = self.agent[jj].get_global_control_points()
+                global_control_points = self.agent[jj].get_global_control_points()
                 self.ax.plot(
-                    global_crontrol_points[0, :], global_crontrol_points[1, :], "ko"
+                    global_control_points[0, :], global_control_points[1, :], "ko"
                 )
 
-                goal_crontrol_points = self.agent[jj].get_goal_control_points() ##plot agent center position
+                goal_control_points = self.agent[jj].get_goal_control_points() ##plot agent center position
                 self.ax.plot(
-                    goal_crontrol_points[0, :], goal_crontrol_points[1, :], "ko" ##k=black, o=dot
+                    goal_control_points[0, :], goal_control_points[1, :], color=self.obstacle_color[jj], marker="o", linestyle="" ##k=black, o=dot
                 )
-
+                if self.agent[jj]._static == False:
+                    self.ax.plot(self.agent[jj]._goal_pose.position[0], self.agent[jj]._goal_pose.position[1], color=self.obstacle_color[jj], marker="*", markersize=10)
+                    self.agent_pos_saver[jj].append(self.agent[jj].position)
+                    x_values = np.zeros(len(self.agent_pos_saver[jj]))
+                    y_values = x_values.copy()
+                    for i in range(len(self.agent_pos_saver[jj])):
+                        x_values[i] = self.agent_pos_saver[jj][i][0]
+                        y_values[i] = self.agent_pos_saver[jj][i][1]
+                    self.ax.plot(x_values, y_values, color=self.obstacle_color[jj], linestyle="dashed")
                 self.ax.set_aspect("equal", adjustable="box")
+        
+        if anim:
+            plot_obstacles(
+                ax=self.ax,
+                obstacle_container=self.obstacle_environment,
+                x_lim=self.x_lim,
+                y_lim=self.y_lim,
+                showLabel=False,
+                obstacle_color = self.obstacle_color,
+            )
 
     def has_converged(self, it: int) -> bool:
         rtol_pos = 1e-3
