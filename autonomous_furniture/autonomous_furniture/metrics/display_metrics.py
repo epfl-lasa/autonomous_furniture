@@ -477,53 +477,70 @@ def plot_proximity():
 
 
 def plot_prox_graph():
-    nb_fur = 9
+    nb_fur = 3
     algo = "dragdist"
     version = "v2"
 
-    step = 180
-    data = json.load(
+    step = 200
+    data_equal = json.load(
         open(
-            f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+            f"/home/menichel/ros2_ws/src/autonomous_furniture/distance_nb{nb_fur}_{algo}_{version}_equal.json",
             "r",
         )
     )
+    data_priority = json.load(
+        open(
+            f"/home/menichel/ros2_ws/src/autonomous_furniture/distance_nb{nb_fur}_{algo}_{version}_priority.json",
+            "r",
+        )
+    )
+    pers_list_equal = data_equal["agent_0"]["list_prox"]
+    furn_list_equal = data_equal["agent_2"]["list_prox"]
+    
+    pers_list_priority = data_priority["agent_0"]["list_prox"]
+    furn_list_priority = data_priority["agent_2"]["list_prox"]
 
-    pers_list = data["agent_0"]["list_prox"]
-    furn_list = data["agent_2"]["list_prox"]
+    # pers_list = [1 - pers_list[ii] / (ii + 1) for ii in range(step)]
+    # furn_list = [1 - furn_list[ii] / (ii + 1) for ii in range(step)]
 
-    pers_list = [1 - pers_list[ii] / (ii + 1) for ii in range(step)]
-    furn_list = [1 - furn_list[ii] / (ii + 1) for ii in range(step)]
-
-    plt.figure()
+    fig, ax = plt.subplots(figsize=(3.5, 3.5), dpi=120)
     xmin = 0
-    xmax = 190
-    ymin = 0.2
-    ymax = 0.8
+    xmax = 200
+    ymin = 2
+    ymax = 5
 
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax)
 
-    plt.xticks(fontsize=11)
-    plt.yticks(fontsize=11)
-    plt.xlabel("Step", fontsize=12)
+    plt.xticks(fontsize=9)
+    plt.yticks(fontsize=9)
+    plt.xlabel("Step", fontsize=9)
 
-    plt.ylabel("Proximity, $\mathcal{P}$", fontsize=12)
-    plt.plot(range(step), pers_list, color=(246 / 255, 178 / 255, 107 / 255))
-    plt.plot(
-        step - 1, pers_list[step - 1], "o", color=(246 / 255, 178 / 255, 107 / 255)
-    )
-    plt.plot(60, pers_list[60], "o", color=(246 / 255, 178 / 255, 107 / 255))
-    plt.plot(0, pers_list[0], "o", color=(246 / 255, 178 / 255, 107 / 255))
+    plt.ylabel("Distance from mobile agent [m]", fontsize=9)
+    plt.plot(range(step), pers_list_equal, color="orange", linestyle="dashed")
+    plt.plot(range(step), furn_list_equal, color="red", linestyle="dashed")
+    # plt.plot(
+    #     step - 1, pers_list[step - 1], "o", color=(246 / 255, 178 / 255, 107 / 255)
+    # )
+    # plt.plot(60, pers_list[60], "o", color=(246 / 255, 178 / 255, 107 / 255))
+    # plt.plot(0, pers_list[0], "o", color=(246 / 255, 178 / 255, 107 / 255))
     # plt.vlines(step-1, 0, pers_list[step-1], linestyle="dashed", color="black")
     # plt.hlines(pers_list[step-1], 0, step-1, linestyle="dashed")
-
-    plt.plot(range(step), furn_list, color=(221 / 255, 16 / 255, 16 / 255))
-    plt.plot(step - 1, furn_list[step - 1], "o", color=(221 / 255, 16 / 255, 16 / 255))
-    plt.plot(60, furn_list[60], "o", color=(221 / 255, 16 / 255, 16 / 255))
-    plt.plot(0, furn_list[0], "o", color=(221 / 255, 16 / 255, 16 / 255))
+    plt.plot(range(step), pers_list_priority, color="orange")
+    plt.plot(range(step), furn_list_priority, color="red")
+    # plt.plot(step - 1, furn_list[step - 1], "o", color=(221 / 255, 16 / 255, 16 / 255))
+    # plt.plot(60, furn_list[60], "o", color=(221 / 255, 16 / 255, 16 / 255))
+    # plt.plot(0, furn_list[0], "o", color=(221 / 255, 16 / 255, 16 / 255))
     # plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
+    plt.plot(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "go")
+    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "%f" %np.round(np.min(pers_list_equal),3))
+    
+    plt.plot(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "go")
+    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "%f" %np.round(np.min(pers_list_priority),3))
 
+    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"], fontsize=9)
+    plt.tight_layout()
+    plt.show()
 
 def plot_time():
 
@@ -629,10 +646,10 @@ def plot_time():
 
 
 if __name__ == "__main__":
-    compare_v2_vs_v1()
+    # compare_v2_vs_v1()
     # compare_drag_vs_nodrag()
     # plot_collisions()
-    # plot_prox_graph()
+    plot_prox_graph()
     # plot_proximity()
     # plot_time()
     plt.legend()

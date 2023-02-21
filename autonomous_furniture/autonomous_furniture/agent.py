@@ -654,7 +654,7 @@ class Furniture(BaseAgent):
 
                         # print(self.angular_velocity)
 
-                    
+
                 if any(x <= gamma_stop for x in gamma_values): # if any gamma values are lower od equal gamma_stop
                     # print("EMERGENCY STOP")
                     self.angular_velocity = 0
@@ -698,21 +698,22 @@ class Furniture(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                get_distance_to_obtacle_surface(
-                    obstacle=obs,
-                    position=self.position,
-                    in_obstacle_frame=False,
-                    margin_absolut=self.margin_absolut,
-                )
+                # get_distance_to_obtacle_surface(
+                #     obstacle=obs,
+                #     position=self.position,
+                #     in_obstacle_frame=False,
+                #     margin_absolut=self.margin_absolut,
+                # )
+                LA.norm(obs.position-self.position)
             )
 
         dmin = min(distance)
-        dmin = dmin if dmin < R else R
-        dmin = dmin if dmin > 0 else 0
+        # dmin = dmin if dmin < R else R
+        # dmin = dmin if dmin > 0 else 0
 
-        self._proximity += dmin / R
+        # self._proximity += dmin / R
         self._list_prox.append(
-            self._proximity
+            dmin
         )  # Temporary metric used for the prox graph of the report, can be deleted
 
     def corner_case(self, mini_drag: str = "nodrag", version: str = "v1"):
@@ -949,20 +950,21 @@ class Person(BaseAgent):
 
         for obs in self.get_obstacles_without_me():
             distance.append(
-                get_distance_to_obtacle_surface(
-                    obstacle=obs,
-                    position=self.position,
-                    in_obstacle_frame=False,
-                    margin_absolut=self.margin_absolut,
-                )
+                # get_distance_to_obtacle_surface(
+                #     obstacle=obs,
+                #     position=self.position,
+                #     in_obstacle_frame=False,
+                #     margin_absolut=self.margin_absolut,
+                # )
+                LA.norm(obs.position-self.position)
             )
 
         dmin = min(distance)
-        dmin = dmin if dmin < R else R
-        dmin = dmin if dmin > 0 else 0
-        self._proximity += dmin / R
+        # dmin = dmin if dmin < R else R
+        # dmin = dmin if dmin > 0 else 0
+        # self._proximity += dmin / R
         self._list_prox.append(
-            self._proximity
+            dmin
         )  # Temporary metric used for the prox graph of the report, can be deleted
 
     # def get_distance_to_surface(

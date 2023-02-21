@@ -175,5 +175,5 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    main()
-    # run_single()
+    # main()
+    run_single()

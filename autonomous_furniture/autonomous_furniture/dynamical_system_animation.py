@@ -86,7 +86,7 @@ class DynamicalSystemAnimation(Animator):
 
             plot_obstacles(
                 ax=self.ax,
-                obstacle_container=self.obstacle_environment,
+                obstacle_container=self.obstacle_environment, #should be a list
                 x_lim=self.x_lim,
                 y_lim=self.y_lim,
                 showLabel=False,
@@ -98,16 +98,16 @@ class DynamicalSystemAnimation(Animator):
             )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
-
+        
             if anim:
                 global_crontrol_points = self.agent[jj].get_global_control_points()
                 self.ax.plot(
                     global_crontrol_points[0, :], global_crontrol_points[1, :], "ko"
                 )
 
-                goal_crontrol_points = self.agent[jj].get_goal_control_points()
+                goal_crontrol_points = self.agent[jj].get_goal_control_points() ##plot agent center position
                 self.ax.plot(
-                    goal_crontrol_points[0, :], goal_crontrol_points[1, :], "ko"
+                    goal_crontrol_points[0, :], goal_crontrol_points[1, :], "ko" ##k=black, o=dot
                 )
 
                 self.ax.set_aspect("equal", adjustable="box")
