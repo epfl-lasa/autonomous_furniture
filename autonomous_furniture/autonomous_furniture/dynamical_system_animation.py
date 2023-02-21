@@ -68,7 +68,7 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_color = ["orange", "blue", "red"]
         
         if anim:
-            self.fig, self.ax = plt.subplots(figsize=(2.5,2.5), dpi=120)
+            self.fig, self.ax = plt.subplots(figsize=(3.0,2.5), dpi=120)
 
         self.converged: bool = False  # IF all the agent has converged
 
@@ -95,6 +95,7 @@ class DynamicalSystemAnimation(Animator):
             self.ax.set_ylim(self.y_lim)
             self.ax.set_xlabel("x [m]", fontsize=9)
             self.ax.set_ylabel("y [m]", fontsize=9)
+            plt.tight_layout()
             
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
@@ -132,6 +133,7 @@ class DynamicalSystemAnimation(Animator):
                 y_lim=self.y_lim,
                 showLabel=False,
                 obstacle_color = self.obstacle_color,
+                draw_reference=False
             )
 
     def has_converged(self, it: int) -> bool:
