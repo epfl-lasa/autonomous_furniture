@@ -18,6 +18,8 @@ import json
 import os
 import random
 
+from multiprocessing import Process
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -31,11 +33,12 @@ def multi_simulation(
     scenarios: list,
     nb_furniture: int,
     do_drag: str,
-    version: str = "v1",
-    anim: bool = True,
+    version: str,
+    anim: bool,
+    it_max: int
 ):
     my_animation = DynamicalSystemAnimation(
-        it_max=500,
+        it_max=it_max,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -63,6 +66,8 @@ def multi_simulation(
             x_lim=[-3, 8],
             y_lim=[-2, 7],
             anim=anim,
+            mini_drag=do_drag,
+            version=version
         )
 
         print(
@@ -87,7 +92,7 @@ def single_simulation(
     scen: int, nb_furniture: int, do_drag: str, version: str = "v1", anim: bool = True
 ):
     my_animation = DynamicalSystemAnimation(
-        it_max=1000,
+        it_max=500,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -131,21 +136,38 @@ def single_simulation(
 
 def main():
     # List of environment shared by all the furniture/agent
-    scenarios = range(155, 250)
-
-    for nb_furniture in [3]:
-        for version in ["v2"]:
-            for do_drag in ["dragvel"]:
+    scenarios = range(150, 250)
+    nb_array = [3]
+    version_array = ["v2"]
+    drag_array = ["nodrag"]
+    
+    n_process = len(nb_array)*len(version_array)*len(drag_array)
+    process_array = []
+    
+    for nb_furniture in nb_array:
+        for version in version_array:
+            for do_drag in drag_array:
+                # p = Process(multi_simulation, args=([scenarios, nb_furniture, do_drag, 1000, version, False]))
+                # process_array.append(p)
+                # p.start()
+                # p.join()
                 multi_simulation(
-                    scenarios, nb_furniture, do_drag, version=version, anim=False
+                    scenarios, nb_furniture, do_drag, it_max=1000, version=version, anim=False
                 )
+    # for i in range(n_process):
+    #     p = process_array[i]
+    #     p.start()
+    # for i in range(n_process):
+    #     p = process_array[i]
+    #     p.join()
+
 
 
 def run_single():
-    scen = 119
-    nb_furniture = 3
+    scen = 240
+    nb_furniture = 10
     version = "v2"
-    for do_drag in ["dragvel"]:
+    for do_drag in ["dragdist"]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)
 
 
@@ -153,5 +175,5 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    main()
-    # run_single()
+    # main()
+    run_single()
