@@ -164,8 +164,8 @@ def main():
 
 
 def run_single():
-    scen = 240
-    nb_furniture = 10
+    scen = 102
+    nb_furniture = 6
     version = "v2"
     for do_drag in ["dragdist"]:
         single_simulation(scen, nb_furniture, do_drag, version=version, anim=True)

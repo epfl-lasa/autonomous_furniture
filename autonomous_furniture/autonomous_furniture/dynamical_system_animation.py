@@ -65,10 +65,10 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_color = []
         # for i in range(len(obstacle_environment)):
         #     self.obstacle_color.append(np.array(np.random.choice(range(255),size=3))/254)
-        self.obstacle_color = ["orange", "blue", "red"]
+        self.obstacle_color = ["orange", "blue", "red", "green", "purple", "brown", "magenta", "cyan"]
         
         if anim:
-            self.fig, self.ax = plt.subplots(figsize=(3.0,2.5), dpi=120)
+            self.fig, self.ax = plt.subplots(figsize=(5,5), dpi=120)
 
         self.converged: bool = False  # IF all the agent has converged
 
