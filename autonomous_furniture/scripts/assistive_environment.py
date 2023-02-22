@@ -46,8 +46,10 @@ class DynamicFurniture:
 
         if y_lim is None:
             y_lim = [-3.0, 3.0]
+
         if x_lim is None:
             x_lim = [-3.0, 3.0]
+
         if walls is True:
             walls_center_position = np.array(
                 [[0.0, y_lim[0]], [x_lim[0], 0.0], [0.0, y_lim[1]], [x_lim[1], 0.0]]

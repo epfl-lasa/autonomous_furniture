@@ -27,7 +27,7 @@ python3 corner_case.py
 
 Make sure, the visualization is enabled (check issues below).
 
-The docker is setup, such that it automatically shares updates local changes.
+The docker-run file is setup to automatically update local changes.
 
 ## Setup without ROS
 Following libraries are needed and need to be installed:
