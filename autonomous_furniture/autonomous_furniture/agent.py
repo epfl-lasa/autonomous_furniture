@@ -361,7 +361,7 @@ class Furniture(BaseAgent):
 
             # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
             d = LA.norm(self.position - self._goal_pose.position)
-            if mini_drag == "dragvel": #a1 computed depending on the velocity
+            if mini_drag == "dragvel":  # a1 computed depending on the velocity
 
                 w1_hat = self.virtual_drag
                 w2_hat_max = 1000
@@ -376,16 +376,18 @@ class Furniture(BaseAgent):
 
                 w1 = w1_hat / (w1_hat + w2_hat)
                 w2 = 1 - w1
-            elif mini_drag == "dragdist": #a1 computed as in the paper depending on the distance
+            elif (
+                mini_drag == "dragdist"
+            ):  # a1 computed as in the paper depending on the distance
 
                 kappa = self.virtual_drag
                 k = 0.01
-                r = d/(d+k)
+                r = d / (d + k)
                 alpha = 1.5
-                w1 = 1 / 2 * (1 + np.tanh(kappa*(d - alpha)))*r
+                w1 = 1 / 2 * (1 + np.tanh(kappa * (d - alpha))) * r
                 w2 = 1 - w1
 
-            elif mini_drag == "nodrag": #no virtual drag
+            elif mini_drag == "nodrag":  # no virtual drag
                 w1 = 0
                 w2 = 1
             else:
@@ -458,7 +460,7 @@ class Furniture(BaseAgent):
                 # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
                 #           ii], head_width=0.1, head_length=0.2, color='m')
 
-            ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ### 
+            ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
             self.linear_velocity = np.sum(
                 velocities * np.tile(weights, (self.dimension, 1)), axis=1
             )
@@ -480,14 +482,19 @@ class Furniture(BaseAgent):
 
             ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
             if emergency_stop:
-                d_critic = 1 # distance from which gamma_critic starts shrinking
-                gamma_critic_max = 2 # value of gamma_critic before being closer than d_critic
-                gamma_critic_min = 1.2 # minimal value of gamma_critic as it should stay vigilant and make space even at the goal
-                gamma_stop = 1.1 #agent should stop when a ctrpoint reaches a gamma value under this threshold
+                d_critic = 1  # distance from which gamma_critic starts shrinking
+                gamma_critic_max = (
+                    2  # value of gamma_critic before being closer than d_critic
+                )
+                gamma_critic_min = 1.2  # minimal value of gamma_critic as it should stay vigilant and make space even at the goal
+                gamma_stop = 1.1  # agent should stop when a ctrpoint reaches a gamma value under this threshold
                 if d > d_critic:
                     self.gamma_critic = gamma_critic_max
                 else:
-                    self.gamma_critic = gamma_critic_min + d*(gamma_critic_max-gamma_critic_min)/d_critic
+                    self.gamma_critic = (
+                        gamma_critic_min
+                        + d * (gamma_critic_max - gamma_critic_min) / d_critic
+                    )
                 # print("gamma_critic = ", self.gamma_critic)
                 gamma_values = np.zeros(
                     global_control_points.shape[1]
@@ -557,8 +564,7 @@ class Furniture(BaseAgent):
                 #         normal = np.sum(normal_list * np.tile(weight_list_prov, (self.dimension, 1)).transpose(), axis=0)
                 #         normal = normal/LA.norm(normal)
                 #         # print(normal)
-                        
-                        
+
                 #         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
                 #         #             instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
                 #         gamma_list_colliding.append(gamma_values[ii])
@@ -568,25 +574,22 @@ class Furniture(BaseAgent):
                 #         normals_for_ang_vel.append(normal)
                 #         control_point_d_list.append(self._control_points[ii][0])
 
-                        
-                #         # if 
+                #         # if
                 #         #     # print("Collision trajectory")
                 #         #     # s = 2.0
                 #         #     # b = -s/gamma_values[ii]*(np.dot(normal,self.linear_velocity)) #smaller when further away from obstacle
-                            
+
                 #         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], normal[0], normal[1],
                 #         #         head_width=0.1, head_length=0.2, color='r')
 
                 #         #     # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0], instant_velocity[1],
                 #         #     #     head_width=0.1, head_length=0.2, color='g')
-                        
+
                 #         #     b = 1/((self.gamma_critic-1)*(gamma_values[ii]-1))
                 #         #     self.linear_velocity = self.linear_velocity + b*normal #correct linear velocity to deviate it away from collision trajectory
                 #         #     if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
                 #         #         self.linear_velocity *= self._dynamics.maximum_velocity/LA.norm(self.linear_velocity)
-                                
 
-                            
                 #         # instant_velocity += b*normal #correct linear velocity to deviate it away from collision trajectory
                 #         # if LA.norm(instant_velocity) > self._dynamics.maximum_velocity:
                 #         #     instant_velocity *= self._dynamics.maximum_velocity/LA.norm(instant_velocity)
@@ -595,12 +598,12 @@ class Furniture(BaseAgent):
                 #         #     head_width=0.1, head_length=0.2, color='b')
 
                 #         # velocities[:, ii] = instant_velocity
-                        
+
                 #         # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
                 #         # instant_velocity[1], head_width=0.1, head_length=0.2, color='g')
 
                 #             # print("Not in collision trajectory")
-                    
+
                 #     normal_list_tot_combined = []
                 #     weight_list_tot_combined = []
                 #     ang_vel_weights = []
@@ -618,29 +621,27 @@ class Furniture(BaseAgent):
                 #     # print("list_critic_gammas: ", list_critic_gammas)
                 #     # print("normal_list_tot_combined: ", normal_list_tot_combined)
                 #     # print("weight_list_tot_combined: ", weight_list_tot_combined)
-                #     normal_combined = np.sum(normal_list_tot_combined * np.tile(weight_list_tot_combined, (self.dimension, 1)).transpose(), axis=0) #calculate the escape direction given all obstacles proximity 
+                #     normal_combined = np.sum(normal_list_tot_combined * np.tile(weight_list_tot_combined, (self.dimension, 1)).transpose(), axis=0) #calculate the escape direction given all obstacles proximity
 
-                    
                 #     if np.dot(self.linear_velocity, normal_combined) < 0:
                 #         # the is a colliding trajectory we need to correct!
                 #         # print("twist before: \n", self.linear_velocity, "\n", self.angular_velocity)
                 #         # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
                 #         # self.linear_velocity[1], head_width=0.1, head_length=0.2, color='g')
-                            
-                        
+
                 #         b = 1/((self.gamma_critic-1)*(np.min(gamma_list_colliding)-1))
                 #         # print("b = ", b)
                 #         self.linear_velocity += b*normal_combined #correct linear velocity to deviate it away from collision trajectory
-                        
+
                 #         # plt.arrow(self.position[0], self.position[1], b*normal_combined[0],
                 #         # b*normal_combined[1], head_width=0.1, head_length=0.2, color='b')
-                        
+
                 #         if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
-                #             self.linear_velocity *= self._dynamics.maximum_velocity/LA.norm(self.linear_velocity)                 
-                        
+                #             self.linear_velocity *= self._dynamics.maximum_velocity/LA.norm(self.linear_velocity)
+
                 #         # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
                 #         # self.linear_velocity[1], head_width=0.1, head_length=0.2, color='y')
-                        
+
                 #         ang_vel_weights = ang_vel_weights/np.sum(ang_vel_weights)
                 #         # print("ang_vel_weights: ", ang_vel_weights)
                 #         # print("ang_vel_corr: ", ang_vel_corr)
@@ -650,37 +651,33 @@ class Furniture(BaseAgent):
                 #         self.angular_velocity += ang_vel_corr*b
                 #         self.angular_velocity = self.angular_velocity[0]
                 #         if LA.norm(self.angular_velocity) > 1.0:
-                #             self.angular_velocity = self.angular_velocity/LA.norm(self.angular_velocity)                 
+                #             self.angular_velocity = self.angular_velocity/LA.norm(self.angular_velocity)
 
                 #         # print(self.angular_velocity)
-
 
                 # if any(x <= gamma_stop for x in gamma_values): # if any gamma values are lower od equal gamma_stop
                 #     # print("EMERGENCY STOP")
                 #     self.angular_velocity = 0
                 #     self.linear_velocity = [0, 0]
 
+                # self.linear_velocity = np.sum(
+                #     velocities * np.tile(weights, (self.dimension, 1)), axis=1
+                # )
 
-                    # self.linear_velocity = np.sum(
-                    #     velocities * np.tile(weights, (self.dimension, 1)), axis=1
-                    # )
+                # # normalization to the initial velocity
+                # self.linear_velocity = (
+                #     initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+                # )
+                # # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+                # #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
-                    # # normalization to the initial velocity
-                    # self.linear_velocity = (
-                    #     initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
-                    # )
-                    # # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-                    # #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+                # for ii in range(self._control_points.shape[1]):
+                #     angular_vel[0, ii] = weights[ii] * np.cross(
+                #         global_control_points[:, ii] - self._shape.center_position,
+                #         velocities[:, ii] - self.linear_velocity,
+                #     )
 
-                    # for ii in range(self._control_points.shape[1]):
-                    #     angular_vel[0, ii] = weights[ii] * np.cross(
-                    #         global_control_points[:, ii] - self._shape.center_position,
-                    #         velocities[:, ii] - self.linear_velocity,
-                    #     )
-
-                    # self.angular_velocity = np.sum(angular_vel)
-                    
-                    
+                # self.angular_velocity = np.sum(angular_vel)
 
         else:
             self.linear_velocity = [0, 0]
@@ -704,7 +701,7 @@ class Furniture(BaseAgent):
                 #     in_obstacle_frame=False,
                 #     margin_absolut=self.margin_absolut,
                 # )
-                LA.norm(obs.position-self.position)
+                LA.norm(obs.position - self.position)
             )
 
         dmin = min(distance)
@@ -956,7 +953,7 @@ class Person(BaseAgent):
                 #     in_obstacle_frame=False,
                 #     margin_absolut=self.margin_absolut,
                 # )
-                LA.norm(obs.position-self.position)
+                LA.norm(obs.position - self.position)
             )
 
         dmin = min(distance)

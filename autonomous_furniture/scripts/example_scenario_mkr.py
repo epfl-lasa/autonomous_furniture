@@ -35,7 +35,7 @@ def multi_simulation(
     do_drag: str,
     version: str,
     anim: bool,
-    it_max: int
+    it_max: int,
 ):
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
@@ -67,7 +67,7 @@ def multi_simulation(
             y_lim=[-2, 7],
             anim=anim,
             mini_drag=do_drag,
-            version=version
+            version=version,
         )
 
         print(
@@ -140,10 +140,10 @@ def main():
     nb_array = [3]
     version_array = ["v2"]
     drag_array = ["nodrag"]
-    
-    n_process = len(nb_array)*len(version_array)*len(drag_array)
+
+    n_process = len(nb_array) * len(version_array) * len(drag_array)
     process_array = []
-    
+
     for nb_furniture in nb_array:
         for version in version_array:
             for do_drag in drag_array:
@@ -152,7 +152,12 @@ def main():
                 # p.start()
                 # p.join()
                 multi_simulation(
-                    scenarios, nb_furniture, do_drag, it_max=1000, version=version, anim=False
+                    scenarios,
+                    nb_furniture,
+                    do_drag,
+                    it_max=1000,
+                    version=version,
+                    anim=False,
                 )
     # for i in range(n_process):
     #     p = process_array[i]
@@ -160,7 +165,6 @@ def main():
     # for i in range(n_process):
     #     p = process_array[i]
     #     p.join()
-
 
 
 def run_single():

@@ -51,7 +51,7 @@ def priority_demo():
     )
 
     goal2 = ObjectPose(position=np.array([2.5, 5.5]), orientation=np.pi / 2)
-    
+
     table_shape2 = CuboidXd(
         axes_length=[1, 1],
         center_position=np.array([2, 0]),

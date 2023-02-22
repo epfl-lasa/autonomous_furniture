@@ -442,14 +442,12 @@ def main():
         num_agent, max_ax_len, min_ax_len
     )
     rel_agent_pos_table, radius_table = calculate_relative_position(num_agent, 1.6, 0.7)
-    chair_pos = np.array(
-        [[1, -0.42], [-1, -0.42], [1.0, 0.42], [-1, 0.42]]
-    )
-    table_pos = np.array([[0,0]])
+    chair_pos = np.array([[1, -0.42], [-1, -0.42], [1.0, 0.42], [-1, 0.42]])
+    table_pos = np.array([[0, 0]])
     human_pos = np.array([[3.0, -0.2]])
-    shift_vectors = np.array([[-2,-2]]) #shift the positions around in the room
-    furn_tot = (len(table_pos)+len(human_pos)+len(chair_pos))*len(shift_vectors)
-    
+    shift_vectors = np.array([[-2, -2]])  # shift the positions around in the room
+    furn_tot = (len(table_pos) + len(human_pos) + len(chair_pos)) * len(shift_vectors)
+
     agent_pos = np.zeros((tot_num_agent, 2))
 
     attractor_pos = np.zeros((tot_num_agent, 2))
@@ -465,36 +463,36 @@ def main():
     obstacle_environment = ObstacleContainer()
 
     for i in range(len(shift_vectors)):
-        #add chairs
+        # add chairs
         for j in range(len(chair_pos)):
             obstacle_environment.append(
                 Cuboid(
                     axes_length=[max_ax_len, min_ax_len],
-                    center_position=chair_pos[j]+shift_vectors[i],
+                    center_position=chair_pos[j] + shift_vectors[i],
                     margin_absolut=chair_margin,
                     orientation=chair_orientation,
                     tail_effect=False,
                     repulsion_coeff=1,
                 )
             )
-        #add tables
+        # add tables
         for j in range(len(table_pos)):
             obstacle_environment.append(
                 Cuboid(
                     axes_length=[1.6, 0.7],
-                    center_position=table_pos[j]+shift_vectors[i],
+                    center_position=table_pos[j] + shift_vectors[i],
                     margin_absolut=radius / 1.1,
                     orientation=math.pi / 2,
                     tail_effect=False,
                     repulsion_coeff=1,
                 )
             )
-        #add person
+        # add person
         for j in range(len(human_pos)):
             obstacle_environment.append(
                 Ellipse(
                     axes_length=[0.5, 0.5],
-                    center_position=human_pos[j]+shift_vectors[i],
+                    center_position=human_pos[j] + shift_vectors[i],
                     margin_absolut=radius_table,
                     orientation=0,
                     tail_effect=False,
@@ -502,7 +500,6 @@ def main():
                     linear_velocity=np.array([-0.3, 0.3]),
                 )
             )
-    
 
     for i in range(furn_tot - 2):
         agent_pos[(i * 2) : (i * 2) + 2] = relative2global(
@@ -515,36 +512,36 @@ def main():
 
     attractor_env = ObstacleContainer()
     for i in range(len(shift_vectors)):
-        #add chairs
+        # add chairs
         for j in range(len(chair_pos)):
             attractor_env.append(
                 Cuboid(
                     axes_length=[max_ax_len, min_ax_len],
-                    center_position=chair_pos[j]+shift_vectors[i],
+                    center_position=chair_pos[j] + shift_vectors[i],
                     margin_absolut=chair_margin,
                     orientation=chair_orientation,
                     tail_effect=False,
                     repulsion_coeff=1,
                 )
             )
-        #add tables
+        # add tables
         for j in range(len(table_pos)):
             attractor_env.append(
                 Cuboid(
                     axes_length=[1.6, 0.7],
-                    center_position=table_pos[j]+shift_vectors[i],
+                    center_position=table_pos[j] + shift_vectors[i],
                     margin_absolut=radius / 1.1,
                     orientation=math.pi / 2,
                     tail_effect=False,
                     repulsion_coeff=1,
                 )
             )
-        #add person
+        # add person
         for j in range(len(human_pos)):
             attractor_env.append(
                 Ellipse(
                     axes_length=[0.5, 0.5],
-                    center_position=human_pos[j]+shift_vectors[i],
+                    center_position=human_pos[j] + shift_vectors[i],
                     margin_absolut=radius_table,
                     orientation=0,
                     tail_effect=False,
@@ -552,7 +549,7 @@ def main():
                     linear_velocity=np.array([-0.3, 0.3]),
                 )
             )
-        
+
     for i in range(furn_tot - 2):
         attractor_pos[(i * 2) : (i * 2) + 2] = relative2global(
             rel_agent_pos, attractor_env[i]

@@ -214,7 +214,7 @@ def generate_launch_description():
     )
     wall_4_description = {
         "use_sim_time": use_sim_time,
-        i"robot_description": wall_4_description_content,
+        "robot_description": wall_4_description_content,
     }
 
     table_state_pub_node = Node(
