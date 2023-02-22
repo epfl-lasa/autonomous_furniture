@@ -4,13 +4,14 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-# from dynamic_obstacle_avoidance.obstacles import Polygon, Cuboid, Ellipse
-# from dynamic_obstacle_avoidance.obstacles import Cuboid,
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile
+
+from tf2_ros import TransformBroadcaster, TransformStamped
+
 from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
-from autonomous_furniture.agent import Furniture, Person
-
 from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
-
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
@@ -20,40 +21,18 @@ from dynamic_obstacle_avoidance.avoidance.dynamic_crowd_avoider import (
 
 from vartools.dynamical_systems import LinearSystem
 
-import rclpy
-from rclpy.node import Node
-from rclpy.qos import QoSProfile
-from geometry_msgs.msg import Quaternion
-from tf2_ros import TransformBroadcaster, TransformStamped
-
 from autonomous_furniture.analysis.calc_time import (
     calculate_relative_position,
     relative2global,
     global2relative,
 )
+from autonomous_furniture.agent import Furniture, Person
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
-
-
-def euler_to_quaternion(roll, pitch, yaw):
-    # TODO: this rotation should be replaced with scipy-Rotations (!)
-    qx = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(
-        pitch / 2
-    ) * sin(yaw / 2)
-    qy = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(
-        pitch / 2
-    ) * sin(yaw / 2)
-    qz = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(
-        pitch / 2
-    ) * cos(yaw / 2)
-    qw = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(
-        pitch / 2
-    ) * sin(yaw / 2)
-    return Quaternion(x=qx, y=qy, z=qz, w=qw)
+from autonomous_furniture.message_generation import euler_to_quaternion
 
 
 class DynamicalSystemRviz(Node):
     def __init__(self):
-        # self.animation_paused = True
         self.animation_paused = False
 
         rclpy.init()
@@ -280,9 +259,13 @@ class DynamicalSystemRviz(Node):
                     attractor_vel[attractor, :], state = attractor_dynamic.evaluate(
                         global_attractor_pos[attractor, :], jj
                     )
-                attractor_weights = attractor_dynamic.get_weights_attractors(
-                    global_attractor_pos, jj
-                )
+                try:
+                    attractor_weights = attractor_dynamic.get_weights_attractors(
+                        global_attractor_pos, jj
+                    )
+                except:
+                    breakpoint()
+
                 goal_vel, goal_rot = attractor_dynamic.get_goal_velocity(
                     global_attractor_pos, attractor_vel, attractor_weights, jj
                 )
@@ -588,8 +571,4 @@ def main():
 
 if __name__ == "__main__":
     plt.close("all")
-
-    # try:
     main()
-    # except RuntimeError:
-    # rclpy.shutdown()

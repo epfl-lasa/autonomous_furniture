@@ -18,16 +18,8 @@ from autonomous_furniture.agent import Furniture, Person
 
 import argparse
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument("--rec", action="store", default=False, help="Record flag")
-parser.add_argument(
-    "--name", action="store", default="recording", help="Name of the simulation"
-)
-args = parser.parse_args()
-
-
-def priority_demo():
+def priority_demo(args=[]):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
@@ -110,7 +102,15 @@ def priority_demo():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--rec", action="store", default=False, help="Record flag")
+    parser.add_argument(
+        "--name", action="store", default="recording", help="Name of the simulation"
+    )
+    args = parser.parse_args()
+
     plt.close("all")
     plt.ion()
 
-    priority_demo()
+    priority_demo(args)

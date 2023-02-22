@@ -30,7 +30,7 @@ class DynamicalSystemAnimation(Animator):
     def setup(
         self,
         obstacle_environment,
-        agent: BaseAgent,
+        agent: list[BaseAgent],
         x_lim=None,
         y_lim=None,
         anim: bool = True,

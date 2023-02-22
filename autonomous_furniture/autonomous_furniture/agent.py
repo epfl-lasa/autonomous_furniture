@@ -195,6 +195,9 @@ class BaseAgent(ABC):
     def name(self, name):
         self._shape.name = name
 
+    def get_obstacle_shape(self) -> Obstacle:
+        return get_obstacle_shape()
+
     def do_velocity_step(self, dt):
         return self._shape.do_velocity_step(dt)
 
