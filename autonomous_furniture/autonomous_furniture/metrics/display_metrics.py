@@ -531,7 +531,7 @@ def plot_prox_graph():
     # pers_list = [1 - pers_list[ii] / (ii + 1) for ii in range(step)]
     # furn_list = [1 - furn_list[ii] / (ii + 1) for ii in range(step)]
 
-    fig, ax = plt.subplots(figsize=(3.5, 3.5), dpi=120)
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
     xmin = 0
     xmax = 200
     ymin = 2
@@ -540,11 +540,12 @@ def plot_prox_graph():
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax)
 
-    plt.xticks(fontsize=9)
-    plt.yticks(fontsize=9)
-    plt.xlabel("Step", fontsize=9)
-
-    plt.ylabel("Distance from mobile agent [m]", fontsize=9)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.xlabel("Step", fontsize=label_size)
+    plt.legend(fontsize=legend_size)
+    
+    plt.ylabel("Distance from mobile agent [m]", fontsize=label_size)
     plt.plot(range(step), pers_list_equal, color="orange", linestyle="dashed")
     plt.plot(range(step), furn_list_equal, color="red", linestyle="dashed")
     # plt.plot(
@@ -561,12 +562,12 @@ def plot_prox_graph():
     # plt.plot(0, furn_list[0], "o", color=(221 / 255, 16 / 255, 16 / 255))
     # plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
     plt.plot(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "go")
-    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "%f" %np.round(np.min(pers_list_equal),3))
+    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0]-5, np.min(pers_list_equal)+0.15, "%s" %np.round(np.min(pers_list_equal),2))
     
     plt.plot(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "go")
-    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "%f" %np.round(np.min(pers_list_priority),3))
+    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0]-5, np.min(pers_list_priority)+0.15, "%s" %np.round(np.min(pers_list_priority),2))
 
-    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"], fontsize=9)
+    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"])
     plt.tight_layout()
     plt.show()
 
@@ -576,7 +577,7 @@ def plot_time():
 
     list_algo = ["nodrag"]
     list_vers = ["v1", "v2"]
-    list_fur = [3, 4, 5, 6, 7, 8, 9, 10]
+    list_fur = [3, 4, 5, 6, 7]
     nb_folds = number_scen(list_fur[0], list_algo[0], list_vers[0])
 
     data_drag_temp = []  # TODO temp to remove
@@ -591,7 +592,7 @@ def plot_time():
                 data.append(
                     json.load(
                         open(
-                            f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                            f"{folder_no_safety}/distance_nb{nb_fur}_{algo}_{version}.json",
                             "r",
                         )
                     )
@@ -638,10 +639,10 @@ def plot_time():
         plt.setp(bp["medians"], color="black")
 
     plt.figure()
-    plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
+    plt.figure(figsize=fig_size, dpi=fig_dpi)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.legend(fontsize=label_size)
 
     bpr = plt.boxplot(
         data_drag_temp,
@@ -657,16 +658,14 @@ def plot_time():
         widths=0.6,
         patch_artist=True,
     )
-    set_box_color(bpl, "red")
-    set_box_color(bpr, "green")  # colors are from http://colorbrewer2.org/
+    set_box_color(bpl, "blue")
+    set_box_color(bpr, "red")  # colors are from http://colorbrewer2.org/
 
-    plt.plot([], c="red", label="v1")
-    plt.plot([], c="green", label="v2")
+    plt.plot([], c="blue", label="past")
+    plt.plot([], c="red", label="TSVMA")
 
-    plt.xlabel("Number of agents", fontsize=9)
-    plt.ylabel(
-        "Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=9
-    )
+    plt.xlabel("Number of agents", fontsize=label_size)
+    plt.ylabel("Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=label_size)
     plt.legend()
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
@@ -676,9 +675,9 @@ def plot_time():
 if __name__ == "__main__":
     # compare_convergence_rate()
     # compare_travelled_distance()
-    plot_collisions()
+    # plot_collisions()
     # plot_prox_graph()
     # plot_proximity()
-    # plot_time()
+    plot_time()
     plt.legend()
     plt.show()
