@@ -207,7 +207,7 @@ class BaseAgent(ABC):
         ).T
 
     def get_goal_control_points(self):
-        """Get gaol-control-points in global frame."""
+        """Get goal-control-points in global frame."""
         return np.array(
             [
                 self._goal_pose.transform_position_from_relative(ctp)
@@ -347,6 +347,7 @@ class Furniture(BaseAgent):
 
             # plt.arrow(self.position[0], self.position[1], initial_velocity[0],
             #       initial_velocity[1], head_width=0.1, head_length=0.2, color='g')
+            d = LA.norm(self.position - self._goal_pose.position)
 
             if version == "v2":
                 initial_velocity = obs_avoidance_interpolation_moving(
@@ -360,7 +361,6 @@ class Furniture(BaseAgent):
                 initial_magnitude = LA.norm(initial_velocity)
 
                 # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
-                d = LA.norm(self.position - self._goal_pose.position)
                 if mini_drag == "dragvel": #a1 computed depending on the velocity
 
                     w1_hat = self.virtual_drag
@@ -479,9 +479,21 @@ class Furniture(BaseAgent):
 
             
             elif version=="v1":
-                #for each control point
+                goal_pos_ctr_pts = self.get_goal_control_points()
+                actual_pos_ctr_pts = self.get_global_control_points()
+                for i in range(self._control_points.shape[1]):
                     #define direction as initial velocities
-                    #initial_velocities = 
+                    ctr_pt_i = np.array([actual_pos_ctr_pts[0][i], actual_pos_ctr_pts[1][i]]) #extract i-th actual control points position
+                    ctr_pt_i_goal = np.array([goal_pos_ctr_pts[0][i], goal_pos_ctr_pts[1][i]]) #extract i-th goal control points position
+                    initial_velocity = ctr_pt_i_goal-ctr_pt_i
+                    # initial_velocity /= LA.norm(initial_velocity) #normalize vector
+                    velocities[:,i] = obs_avoidance_interpolation_moving(
+                                        position=ctr_pt_i,
+                                        initial_velocity=initial_velocity,
+                                        obs=environment_without_me,
+                                        self_priority=self.priority,
+                                        )
+
                     # obs_avoidance_interpolation_moving
                 
                 ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ### 
@@ -489,10 +501,11 @@ class Furniture(BaseAgent):
                     velocities * np.tile(weights, (self.dimension, 1)), axis=1
                 )
 
-                # normalization to the initial velocity
-                self.linear_velocity = (
-                    initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
-                )
+                # # normalization to the initial velocity
+                if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
+                    self.linear_velocity = (
+                        self._dynamics.maximum_velocity * self.linear_velocity / LA.norm(self.linear_velocity)
+                    )
                 # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
                 #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
