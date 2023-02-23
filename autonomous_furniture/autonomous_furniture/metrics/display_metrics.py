@@ -562,10 +562,10 @@ def plot_prox_graph():
     # plt.plot(0, furn_list[0], "o", color=(221 / 255, 16 / 255, 16 / 255))
     # plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
     plt.plot(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "go")
-    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0]-5, np.min(pers_list_equal)+0.15, "%s" %np.round(np.min(pers_list_equal),2))
+    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0]-5, np.min(pers_list_equal)+0.15, "%.2f" %np.round(np.min(pers_list_equal),2))
     
     plt.plot(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "go")
-    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0]-5, np.min(pers_list_priority)+0.15, "%s" %np.round(np.min(pers_list_priority),2))
+    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0]-5, np.min(pers_list_priority)+0.15, "%.2f" %np.round(np.min(pers_list_priority),2))
 
     plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"])
     plt.tight_layout()
@@ -676,8 +676,8 @@ if __name__ == "__main__":
     # compare_convergence_rate()
     # compare_travelled_distance()
     # plot_collisions()
-    # plot_prox_graph()
+    plot_prox_graph()
     # plot_proximity()
-    plot_time()
+    # plot_time()
     plt.legend()
     plt.show()
