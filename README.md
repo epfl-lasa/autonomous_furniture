@@ -42,6 +42,8 @@ To run the example `assistive_environment.launch.py`
 ros2 launch autonomous_furniture assistive_environment.launch.py
 ```
 
+ros2 launch autonomous_furniture dense_environmen.launch.py
+
 Sometimes, the rviz does not open the correct configuration, in that case open it:
 `CTRL+o` -> go to `/home/ros/ros2_ws/autonomous_furniture/rviz/assistive_environment.rviz`
 
@@ -49,6 +51,12 @@ Sometimes, the rviz does not open the correct configuration, in that case open i
 Launch the obstacle avoidance simulation (from the autonomous_furniture folder):
 ``` shell
 python3 furniture_publishers/assistive_environment.py
+```
+
+Run the indoor, dense environment:
+
+``` shell
+python3 furniture_publishers/dense_environment.py
 ```
 
 ### Build and Run

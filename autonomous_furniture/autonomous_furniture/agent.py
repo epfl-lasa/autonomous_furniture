@@ -1,7 +1,12 @@
-from abc import ABC, abstractmethod
-from asyncio import get_running_loop
+"""
+Autonomous two-dimensional agents which navigate in unstructured environments.
+"""
 import warnings
+from abc import ABC, abstractmethod
 from typing import Optional
+from enum import Enum, auto
+
+from asyncio import get_running_loop
 
 import numpy as np
 from numpy import linalg as LA
@@ -22,6 +27,14 @@ from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
 # from vartools.states
+
+
+class ObjectType(Enum):
+    TABLE = auto()
+    QOLO = auto()
+    CHAIR = auto()
+    HOSPITAL_BED = auto()
+    OTHER = auto()
 
 
 def get_distance_to_obtacle_surface(
@@ -76,14 +89,16 @@ class BaseAgent(ABC):
         goal_pose: ObjectPose = None,
         name: str = "no_name",
         static: bool = False,
+        object_type: ObjectType = ObjectType.OTHER,
     ) -> None:
         super().__init__()
 
         self._shape = shape
 
+        object_type = object_type
+
         # Default values for new variables
         self.danger = False
-        self.gamma_critic = 0
         self.color = np.array([176, 124, 124]) / 255.0
 
         self.priority = priority_value
@@ -956,6 +971,7 @@ class Person(BaseAgent):
             shape=_shape,
             priority_value=priority_value,
             control_points=np.array([[0, 0]]),
+            object_type=ObjectType.QOLO,
             **kwargs,
         )  # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
 

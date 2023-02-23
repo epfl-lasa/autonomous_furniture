@@ -32,6 +32,7 @@ from autonomous_furniture.analysis.calc_time import relative2global
 from autonomous_furniture.analysis.calc_time import global2relative
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
+from autonomous_furniture.agent import ObjectType
 from autonomous_furniture.agent import BaseAgent
 from autonomous_furniture.agent import Furniture, Person
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
@@ -41,17 +42,6 @@ from autonomous_furniture.message_generation import euler_to_quaternion
 class RvizPublisher(Node):
     def __init__(self):
         pass
-
-
-from enum import Enum, auto
-
-
-class ObjectType(Enum):
-    TABLE = auto()
-    QOLO = auto()
-    CHAIR = auto()
-    HOSPITAL_BED = auto()
-    OTHER = auto()
 
 
 # @dataclass
@@ -135,22 +125,19 @@ class RvizSimulator(Node):
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 
-        for obs in range(num_obs):
-                if obs == num_obs - 1:
-                    u_obs_vel = obs_vel / np.linalg.norm(obs_vel)
-                    x_vec = np.array([1, 0])
-                    dot_prod = np.dot(x_vec, u_obs_vel)
-                    qolo_dir = np.arccos(dot_prod)
-                    self.update_state_publisher(
-                        obs_name[obs],
-                        obstacle_environment[-1].center_position,
-                        qolo_dir,
-                    )
-                else:
-                    self.update_state_publisher(
-                        obs_name[obs],
-                        obstacle_environment[obs].center_position,
-                        obstacle_environment[obs].orientation,
+        for ii, agent in enumerate(self.agent):
+            if agent.object_type == ObjectType.QOLO:
+                u_obs_vel = obs_vel / np.linalg.norm(obs_vel)
+                x_vec = np.array([1, 0])
+                dot_prod = np.dot(x_vec, u_obs_vel)
+                qolo_dir = np.arccos(dot_prod)
+                agent.orientation = qolo_dir
+
+            self.update_state_publisher(
+                pose=agent.pose,
+                frame_prefix=agent.name,
+                object_type=agent.type,
+            )
 
 
 class GlobalObstacleContainer:
@@ -194,6 +181,7 @@ def create_hospital_bed(
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
     name: str = "",
+    margin_absolut: float = 0.4
     # center_position: np.ndarray, goal_pose: Optional[np.ndarray] = None
 ) -> Furniture:
     if not len(name):
@@ -204,7 +192,7 @@ def create_hospital_bed(
     table_shape = Cuboid(
         axes_length=np.array([2.0, 1.0]),
         center_position=start_pose.position,
-        margin_absolut=1.0,
+        margin_absolut=margin_absolut,
         orientation=start_pose.orientation,
         tail_effect=False,
     )
@@ -215,15 +203,80 @@ def create_hospital_bed(
         control_points=control_points,
         goal_pose=goal_pose,
         priority_value=1.0,
-        name="hospital_bed",
+        name=name,
+        object_type=ObjectType.HOSPITAL_BED,
     )
 
     return new_bed
 
 
-def main_animation():
-    axes_length = [2.4, 1.1]
+def create_chair(
+    start_pose: ObjectPose,
+    goal_pose: ObjectPose,
+    name: str = "",
+    margin_absolut: float = 0.4,
+    # center_position: np.ndarray, goal_pose: Optional[np.ndarray] = None
+) -> Furniture:
+    if not len(name):
+        name = f"obstacle{len(GlobalObstacleContainer())}"
 
+    control_points = np.array([[0.0, 0], [0.0, 0.0]])
+
+    table_shape = Cuboid(
+        axes_length=np.array([0.6, 0.5]),
+        center_position=start_pose.position,
+        margin_absolut=margin_absolut,
+        orientation=start_pose.orientation,
+        tail_effect=False,
+    )
+
+    new_furniture = Furniture(
+        shape=table_shape,
+        obstacle_environment=GlobalObstacleContainer(),
+        control_points=control_points,
+        goal_pose=goal_pose,
+        priority_value=1.0,
+        name=name,
+        object_type=ObjectType.CHAIR,
+    )
+
+    return new_furniture
+
+
+def create_table(
+    start_pose: ObjectPose,
+    goal_pose: ObjectPose,
+    name: str = "",
+    margin_absolut: float = 0.4,
+    # center_position: np.ndarray, goal_pose: Optional[np.ndarray] = None
+) -> Furniture:
+    if not len(name):
+        name = f"obstacle{len(GlobalObstacleContainer())}"
+
+    control_points = np.array([[0.45, 0], [-0.45, 0]])
+
+    table_shape = Cuboid(
+        axes_length=np.array([1.6, 0.7]),
+        center_position=start_pose.position,
+        margin_absolut=margin_absolut,
+        orientation=start_pose.orientation,
+        tail_effect=False,
+    )
+
+    new_furniture = Furniture(
+        shape=table_shape,
+        obstacle_environment=GlobalObstacleContainer(),
+        control_points=control_points,
+        goal_pose=goal_pose,
+        priority_value=1.0,
+        name=name,
+        object_type=ObjectType.TABLE,
+    )
+
+    return new_furniture
+
+
+def two_bed_animation():
     agent_list: list[BaseAgent] = []
 
     new_bed = create_hospital_bed(
@@ -256,6 +309,79 @@ def main_animation():
     )
 
     # GlobalObstacleContainer()
+    my_animation.run(save_animation=False)
+    my_animation.logs(len(agent_list))
+
+
+def create_four_chair_arrangement(center_position: np.ndarray):
+    delta_x = 0.4
+    delta_y = 0.5
+    agent_list: list[BaseAgent] = []
+
+    new_furniture = create_table(
+        start_pose=ObjectPose(position=center_position, orientation=0),
+        goal_pose=ObjectPose(position=center_position, orientation=0),
+    )
+    agent_list.append(new_furniture)
+
+    new_furniture = create_chair(
+        start_pose=ObjectPose(
+            position=center_position + np.array([-delta_x, -delta_y]), orientation=0
+        ),
+        goal_pose=ObjectPose(position=center_position, orientation=0),
+    )
+    agent_list.append(new_furniture)
+
+    new_furniture = create_chair(
+        start_pose=ObjectPose(
+            position=center_position + np.array([delta_x, -delta_y]), orientation=0
+        ),
+        goal_pose=ObjectPose(position=center_position, orientation=0),
+    )
+    agent_list.append(new_furniture)
+
+    new_furniture = create_chair(
+        start_pose=ObjectPose(
+            position=center_position + np.array([-delta_x, delta_y]), orientation=0
+        ),
+        goal_pose=ObjectPose(position=center_position, orientation=0),
+    )
+    agent_list.append(new_furniture)
+
+    new_furniture = create_chair(
+        start_pose=ObjectPose(
+            position=center_position + np.array([delta_x, delta_y]), orientation=0
+        ),
+        goal_pose=ObjectPose(position=center_position, orientation=0),
+    )
+    agent_list.append(new_furniture)
+
+    return agent_list
+
+
+def run_chair_and_table_animation():
+    agent_list: list[BaseAgent] = []
+
+    agent_list = agent_list + create_four_chair_arrangement(np.array([0, 0.0]))
+
+    my_animation = DynamicalSystemAnimation(
+        it_max=200,
+        dt_simulation=0.05,
+        dt_sleep=0.05,
+        animation_name="furniture_animation",
+    )
+
+    my_animation.setup(
+        obstacle_environment=GlobalObstacleContainer(),
+        agent=agent_list,
+        x_lim=[-3, 8],
+        y_lim=[-2, 7],
+        figsize=(5, 4),
+        version="v2",
+        mini_drag="dragdist",
+    )
+
+    # GlobalObstacleContainer()
 
     my_animation.run(save_animation=False)
     my_animation.logs(len(agent_list))
@@ -263,4 +389,5 @@ def main_animation():
 
 if __name__ == "__main__":
     plt.close("all")
-    main_animation()
+    # two_bed_animation()
+    run_chair_and_table_animation()

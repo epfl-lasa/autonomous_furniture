@@ -38,6 +38,7 @@ class DynamicalSystemAnimation(Animator):
         anim: bool = True,
         mini_drag: str = "nodrag",
         version: str = "v1",
+        obstacle_color=["orange", "blue", "red"],
         figsize=(3.0, 2.5),
     ):
         self.mini_drag = mini_drag
@@ -65,10 +66,9 @@ class DynamicalSystemAnimation(Animator):
             self.agent_pos_saver[i].append(self.agent[i].position)
 
         self.obstacle_environment = obstacle_environment
-        self.obstacle_color = []
         # for i in range(len(obstacle_environment)):
         #     self.obstacle_color.append(np.array(np.random.choice(range(255),size=3))/254)
-        self.obstacle_color = ["orange", "blue", "red"]
+        self.obstacle_color = obstacle_color
 
         if anim:
             self.fig, self.ax = plt.subplots(figsize=figsize, dpi=120)
@@ -116,10 +116,15 @@ class DynamicalSystemAnimation(Animator):
                 goal_control_points = self.agent[
                     jj
                 ].get_goal_control_points()  ##plot agent center position
+
+                if len(self.obstacle_color) > jj:
+                    color = self.obstacle_color[jj]
+                else:
+                    color = "black"
                 self.ax.plot(
                     goal_control_points[0, :],
                     goal_control_points[1, :],
-                    color=self.obstacle_color[jj],
+                    color=color,
                     marker="o",
                     linestyle="",  ##k=black, o=dot
                 )
@@ -127,7 +132,7 @@ class DynamicalSystemAnimation(Animator):
                     self.ax.plot(
                         self.agent[jj]._goal_pose.position[0],
                         self.agent[jj]._goal_pose.position[1],
-                        color=self.obstacle_color[jj],
+                        color=color,
                         marker="*",
                         markersize=10,
                     )
@@ -137,10 +142,11 @@ class DynamicalSystemAnimation(Animator):
                     for i in range(len(self.agent_pos_saver[jj])):
                         x_values[i] = self.agent_pos_saver[jj][i][0]
                         y_values[i] = self.agent_pos_saver[jj][i][1]
+
                     self.ax.plot(
                         x_values,
                         y_values,
-                        color=self.obstacle_color[jj],
+                        color=color,
                         linestyle="dashed",
                     )
                 self.ax.set_aspect("equal", adjustable="box")
@@ -148,13 +154,18 @@ class DynamicalSystemAnimation(Animator):
         if anim:
             # breakpoint()
             for jj in range(self.number_agent):
+                if len(self.obstacle_color) > jj:
+                    color = self.obstacle_color[jj]
+                else:
+                    color = np.array([176, 124, 124]) / 255.0
+
                 plot_obstacles(
                     ax=self.ax,
                     obstacle_container=[self.obstacle_environment[jj]],
                     x_lim=self.x_lim,
                     y_lim=self.y_lim,
                     showLabel=False,
-                    obstacle_color=self.obstacle_color[jj],
+                    obstacle_color=color,
                     draw_reference=False,
                 )
 
