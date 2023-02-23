@@ -50,7 +50,7 @@ print(os.getcwd())
 
 folder_new_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/new_safety_module"
 folder_no_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/no_safety_module"
-folders = [folder_new_safety, folder_no_safety]
+folders = [folder_no_safety,folder_new_safety]
 
 fig_size=[4,3]
 fig_dpi=120
@@ -239,8 +239,7 @@ def compare_travelled_distance():
         plt.setp(bp["caps"], color=color)
         plt.setp(bp["medians"], color="black")
 
-    plt.figure()
-    plt.figure(figsize=fig_size, fig_dpi=120)
+    plt.figure(figsize=fig_size, dpi=fig_dpi)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
     plt.legend(fontsize=legend_size)
@@ -259,14 +258,14 @@ def compare_travelled_distance():
         patch_artist=True,
     )
     set_box_color(bpl, "red")
-    set_box_color(bpr, "green")  # colors are from http://colorbrewer2.org/
+    set_box_color(bpr, "orange")  # colors are from http://colorbrewer2.org/
 
     plt.plot([], c="red", label="TSVMA")
-    plt.plot([], c="green", label="SVMA")
+    plt.plot([], c="orange", label="SVMA")
 
-    plt.xlabel("Number of agents", fontsize=9)
+    plt.xlabel("Number of agents", fontsize=label_size)
     plt.ylabel(
-        "Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=9
+        "Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=label_size
     )
     plt.legend()
 
@@ -327,33 +326,33 @@ def plot_collisions():
 
     list_nb_fur = [3, 4, 5, 6, 7, 8, 9]
     list_version = ["v2"]
-    list_algo = ["nodrag", "dragdist"]
+    list_algo = ["dragdist"]
 
     collisions_data = []
     nb_collisions_data = []
     for algo in list_algo:
         for vers in list_version:
-            collisions_data_temp = []
-            nb_collisions = []
+            for folder in folders:
+                collisions_data_temp = []
+                nb_collisions = []
 
-            for idx, nb_fur in enumerate(list_nb_fur):
+                for idx, nb_fur in enumerate(list_nb_fur):
 
-                data = json.load(
-                    open(
-                        f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
-                        "r",
+                    data = json.load(
+                        open(
+                            f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
+                            "r",
+                        )
                     )
-                )
-                collisions_data_temp.append(data["collisions_ser"])
-                has_collision = [1 for i in data["collisions_ser"] if i > 0]
-                nb_collisions.append(len(has_collision))
+                    collisions_data_temp.append(data["collisions"])
+                    has_collision = [1 for i in data["collisions"] if i > 0]
+                    nb_collisions.append(len(has_collision))
 
-            nb_collisions_data.append(nb_collisions)
+                nb_collisions_data.append(nb_collisions)
 
     width = 0.25
     #Full ERM_temp= [4, 17, 38, 56, 74, 87, 97, 99]
     ERM_temp = [
-        4,
         17,
         38,
         56,
@@ -366,33 +365,32 @@ def plot_collisions():
 
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
-    fig, ax = plt.subplots(figsize=(3.7, 3.7), dpi=120)
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
     # plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=9)
-    plt.yticks(fontsize=9)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.legend(fontsize=legend_size)
 
     # plt.bar(
     #     pos + 0.5 * width, ERM_temp, color="blue", width=width, label="previous work"
     # )
-
-    plt.bar(
-        pos - 0.5 * width,
-        nb_collisions_data[0],
-        color="red",
-        width=width,
-        label="TSVMA",
-    )
-    plt.bar(pos + 0.5*width, nb_collisions_data[1], color="green", width=width, label="SVMA")
+    br1 = pos
+    br0 = pos-width
+    br2 = pos+width
+    
+    plt.bar(br0,ERM_temp,color="blue",width=width,label="past",)
+    plt.bar(br1, nb_collisions_data[0], color="green", width=width, label="SVMA")
+    plt.bar(br2, nb_collisions_data[1], color="orange", width=width, label="SSVMA")
+    
     plt.xticks(pos, list_nb_fur)
 
     for bars in ax.containers:
-        ax.bar_label(bars, fontsize=9)
+        ax.bar_label(bars, fontsize=label_size)
 
-    plt.xlabel("Number of agents", fontsize=10)
-    plt.ylabel(
-        "Percentage of scenarios with serious collisions, $\mathcal{C}$[%]", fontsize=10
-    )
-    plt.legend(fontsize=10)
+    plt.xlabel("Number of agents", fontsize=label_size)
+    plt.ylabel("Scenarios with virtual collisions [%]", fontsize=label_size)
+    plt.legend()
+    plt.tight_layout()
     plt.show()
 
 
@@ -677,8 +675,8 @@ def plot_time():
 
 if __name__ == "__main__":
     # compare_convergence_rate()
-    compare_travelled_distance()
-    # plot_collisions()
+    # compare_travelled_distance()
+    plot_collisions()
     # plot_prox_graph()
     # plot_proximity()
     # plot_time()
