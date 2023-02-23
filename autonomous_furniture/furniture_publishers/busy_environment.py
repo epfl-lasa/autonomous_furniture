@@ -32,6 +32,7 @@ from autonomous_furniture.analysis.calc_time import relative2global
 from autonomous_furniture.analysis.calc_time import global2relative
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
+from autonomous_furniture.agent import BaseAgent
 from autonomous_furniture.agent import Furniture, Person
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
 from autonomous_furniture.message_generation import euler_to_quaternion
@@ -91,7 +92,7 @@ def create_hospital_bed(
     center_position: np.ndarray, goal_pose: Optional[np.ndarray] = None
 ) -> Furniture:
     control_points = np.array([[0.6, 0], [-0.6, 0]])
-    goal = ObjectPose(position=np.array([2.5, 3]), orientation=0)
+    goal = ObjectPose(position=np.array(center_position), orientation=0.0)
 
     table_shape = Cuboid(
         axes_length=np.array([2.0, 1]),
@@ -103,7 +104,7 @@ def create_hospital_bed(
 
     new_bed = Furniture(
         shape=table_shape,
-        obstacle_environment=GlobalFurnitureContainer(),
+        obstacle_environment=GlobalObstacleContainer(),
         control_points=control_points,
         goal_pose=goal,
         priority_value=1,
@@ -116,11 +117,13 @@ def create_hospital_bed(
 def main_animation():
     axes_length = [2.4, 1.1]
 
-    global_furniture = GlobalFurnitureContainer()
-    new_bed = create_hospital_bed(center_position=[3.0, 4.0])
-    breakpoint()
+    agent_list: list[BaseAgent] = []
 
-    global_furniture.append(new_bed)
+    new_bed = create_hospital_bed(center_position=[3.0, 4.0])
+    agent_list.append(new_bed)
+
+    new_bed = create_hospital_bed(center_position=[1.0, 2.0])
+    agent_list.append(new_bed)
 
     my_animation = DynamicalSystemAnimation(
         it_max=200,
@@ -130,16 +133,18 @@ def main_animation():
     )
 
     my_animation.setup(
-        obstacle_environment=global_furniture.get_obstacle_list(),
-        agent=global_furniture,
+        obstacle_environment=GlobalObstacleContainer(),
+        agent=agent_list,
         x_lim=[-3, 8],
         y_lim=[-2, 7],
         version="v2",
         mini_drag="dragdist",
     )
 
-    my_animation.run(save_animation="False")
-    my_animation.logs(len(my_furniture))
+    # GlobalObstacleContainer()
+
+    my_animation.run(save_animation=False)
+    my_animation.logs(len(agent_list))
 
 
 if __name__ == "__main__":

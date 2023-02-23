@@ -143,15 +143,17 @@ class DynamicalSystemAnimation(Animator):
                 self.ax.set_aspect("equal", adjustable="box")
 
         if anim:
-            plot_obstacles(
-                ax=self.ax,
-                obstacle_container=self.obstacle_environment,
-                x_lim=self.x_lim,
-                y_lim=self.y_lim,
-                showLabel=False,
-                obstacle_color=self.obstacle_color,
-                draw_reference=False,
-            )
+            # breakpoint()
+            for jj in range(self.number_agent):
+                plot_obstacles(
+                    ax=self.ax,
+                    obstacle_container=[self.obstacle_environment[jj]],
+                    x_lim=self.x_lim,
+                    y_lim=self.y_lim,
+                    showLabel=False,
+                    obstacle_color=self.obstacle_color[jj],
+                    draw_reference=False,
+                )
 
     def has_converged(self, it: int) -> bool:
         rtol_pos = 1e-3
