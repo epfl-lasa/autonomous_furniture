@@ -56,7 +56,7 @@ fig_size=[4,3]
 fig_dpi=120
 tick_size=8.5
 label_size=9
-legend_size=1.5
+legend_size=9
 
 def compare_convergence_rate():
     diff_dist = []
@@ -140,12 +140,12 @@ def compare_convergence_rate():
     # )
 
     # plot_box(diff_dist, list_fur)
-    label = ["past", "SVMA", "SSVMA"]
+    label = ["HDSM", "DDHDSM", "SDDHDSM"]
     barWidth = 0.25
     fig, ax = plt.subplots(figsize=(4, 3), dpi=120)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
-    plt.legend(fontsize=legend_size)
+    # plt.legend(fontsize=legend_size)
     
     br1 = np.arange(len(converg_data[0,:]))
     br0 = br1 - barWidth
@@ -163,7 +163,7 @@ def compare_convergence_rate():
     for bars in ax.containers:
         ax.bar_label(bars, fontsize=label_size)
 
-    plt.legend()
+    plt.legend(fontsize=legend_size)
     plt.show()
 
 def compare_travelled_distance():
@@ -242,7 +242,6 @@ def compare_travelled_distance():
     plt.figure(figsize=fig_size, dpi=fig_dpi)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
-    plt.legend(fontsize=legend_size)
     bpr = plt.boxplot(
         data_drag_temp,
         positions=np.array(range(len(data_drag_temp))) * 2.0 + 0.4,
@@ -260,14 +259,14 @@ def compare_travelled_distance():
     set_box_color(bpl, "red")
     set_box_color(bpr, "orange")  # colors are from http://colorbrewer2.org/
 
-    plt.plot([], c="red", label="TSVMA")
-    plt.plot([], c="orange", label="SVMA")
+    plt.plot([], c="red", label="DHDSM")
+    plt.plot([], c="orange", label="DDHDSM")
 
     plt.xlabel("Number of agents", fontsize=label_size)
     plt.ylabel(
         "Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=label_size
     )
-    plt.legend()
+    plt.legend(fontsize=legend_size)
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
 
@@ -369,7 +368,6 @@ def plot_collisions():
     # plt.figure(figsize=(3.5, 3.5), dpi=120)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
-    plt.legend(fontsize=legend_size)
 
     # plt.bar(
     #     pos + 0.5 * width, ERM_temp, color="blue", width=width, label="previous work"
@@ -378,9 +376,9 @@ def plot_collisions():
     br0 = pos-width
     br2 = pos+width
     
-    plt.bar(br0,ERM_temp,color="blue",width=width,label="past",)
-    plt.bar(br1, nb_collisions_data[0], color="green", width=width, label="SVMA")
-    plt.bar(br2, nb_collisions_data[1], color="orange", width=width, label="SSVMA")
+    plt.bar(br0,ERM_temp,color="blue",width=width,label="HDSM",)
+    plt.bar(br1, nb_collisions_data[0], color="green", width=width, label="DDHDSM")
+    plt.bar(br2, nb_collisions_data[1], color="orange", width=width, label="SDDHDSM")
     
     plt.xticks(pos, list_nb_fur)
 
@@ -389,7 +387,7 @@ def plot_collisions():
 
     plt.xlabel("Number of agents", fontsize=label_size)
     plt.ylabel("Scenarios with virtual collisions [%]", fontsize=label_size)
-    plt.legend()
+    plt.legend(fontsize=legend_size)
     plt.tight_layout()
     plt.show()
 
@@ -543,7 +541,6 @@ def plot_prox_graph():
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
     plt.xlabel("Step", fontsize=label_size)
-    plt.legend(fontsize=legend_size)
     
     plt.ylabel("Distance from mobile agent [m]", fontsize=label_size)
     plt.plot(range(step), pers_list_equal, color="orange", linestyle="dashed")
@@ -567,7 +564,7 @@ def plot_prox_graph():
     plt.plot(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "go")
     ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0]-5, np.min(pers_list_priority)+0.15, "%.2f" %np.round(np.min(pers_list_priority),2))
 
-    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"])
+    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"], fontsize=legend_size)
     plt.tight_layout()
     plt.show()
 
@@ -642,7 +639,6 @@ def plot_time():
     plt.figure(figsize=fig_size, dpi=fig_dpi)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
-    plt.legend(fontsize=label_size)
 
     bpr = plt.boxplot(
         data_drag_temp,
@@ -661,12 +657,12 @@ def plot_time():
     set_box_color(bpl, "blue")
     set_box_color(bpr, "red")  # colors are from http://colorbrewer2.org/
 
-    plt.plot([], c="blue", label="past")
-    plt.plot([], c="red", label="TSVMA")
+    plt.plot([], c="blue", label="HDSM")
+    plt.plot([], c="red", label="DHDSM")
 
     plt.xlabel("Number of agents", fontsize=label_size)
     plt.ylabel("Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=label_size)
-    plt.legend()
+    plt.legend(fontsize=label_size)
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
     plt.tight_layout()
@@ -676,7 +672,7 @@ if __name__ == "__main__":
     # compare_convergence_rate()
     # compare_travelled_distance()
     # plot_collisions()
-    plot_prox_graph()
+    # plot_prox_graph()
     # plot_proximity()
     # plot_time()
     plt.legend()
