@@ -52,7 +52,13 @@ folder_new_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_
 folder_no_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/no_safety_module"
 folders = [folder_new_safety, folder_no_safety]
 
-def compare_v2_vs_v1():
+fig_size=[4,3]
+fig_dpi=120
+tick_size=8.5
+label_size=9
+legend_size=1.5
+
+def compare_convergence_rate():
     diff_dist = []
     list_algo = ["dragdist"]
     list_vers = ["v2"]
@@ -60,41 +66,67 @@ def compare_v2_vs_v1():
     converg_data = np.zeros((len(folders), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
+    # for ll, nb_fur in enumerate(list_fur):
+    #     dist_data = np.zeros((2, nb_folds))
+    #     for algo in list_algo:
+    #         kk = 0
+
+    #         for jj, folder in enumerate(folders):
+    #             data = json.load(
+    #                 open(
+    #                     f"{folder}/distance_nb{nb_fur}_{algo}_{list_vers[0]}.json",
+    #                     "r",
+    #                 )
+    #             )
+
+    #             dist = np.zeros(nb_folds)
+
+    #             # for agent in data.keys():
+    #             for ii in range(nb_fur):
+    #                 dist = dist + [
+    #                     data[f"agent_{ii}"]["total_dist"][mm]
+    #                     / data[f"agent_{ii}"]["direct_dist"][mm]
+    #                     for mm in range(nb_folds)
+    #                 ]
+    #                 # sum_direct_dist += data[f"agent_{ii}"]["direct_dist"]
+    #                 # times += data[f"agent_{ii}"]["time_conv"]
+
+    #             dist /= nb_fur
+
+    #             dist_data[kk, :] = dist
+    #             converg_data[jj, ll] = data["converged"].count(True)
+
+    #             kk += 1
+    #             # conv_data.append(data["converged"].count(True))
+
+    #         temp = dist_data[0, :] - dist_data[1, :]
+    #         diff_dist.append(dist_data[0, :] - dist_data[1, :])
+    
+    converg_data = np.zeros([3, len(list_fur)])
     for ll, nb_fur in enumerate(list_fur):
-        dist_data = np.zeros((2, nb_folds))
-        for algo in list_algo:
-            kk = 0
+        data_prev = json.load( #load data from previous work
+            open(
+                f"{folder_no_safety}/distance_nb{nb_fur}_nodrag_v1.json",
+                "r",
+            )
+        )
+        converg_data[0, ll] = data_prev["converged"].count(True)
 
-            for jj, folder in enumerate(folders):
-                data = json.load(
-                    open(
-                        f"{folder}/distance_nb{nb_fur}_{algo}_{list_vers[0]}.json",
-                        "r",
-                    )
-                )
+        data_no_safety = json.load( #load data from new work without safety module
+            open(
+                f"{folder_no_safety}/distance_nb{nb_fur}_dragdist_v2.json",
+                "r",
+            )
+        )
+        converg_data[1, ll] = data_no_safety["converged"].count(True)
 
-                dist = np.zeros(nb_folds)
-
-                # for agent in data.keys():
-                for ii in range(nb_fur):
-                    dist = dist + [
-                        data[f"agent_{ii}"]["total_dist"][mm]
-                        / data[f"agent_{ii}"]["direct_dist"][mm]
-                        for mm in range(nb_folds)
-                    ]
-                    # sum_direct_dist += data[f"agent_{ii}"]["direct_dist"]
-                    # times += data[f"agent_{ii}"]["time_conv"]
-
-                dist /= nb_fur
-
-                dist_data[kk, :] = dist
-                converg_data[jj, ll] = data["converged"].count(True)
-
-                kk += 1
-                # conv_data.append(data["converged"].count(True))
-
-            temp = dist_data[0, :] - dist_data[1, :]
-            diff_dist.append(dist_data[0, :] - dist_data[1, :])
+        data_yes_safety = json.load( #load data from new work without safety module
+            open(
+                f"{folder_new_safety}/distance_nb{nb_fur}_dragdist_v2.json",
+                "r",
+            )
+        )
+        converg_data[2, ll] = data_yes_safety["converged"].count(True)
 
     # Nb fur to compare :
     # fur_number = 6
@@ -108,12 +140,33 @@ def compare_v2_vs_v1():
     # )
 
     # plot_box(diff_dist, list_fur)
-    plot_bar(converg_data, ["yes_safety", "no_safety"])
+    label = ["past", "SVMA", "SSVMA"]
+    barWidth = 0.25
+    fig, ax = plt.subplots(figsize=(4, 3), dpi=120)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.legend(fontsize=legend_size)
+    
+    br1 = np.arange(len(converg_data[0,:]))
+    br0 = br1 - barWidth
+    br2 = br1 + barWidth
+    
+    plt.bar(br1, converg_data[0,:], color="blue", width=barWidth, edgecolor="grey", label=label[0])
+    plt.bar(br2, converg_data[1,:], color="green", width=barWidth, edgecolor="grey", label=label[1])
+    plt.bar(br0, converg_data[2,:], color="orange", width=barWidth, edgecolor="grey", label=label[2])
+
+    plt.xlabel("Number of furnitures", fontsize=label_size)
+    plt.ylabel("Converged scenario[%]", fontsize=label_size)
+    plt.xticks(np.arange(len(converg_data[0,:])), [3, 4, 5, 6, 7, 8, 9, 10])
+    plt.tight_layout()
+
+    for bars in ax.containers:
+        ax.bar_label(bars, fontsize=label_size)
 
     plt.legend()
     plt.show()
 
-def compare_drag_vs_nodrag():
+def compare_travelled_distance():
 
     delete_collisions_from_data = True  # Whether or not we take into consideration for the graph all the scenarios
     # or the ones where both alg did not register collisions
@@ -138,7 +191,7 @@ def compare_drag_vs_nodrag():
                 data.append(
                     json.load(
                         open(
-                            f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                            f"{folder_new_safety}/distance_nb{nb_fur}_{algo}_{version}.json",
                             "r",
                         )
                     )
@@ -187,10 +240,10 @@ def compare_drag_vs_nodrag():
         plt.setp(bp["medians"], color="black")
 
     plt.figure()
-    plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
+    plt.figure(figsize=fig_size, fig_dpi=120)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.legend(fontsize=legend_size)
     bpr = plt.boxplot(
         data_drag_temp,
         positions=np.array(range(len(data_drag_temp))) * 2.0 + 0.4,
@@ -269,29 +322,6 @@ def plot_box(data, labels: list, save: bool = False):
         plt.savefig(
             f"autonomous_furniture/metrics/distance_nb{nb_fur}.png", format="png"
         )
-
-
-def plot_bar(data, label):
-    barWidth = 0.25
-    fig2 = plt.subplots(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
-
-    drag = data[0, :]
-    nodrag = data[1, :]
-
-    br1 = np.arange(len(drag))
-    br2 = [x + barWidth for x in br1]
-
-    plt.bar(br1, drag, color="r", width=barWidth, edgecolor="grey", label=label[0])
-    plt.bar(br2, nodrag, color="g", width=barWidth, edgecolor="grey", label=label[1])
-
-    plt.xlabel("Number of furnitures", fontsize=10)
-    plt.ylabel("Converged scenario[%]", fontsize=10)
-    plt.xticks([r + barWidth for r in range(len(drag))], [3, 4, 5, 6, 7, 8, 9, 10])
-    plt.tight_layout()
-
 
 def plot_collisions():
 
@@ -646,10 +676,10 @@ def plot_time():
 
 
 if __name__ == "__main__":
-    # compare_v2_vs_v1()
-    # compare_drag_vs_nodrag()
+    # compare_convergence_rate()
+    compare_travelled_distance()
     # plot_collisions()
-    plot_prox_graph()
+    # plot_prox_graph()
     # plot_proximity()
     # plot_time()
     plt.legend()
