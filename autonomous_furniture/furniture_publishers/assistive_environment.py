@@ -30,23 +30,7 @@ from autonomous_furniture.analysis.calc_time import (
     global2relative,
 )
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
-
-
-def euler_to_quaternion(roll, pitch, yaw):
-    # TODO: this rotation should be replaced with scipy-Rotations (!)
-    qx = sin(roll / 2) * cos(pitch / 2) * cos(yaw / 2) - cos(roll / 2) * sin(
-        pitch / 2
-    ) * sin(yaw / 2)
-    qy = cos(roll / 2) * sin(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * cos(
-        pitch / 2
-    ) * sin(yaw / 2)
-    qz = cos(roll / 2) * cos(pitch / 2) * sin(yaw / 2) - sin(roll / 2) * sin(
-        pitch / 2
-    ) * cos(yaw / 2)
-    qw = cos(roll / 2) * cos(pitch / 2) * cos(yaw / 2) + sin(roll / 2) * sin(
-        pitch / 2
-    ) * sin(yaw / 2)
-    return Quaternion(x=qx, y=qy, z=qz, w=qw)
+from autonomous_furniture.message_generation import euler_to_quaternion
 
 
 class DynamicalSystemRviz(Node):
@@ -55,11 +39,9 @@ class DynamicalSystemRviz(Node):
         self.animation_paused = False
 
         rclpy.init()
-
         super().__init__("furniture_publisher")
 
         qos_profile = QoSProfile(depth=10)
-
         self.broadcaster = TransformBroadcaster(self, qos=qos_profile)
         self.nodeName = self.get_name()
         self.odom_trans = TransformStamped()

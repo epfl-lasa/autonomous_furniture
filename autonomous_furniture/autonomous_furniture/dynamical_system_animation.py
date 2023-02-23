@@ -1,20 +1,23 @@
+from typing import Optional
+
 import numpy as np
-import matplotlib.pyplot as plt
-from dynamic_obstacle_avoidance.visualization import plot_obstacles
-from vartools.animator import Animator
-from autonomous_furniture.agent import BaseAgent
 
 import json
+import matplotlib.pyplot as plt
+
+from vartools.animator import Animator
+from dynamic_obstacle_avoidance.visualization import plot_obstacles
+from autonomous_furniture.agent import BaseAgent
 
 
 class DynamicalSystemAnimation(Animator):
     def __init__(
         self,
         it_max: int = 100,
-        iterator=None,
+        iterator: Optional[int] = None,
         dt_simulation: float = 0.1,
         dt_sleep: float = 0.1,
-        animation_name=None,
+        animation_name: str = "",
         file_type=".mp4",
     ) -> None:
         super().__init__(
@@ -23,9 +26,8 @@ class DynamicalSystemAnimation(Animator):
 
         # For metrics
         self.metrics_json = {}
-        self.it_final = (
-            it_max - 1
-        )  # By default set to it_max, value is changed in metrics method
+        # By default set to it_max, value is changed in metrics method
+        self.it_final = it_max - 1
 
     def setup(
         self,
@@ -36,6 +38,7 @@ class DynamicalSystemAnimation(Animator):
         anim: bool = True,
         mini_drag: str = "nodrag",
         version: str = "v1",
+        figsize=(3.0, 2.5),
     ):
         self.mini_drag = mini_drag
         self.version = version
@@ -68,7 +71,7 @@ class DynamicalSystemAnimation(Animator):
         self.obstacle_color = ["orange", "blue", "red"]
 
         if anim:
-            self.fig, self.ax = plt.subplots(figsize=(3.0, 2.5), dpi=120)
+            self.fig, self.ax = plt.subplots(figsize=figsize, dpi=120)
 
         self.converged: bool = False  # IF all the agent has converged
 

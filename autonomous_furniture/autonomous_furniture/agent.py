@@ -533,6 +533,7 @@ class Furniture(BaseAgent):
                     environment_without_me=environment_without_me,
                     global_control_points=global_control_points,
                     obs_idx=obs_idx,
+                    gamma_values=gamma_values,
                 )
 
             # if any gamma values are lower od equal gamma_stop
@@ -567,6 +568,7 @@ class Furniture(BaseAgent):
         environment_without_me: list[Obstacle],
         global_control_points: np.ndarray,
         obs_idx: list[int],
+        gamma_values: np.ndarray,
     ) -> None:
         # TODO: make sure this works...
         normal_list_tot = []
@@ -937,8 +939,8 @@ class Person(BaseAgent):
     def __init__(
         self,
         priority_value: float = 1,
-        center_position=None,
-        radius=0.5,
+        center_position: Optional[np.ndarray] = None,
+        radius: float = 0.5,
         margin: float = 1,
         **kwargs,
     ) -> None:
