@@ -41,12 +41,12 @@ def priority_demo():
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([6, 1.5]), orientation=np.pi / 3)
+    goal = ObjectPose(position=np.array([4, 1.5]), orientation=np.pi / 2)
     goal2 = ObjectPose(position=np.array([-1, -4]), orientation=np.pi / 2)
 
     table_shape = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([-1, 2.75]),
+        center_position=np.array([0.5, 3.75]),
         margin_absolut=1,
         orientation=0,
         tail_effect=False,

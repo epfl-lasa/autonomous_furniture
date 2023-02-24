@@ -52,11 +52,11 @@ folder_new_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_
 folder_no_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/no_safety_module"
 folders = [folder_no_safety,folder_new_safety]
 
-fig_size=[4,3]
+fig_size=[6,6]
 fig_dpi=120
-tick_size=8.5
-label_size=9
-legend_size=9
+tick_size=12
+label_size=15
+legend_size=15
 
 def compare_convergence_rate():
     diff_dist = []
@@ -142,7 +142,7 @@ def compare_convergence_rate():
     # plot_box(diff_dist, list_fur)
     label = ["HDSM", "DDHDSM", "SDDHDSM"]
     barWidth = 0.25
-    fig, ax = plt.subplots(figsize=(4, 3), dpi=120)
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
     plt.xticks(fontsize=tick_size)
     plt.yticks(fontsize=tick_size)
     # plt.legend(fontsize=legend_size)
@@ -669,9 +669,9 @@ def plot_time():
 
 
 if __name__ == "__main__":
-    # compare_convergence_rate()
+    compare_convergence_rate()
     # compare_travelled_distance()
-    # plot_collisions()
+    plot_collisions()
     # plot_prox_graph()
     # plot_proximity()
     # plot_time()
