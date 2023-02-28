@@ -22,19 +22,22 @@ from autonomous_furniture.launch_helper_functions import create_qolo_nodes
 
 def generate_launch_description():
     furnite_nodes = []
-    furnite_nodes.append(
-        node_creator(
-            furniture_name="table",
-            urdf_file_name="table.urdf.xacro",
-            topicspace="furniture",
-        )
-    )
+    
+    n_tables = 1
+    for ii in range(n_tables):
+        furnite_nodes.append(
+            node_creator(
+                furniture_name=f"table{ii]}",
+                urdf_file_name="table.urdf.xacro",
+                topicspace="furniture",
+                )
+                )
 
     n_chairs = 4
     for ii in range(n_chairs):
         furnite_nodes.append(
             node_creator(
-                furniture_name="chair" + str(ii),
+                furniture_name=f"chair{ii}",
                 urdf_file_name="chair.urdf.xacro",
                 topicspace="furniture",
             )

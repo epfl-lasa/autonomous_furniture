@@ -38,11 +38,13 @@ class DynamicalSystemAnimation(Animator):
         anim: bool = True,
         mini_drag: str = "nodrag",
         version: str = "v1",
-        obstacle_color=["orange", "blue", "red"],
+        check_convergence: bool = True,
+        obstacle_colors=["orange", "blue", "red"],
         figsize=(3.0, 2.5),
     ):
         self.mini_drag = mini_drag
         self.version = version
+        self.check_convergence = check_convergence
 
         dim = 2
         self.number_agent = len(agent)
@@ -67,8 +69,8 @@ class DynamicalSystemAnimation(Animator):
 
         self.obstacle_environment = obstacle_environment
         # for i in range(len(obstacle_environment)):
-        #     self.obstacle_color.append(np.array(np.random.choice(range(255),size=3))/254)
-        self.obstacle_color = obstacle_color
+        #     self.obstacle_colors.append(np.array(np.random.choice(range(255),size=3))/254)
+        self.obstacle_colors = obstacle_colors
 
         if anim:
             self.fig, self.ax = plt.subplots(figsize=figsize, dpi=120)
@@ -76,30 +78,6 @@ class DynamicalSystemAnimation(Animator):
         self.converged: bool = False  # IF all the agent has converged
 
     def update_step(self, ii, anim: bool = True):
-        if anim:
-            self.ax.clear()
-            # Drawing and adjusting of the axis
-            # for agent in range(self.num_agent):
-            #     self.ax.plot(
-            #         self.position_list[agent, 0, :ii + 1],
-            #         self.position_list[agent, 1, :ii + 1],
-            #         ":",
-            #         color="#135e08"
-            #     )
-            #     self.ax.plot(
-            #         self.position_list[agent, 0, ii + 1],
-            #         self.position_list[agent, 1, ii + 1],
-            #         "o",
-            #         color="#135e08",
-            #         markersize=12,
-            #     )
-
-            self.ax.set_xlim(self.x_lim)
-            self.ax.set_ylim(self.y_lim)
-            self.ax.set_xlabel("x [m]", fontsize=9)
-            self.ax.set_ylabel("y [m]", fontsize=9)
-            plt.tight_layout()
-
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
                 mini_drag=self.mini_drag, version=self.version, emergency_stop=True
@@ -107,69 +85,96 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 
-            if anim:
-                global_control_points = self.agent[jj].get_global_control_points()
-                self.ax.plot(
-                    global_control_points[0, :], global_control_points[1, :], "ko"
-                )
+        if not anim:
+            return
 
-                goal_control_points = self.agent[
-                    jj
-                ].get_goal_control_points()  ##plot agent center position
+        self.ax.clear()
+        for jj in range(self.number_agent):
+            global_control_points = self.agent[jj].get_global_control_points()
+            self.ax.plot(global_control_points[0, :], global_control_points[1, :], "ko")
 
-                if len(self.obstacle_color) > jj:
-                    color = self.obstacle_color[jj]
-                else:
-                    color = "black"
+            goal_control_points = self.agent[
+                jj
+            ].get_goal_control_points()  ##plot agent center position
+
+            if len(self.obstacle_colors) > jj:
+                color = self.obstacle_colors[jj]
+            else:
+                color = "black"
+
+            self.ax.plot(
+                goal_control_points[0, :],
+                goal_control_points[1, :],
+                color=color,
+                marker="o",
+                linestyle="",  ##k=black, o=dot
+            )
+            if self.agent[jj]._static == False:
                 self.ax.plot(
-                    goal_control_points[0, :],
-                    goal_control_points[1, :],
+                    self.agent[jj]._goal_pose.position[0],
+                    self.agent[jj]._goal_pose.position[1],
                     color=color,
-                    marker="o",
-                    linestyle="",  ##k=black, o=dot
+                    marker="*",
+                    markersize=10,
                 )
-                if self.agent[jj]._static == False:
-                    self.ax.plot(
-                        self.agent[jj]._goal_pose.position[0],
-                        self.agent[jj]._goal_pose.position[1],
-                        color=color,
-                        marker="*",
-                        markersize=10,
-                    )
-                    self.agent_pos_saver[jj].append(self.agent[jj].position)
-                    x_values = np.zeros(len(self.agent_pos_saver[jj]))
-                    y_values = x_values.copy()
-                    for i in range(len(self.agent_pos_saver[jj])):
-                        x_values[i] = self.agent_pos_saver[jj][i][0]
-                        y_values[i] = self.agent_pos_saver[jj][i][1]
+                self.agent_pos_saver[jj].append(self.agent[jj].position)
+                x_values = np.zeros(len(self.agent_pos_saver[jj]))
+                y_values = x_values.copy()
+                for i in range(len(self.agent_pos_saver[jj])):
+                    x_values[i] = self.agent_pos_saver[jj][i][0]
+                    y_values[i] = self.agent_pos_saver[jj][i][1]
 
-                    self.ax.plot(
-                        x_values,
-                        y_values,
-                        color=color,
-                        linestyle="dashed",
-                    )
-                self.ax.set_aspect("equal", adjustable="box")
-
-        if anim:
-            # breakpoint()
-            for jj in range(self.number_agent):
-                if len(self.obstacle_color) > jj:
-                    color = self.obstacle_color[jj]
-                else:
-                    color = np.array([176, 124, 124]) / 255.0
-
-                plot_obstacles(
-                    ax=self.ax,
-                    obstacle_container=[self.obstacle_environment[jj]],
-                    x_lim=self.x_lim,
-                    y_lim=self.y_lim,
-                    showLabel=False,
-                    obstacle_color=color,
-                    draw_reference=False,
+                self.ax.plot(
+                    x_values,
+                    y_values,
+                    color=color,
+                    linestyle="dashed",
                 )
+            self.ax.set_aspect("equal", adjustable="box")
+
+        # Drawing and adjusting of the axis
+        # for agent in range(self.num_agent):
+        #     self.ax.plot(
+        #         self.position_list[agent, 0, :ii + 1],
+        #         self.position_list[agent, 1, :ii + 1],
+        #         ":",
+        #         color="#135e08"
+        #     )
+        #     self.ax.plot(
+        #         self.position_list[agent, 0, ii + 1],
+        #         self.position_list[agent, 1, ii + 1],
+        #         "o",
+        #         color="#135e08",
+        #         markersize=12,
+        #     )
+
+        self.ax.set_xlim(self.x_lim)
+        self.ax.set_ylim(self.y_lim)
+        self.ax.set_xlabel("x [m]", fontsize=9)
+        self.ax.set_ylabel("y [m]", fontsize=9)
+        plt.tight_layout()
+
+        # breakpoint()
+        for jj in range(self.number_agent):
+            if len(self.obstacle_colors) > jj:
+                color = self.obstacle_colors[jj]
+            else:
+                color = np.array([176, 124, 124]) / 255.0
+
+            plot_obstacles(
+                ax=self.ax,
+                obstacle_container=[self.obstacle_environment[jj]],
+                x_lim=self.x_lim,
+                y_lim=self.y_lim,
+                showLabel=False,
+                obstacle_color=color,
+                draw_reference=False,
+            )
 
     def has_converged(self, it: int) -> bool:
+        if not self.check_convergence:
+            return False
+
         rtol_pos = 1e-3
         rtol_ang = 4e-1
         for ii in range(len(self.agent)):

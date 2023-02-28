@@ -95,7 +95,8 @@ class BaseAgent(ABC):
 
         self._shape = shape
 
-        object_type = object_type
+        self.object_type = object_type
+        self.maximum_velocity = 1.0
 
         # Default values for new variables
         self.danger = False
@@ -103,23 +104,24 @@ class BaseAgent(ABC):
 
         self.priority = priority_value
         self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
-        # TODO maybe append the shape directly in bos env, and then do a destructor to remove it from the list
+        # TODO maybe append the shape directly in bos env,
+        # and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
         self._parking_pose = parking_pose
 
         self._goal_pose = goal_pose
-        # Adding the current shape of the agent to the list of obstacle_env so as to be visible to other agents
+        # Adding the current shape of the agent to the list of
+        # obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
 
         self._static = static
-        # name of the furniture, useful for debugging stuff
         self.name = name
 
         self.converged: bool = False
         # Emergency Stop
         self.stop: bool = False
-        self.gamma_critic = 0
+
         # metrics
         self.direct_distance = LA.norm(goal_pose.position - self.position)
         self.total_distance = 0
@@ -130,7 +132,8 @@ class BaseAgent(ABC):
         # To be deleted after
         self._list_prox = []
 
-        # Emergency stop values
+        ##  Emergency stop values ##
+        self.gamma_critic = 0
         # distance from which gamma_critic starts shrinking
         self.d_critic = 1
         # value of gamma_critic before being closer than d_critic
@@ -140,6 +143,11 @@ class BaseAgent(ABC):
         self.gamma_critic_min = 1.2
         # agent should stop when a ctrpoint reaches a gamma value under this threshold
         self.gamma_stop = 1.1
+
+    @property
+    def pose(self):
+        """Returns numpy-array position."""
+        return self._shape.pose
 
     @property
     def position(self):
@@ -326,7 +334,8 @@ class Furniture(BaseAgent):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._dynamics = LinearSystem(
-            attractor_position=self._goal_pose.position, maximum_velocity=1
+            attractor_position=self._goal_pose.position,
+            maximum_velocity=self.maximum_velocity,
         )
 
         # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
@@ -338,6 +347,14 @@ class Furniture(BaseAgent):
     @property
     def margin_absolut(self):
         return self._shape._margin_absolut
+
+    def set_goal_pose(self, pose: ObjectPose) -> None:
+        self._goal_pose = pose
+        self.direct_distance = LA.norm(self._goal_pose.position - self.position)
+        self._dynamics = LinearSystem(
+            attractor_position=self._goal_pose.position,
+            maximum_velocity=self.maximum_velocity,
+        )
 
     def update_velocity(
         self,
