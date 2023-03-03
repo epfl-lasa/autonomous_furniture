@@ -3,9 +3,6 @@ from typing import Optional
 import random
 import numpy as np
 
-# from turtle import position
-
-
 from vartools.states import ObjectPose
 
 from dynamic_obstacle_avoidance.obstacles import Obstacle
@@ -37,10 +34,14 @@ def is_position_in_obstacle(
 
 
 class ScenarioLauncher:
-    def __init__(self, nb_furniture=5, record=False):
-
-        x_lim = [-3, 8]
-        y_lim = [-2, 7]
+    def __init__(
+        self,
+        nb_furniture: int = 5,
+        record: bool = False,
+        x_lim: list[float] = [0, 11],
+        y_lim: list[float] = [0, 9],
+        furniture_shape: Optional[Obstacle] = None,
+    ):
         self._resolution = [40, 40]
 
         self._nb_furniture = nb_furniture
@@ -62,13 +63,17 @@ class ScenarioLauncher:
         self._init_setup = []  # Stores all the starting position of the agents
         self._goal_setup = []  # Stores all the goal pose of the agents
 
-        self._fur_shape = CuboidXd(
-            axes_length=[2, 1],  # TODO TEMPORARY Remove from being it hardcoded
-            center_position=[0, 0],
-            margin_absolut=0.9,
-            orientation=0,
-            tail_effect=False,
-        )
+        if furniture_shape is None:
+            self._fur_shape = CuboidXd(
+                axes_length=[2, 1],  # TODO TEMPORARY Remove from being it hardcoded
+                center_position=[0, 0],
+                margin_absolut=0.9,
+                orientation=0,
+                tail_effect=False,
+            )
+        else:
+            self._fur_shape = furniture_shape
+
         # TODO modifiy to remove the useless "[]"
         self.grid = Grid(x_lim, y_lim, [], self._resolution)
 

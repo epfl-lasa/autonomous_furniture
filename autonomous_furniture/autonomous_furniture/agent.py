@@ -44,7 +44,6 @@ def get_distance_to_obtacle_surface(
     margin_absolut: Optional[float] = None,
     in_global_frame: Optional[bool] = None,
 ) -> float:
-
     if in_global_frame is not None:
         in_obstacle_frame = not (in_global_frame)
 
@@ -90,6 +89,7 @@ class BaseAgent(ABC):
         name: str = "no_name",
         static: bool = False,
         object_type: ObjectType = ObjectType.OTHER,
+        symmetry: Optional[float] = None,
     ) -> None:
         super().__init__()
 
@@ -97,6 +97,7 @@ class BaseAgent(ABC):
 
         self.object_type = object_type
         self.maximum_velocity = 1.0
+        self.symmetry = symmetry
 
         # Default values for new variables
         self.danger = False
@@ -111,6 +112,7 @@ class BaseAgent(ABC):
         self._parking_pose = parking_pose
 
         self._goal_pose = goal_pose
+
         # Adding the current shape of the agent to the list of
         # obstacle_env so as to be visible to other agents
         self._obstacle_environment.append(self._shape)
@@ -270,7 +272,7 @@ class BaseAgent(ABC):
         return weights
 
     @staticmethod
-    def get_gamma_product_crowd(position, env):
+    def get_gamma_product_crowd(position, env, show_collision_info: bool = False):
         if not len(env):
             # Very large number
             return 1e20
@@ -285,7 +287,8 @@ class BaseAgent(ABC):
         # Take root of order 'n_obs' to make up for the obstacle multiple
         if any(gamma_list < 1):
             BaseAgent.number_collisions += 1
-            print("[INFO] Collision")
+            if show_collision_info:
+                print("[INFO] Collision")
             return 0, 0
 
         gamma = np.min(gamma_list)
@@ -338,8 +341,8 @@ class Furniture(BaseAgent):
             maximum_velocity=self.maximum_velocity,
         )
 
-        # self._dynamic_avoider = DynamicCrowdAvoider(initial_dynamics=self._dynamics, environment=self._obstacle_environment)
-        self.minimize_drag: bool = False  # Seems to be used nowhere, mb to be removed
+        # Seems to be used nowhere, mb to be removed
+        self.minimize_drag: bool = False
 
         # Metrics
         self.time_conv_direct = self.direct_distance / self._dynamics.maximum_velocity
@@ -362,7 +365,6 @@ class Furniture(BaseAgent):
         version: str = "v1",
         emergency_stop: bool = False,
     ) -> None:
-
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -370,7 +372,7 @@ class Furniture(BaseAgent):
 
         if not len(environment_without_me):
             self.linear_velocity = self._dynamics.evaluate(self.position)
-            # self.angular_velocity =
+            self.angular_velocity = 0
             breakpoint()
 
         weights = self.get_weight_of_control_points(
@@ -381,7 +383,7 @@ class Furniture(BaseAgent):
         init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
 
         if self._static:
-            self.linear_velocity = [0, 0]
+            self.linear_velocity = [0, 0.0]
             self.angular_velocity = 0
             return
 
@@ -403,6 +405,7 @@ class Furniture(BaseAgent):
                 obs=environment_without_me,
                 self_priority=self.priority,
             )
+
         # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
 
         initial_magnitude = LA.norm(initial_velocity)
@@ -410,7 +413,6 @@ class Furniture(BaseAgent):
         # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
         d = LA.norm(self.position - self._goal_pose.position)
         if mini_drag == "dragvel":  # a1 computed depending on the velocity
-
             w1_hat = self.virtual_drag
             w2_hat_max = 1000
             if LA.norm(initial_velocity) != 0:
@@ -422,10 +424,10 @@ class Furniture(BaseAgent):
 
             w1 = w1_hat / (w1_hat + w2_hat)
             w2 = 1 - w1
+
         elif (
             mini_drag == "dragdist"
         ):  # a1 computed as in the paper depending on the distance
-
             kappa = self.virtual_drag
             k = 0.01
             r = d / (d + k)
@@ -451,9 +453,7 @@ class Furniture(BaseAgent):
             drag_angle = -1 * (2 * np.pi - drag_angle)
 
         # Case where we consider for instance PI-symetry for the furniture
-        if (
-            np.abs(drag_angle) > np.pi / 2
-        ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we have to change this value
+        if np.abs(drag_angle) > np.pi / 2 and not self.object_type == ObjectType.CHAIR:
             if self.orientation > 0:
                 orientation_sym = self.orientation - np.pi
             else:
@@ -469,7 +469,8 @@ class Furniture(BaseAgent):
 
         if (
             np.abs(goal_angle) > np.pi / 2
-        ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+        ) and not self.object_type == ObjectType.CHAIR:
+            # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
             if self.orientation > 0:
                 orientation_sym = self.orientation - np.pi
             else:
@@ -796,7 +797,6 @@ class Furniture(BaseAgent):
         )  # Temporary metric used for the prox graph of the report, can be deleted
 
     def corner_case(self, mini_drag: str = "nodrag", version: str = "v1"):
-
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -834,7 +834,6 @@ class Furniture(BaseAgent):
             # Computing the weights of the angle to reach
             d = LA.norm(self.position - self._goal_pose.position)
             if mini_drag == "dragvel":
-
                 w1_hat = self.virtual_drag
                 w2_hat_max = 1000
                 if LA.norm(initial_velocity) != 0:
@@ -849,7 +848,6 @@ class Furniture(BaseAgent):
                 w1 = w1_hat / (w1_hat + w2_hat)
                 w2 = 1 - w1
             elif mini_drag == "dragdist":
-
                 kappa = self.virtual_drag
                 w1 = 1 / 2 * (1 + np.tanh((d * kappa - 1.5 * kappa) / 2))
                 w2 = 1 - w1

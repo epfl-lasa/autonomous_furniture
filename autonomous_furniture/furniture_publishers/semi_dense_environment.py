@@ -28,10 +28,8 @@ def create_environment(go_to_center: bool = False):
     GlobalObstacleContainer().empty()
 
     agent_list: list[BaseAgent] = []
-    agent_list = agent_list + create_four_chair_arrangement(np.array([-2, -2.0]))
-    agent_list = agent_list + create_four_chair_arrangement(np.array([2.0, -2.0]))
-    agent_list = agent_list + create_four_chair_arrangement(np.array([-2.0, 2.0]))
-    agent_list = agent_list + create_four_chair_arrangement(np.array([2.0, 2.0]))
+    agent_list = agent_list + create_four_chair_arrangement(np.array([-2.0, 0.0]))
+    agent_list = agent_list + create_four_chair_arrangement(np.array([2.0, 0.0]))
 
     set_goals_to_arrange_on_the_right(
         agent_list,
@@ -63,14 +61,14 @@ def create_environment(go_to_center: bool = False):
     return agent_list, x_lim, y_lim
 
 
-def run_chair_and_table_matplotlib(go_to_center: bool = False):
+def run_twoset_chair_and_table_matplotlib():
     """Matplotlib Animation with many chairs and tables (!)."""
     import matplotlib.pyplot as plt
     from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
     plt.ion()
 
-    agent_list, x_lim, y_lim = create_environment(go_to_center=go_to_center)
+    agent_list, x_lim, y_lim = create_environment(go_to_center=True)
 
     my_animation = DynamicalSystemAnimation(
         it_max=800,
@@ -98,13 +96,13 @@ def run_chair_and_table_matplotlib(go_to_center: bool = False):
     print("Done")
 
 
-def run_chair_and_table_rviz(go_to_center: bool = False):
+def run_twoset_chair_and_table_rviz():
     """Run environment using ros and rviz"""
     import rclpy
     from rclpy.node import Node
     from autonomous_furniture.rviz_animator import RvizSimulator
 
-    agent_list, x_lim, y_lim = create_environment(go_to_center)
+    agent_list, x_lim, y_lim = create_environment(go_to_center=True)
 
     ## Start ROS Node
     print("Starting publishing node")
@@ -129,7 +127,7 @@ def run_chair_and_table_rviz(go_to_center: bool = False):
 if (__name__) == "__main__":
     plt.close("all")
     # main()
-    run_chair_and_table_matplotlib(go_to_center=True)
-    # run_chair_and_table_rviz(go_to_center=True)
+    # run_twoset_chair_and_table_matplotlib()
+    run_twoset_chair_and_table_rviz()
 
     print("Done")

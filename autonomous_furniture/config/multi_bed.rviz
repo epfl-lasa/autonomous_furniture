@@ -5,15 +5,16 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Status1
+        - /Grid1
+        - /Grid1/Offset1
         - /RobotModel2/Description Topic1
-        - /RobotModel3
-      Splitter Ratio: 0.5
-    Tree Height: 780
+      Splitter Ratio: 0.6590909361839294
+    Tree Height: 365
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
     Expanded:
+      - /2D Pose Estimate1
       - /2D Goal Pose1
       - /Publish Point1
     Name: Tool Properties
@@ -27,16 +28,16 @@ Visualization Manager:
   Class: ""
   Displays:
     - Class: rviz_default_plugins/Axes
-      Enabled: true
+      Enabled: false
       Length: 1
       Name: Axes
       Radius: 0.10000000149011612
       Reference Frame: <Fixed Frame>
-      Value: true
-    - Alpha: 0.5
+      Value: false
+    - Alpha: 1
       Cell Size: 1
       Class: rviz_default_plugins/Grid
-      Color: 160; 160; 164
+      Color: 0; 0; 0
       Enabled: true
       Line Style:
         Line Width: 0.029999999329447746
@@ -44,11 +45,11 @@ Visualization Manager:
       Name: Grid
       Normal Cell Count: 0
       Offset:
-        X: 0
-        Y: 0
+        X: 5.5
+        Y: 4.5
         Z: 0
       Plane: XY
-      Plane Cell Count: 20
+      Plane Cell Count: 13
       Reference Frame: <Fixed Frame>
       Value: true
     - Alpha: 1
@@ -61,7 +62,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /furniture/chair0/robot_description
+        Value: /furniture/hospital_bed0/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -69,259 +70,11 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        chair0/back_support:
+        hospital_bed0/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        chair0/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/left_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/leg_fl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/leg_fr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/leg_rl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/leg_rr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair0/main:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        chair0/right_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-      Mass Properties:
-        Inertia: false
-        Mass: false
-      Name: RobotModel
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
-      Collision Enabled: false
-      Description File: ""
-      Description Source: Topic
-      Description Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /furniture/chair1/robot_description
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        chair1/back_support:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/left_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/leg_fl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/leg_fr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/leg_rl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/leg_rr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair1/main:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        chair1/right_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-      Mass Properties:
-        Inertia: false
-        Mass: false
-      Name: RobotModel
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
-      Collision Enabled: false
-      Description File: ""
-      Description Source: Topic
-      Description Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /furniture/chair2/robot_description
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        chair2/back_support:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/left_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/leg_fl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/leg_fr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/leg_rl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/leg_rr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair2/main:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        chair2/right_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-      Mass Properties:
-        Inertia: false
-        Mass: false
-      Name: RobotModel
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
-      Collision Enabled: false
-      Description File: ""
-      Description Source: Topic
-      Description Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /furniture/chair3/robot_description
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        chair3/back_support:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/left_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/leg_fl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/leg_fr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/leg_rl:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/leg_rr:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        chair3/main:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        chair3/right_handle:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-      Mass Properties:
-        Inertia: false
-        Mass: false
-      Name: RobotModel
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
-      Collision Enabled: false
-      Description File: ""
-      Description Source: Topic
-      Description Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /furniture/table0/robot_description
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        table0/base_link:
+        hospital_bed0/bed:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -344,7 +97,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /furniture/table/robot_description
+        Value: /furniture/hospital_bed1/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -352,6 +105,15 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        hospital_bed1/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed1/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -370,14 +132,233 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: ""
+        Value: /furniture/hospital_bed3/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
-        Link Tree Style: ""
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed3/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed3/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed3/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed3/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed3/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed5/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed5/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed5/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed6/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed6/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed6/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed7/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed7/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed7/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed8/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed8/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed8/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed9/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed9/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed9/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -388,7 +369,7 @@ Visualization Manager:
       Visual Enabled: true
   Enabled: true
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 255; 255; 255
     Fixed Frame: world
     Frame Rate: 30
   Name: root
@@ -432,39 +413,39 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 19.204641342163086
+      Distance: 22.62765884399414
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 5.874050617218018
+        Y: 9.080596923828125
+        Z: -9.105460166931152
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2803974151611328
+      Pitch: 1.0297960042953491
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.700415134429932
+      Yaw: 4.595983505249023
     Saved: ~
 Window Geometry:
   Displays:
-    collapsed: false
-  Height: 1003
-  Hide Left Dock: false
+    collapsed: true
+  Height: 1033
+  Hide Left Dock: true
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd00000004000000000000026100000395fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003b00000395000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010000000395fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003b00000395000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d00650100000000000004500000000000000000000000dd0000039500000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000030c000003b3fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f00700065007200740069006500730200000917000001cf00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073000000003b000003b3000000c700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010000000395fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003b00000395000000a000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000004420000003efc0100000002fb0000000800540069006d00650100000000000004420000000000000000fb0000000800540069006d006501000000000000045000000000000000000000077c000003b300000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Tool Properties:
     collapsed: false
   Views:
     collapsed: true
-  Width: 836
-  X: 2760
+  Width: 1916
+  X: 0
   Y: 22
