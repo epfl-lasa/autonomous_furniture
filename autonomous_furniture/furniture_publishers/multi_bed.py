@@ -20,8 +20,10 @@ from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 def create_environment(n_agents: int = 10):
     import random
 
+    x_lim = [0, 12]
+    y_lim = [0, 9]
     # random.seed(7)
-    random.seed(11)
+    random.seed(3)
 
     obstacle_environment = GlobalObstacleContainer()
 
@@ -29,7 +31,10 @@ def create_environment(n_agents: int = 10):
         start_pose=ObjectPose(position=np.zeros(2), orientation=0)
     )
     my_scenario = ScenarioLauncher(
-        nb_furniture=n_agents, furniture_shape=sample_bed._shape
+        nb_furniture=n_agents,
+        furniture_shape=sample_bed._shape,
+        x_lim=x_lim,
+        y_lim=y_lim,
     )
     my_scenario.creation()
 
@@ -43,7 +48,7 @@ def create_environment(n_agents: int = 10):
         )
         agent_list.append(new_bed)
 
-    return agent_list
+    return agent_list, x_lim, y_lim
 
 
 def run_ten_bed_animation_matplotlib(it_max=800):
@@ -51,7 +56,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     import matplotlib.pyplot as plt
     from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
-    agent_list = create_environment()
+    agent_list, x_lim, y_lim = create_environment()
 
     n_agents = len(agent_list)
     cm = plt.get_cmap("gist_rainbow")
@@ -60,7 +65,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
         dt_simulation=0.01,
-        dt_sleep=0.2,
+        dt_sleep=0.01,
         animation_name="multiple_bed_animation",
         file_type=".gif",
     )
@@ -68,8 +73,8 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     my_animation.setup(
         obstacle_environment=GlobalObstacleContainer(),
         agent=agent_list,
-        x_lim=[0, 11],
-        y_lim=[0, 9],
+        x_lim=x_lim,
+        y_lim=y_lim,
         figsize=(5, 4),
         version="v2",
         mini_drag="dragdist",
@@ -77,7 +82,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
         # obstacle_colors=[],
     )
 
-    my_animation.run(save_animation=False)
+    my_animation.run(save_animation=True)
     my_animation.logs(len(agent_list))
 
 
@@ -87,7 +92,7 @@ def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
     from rclpy.node import Node
     from autonomous_furniture.rviz_animator import RvizSimulator
 
-    agent_list = create_environment()
+    agent_list, x_lim, y_lim = create_environment()
 
     ## Start ROS Node
     print("Starting publishing node")
@@ -95,7 +100,7 @@ def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
     visualizer = RvizSimulator(
         it_max=it_max,
         dt_simulation=0.01,
-        dt_sleep=0.05,
+        dt_sleep=0.01,
     )
     visualizer.setup(
         obstacle_environment=GlobalObstacleContainer(),
@@ -116,5 +121,5 @@ def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
 
 
 if (__name__) == "__main__":
-    # run_ten_bed_animation_matplotlib(it_max=200)
-    run_ten_bed_animation_rviz(it_max=200)
+    run_ten_bed_animation_matplotlib(it_max=1000)
+    # run_ten_bed_animation_rviz(it_max=200)

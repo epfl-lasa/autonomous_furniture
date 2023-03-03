@@ -9,7 +9,7 @@ Panels:
         - /Grid1/Offset1
         - /RobotModel2/Description Topic1
       Splitter Ratio: 0.6590909361839294
-    Tree Height: 365
+    Tree Height: 810
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -45,7 +45,7 @@ Visualization Manager:
       Name: Grid
       Normal Cell Count: 0
       Offset:
-        X: 5.5
+        X: 6
         Y: 4.5
         Z: 0
       Plane: XY
@@ -132,7 +132,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /furniture/hospital_bed3/robot_description
+        Value: /furniture/hospital_bed2/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -140,11 +140,11 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        hospital_bed3/base_link:
+        hospital_bed2/base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-        hospital_bed3/bed:
+        hospital_bed2/bed:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -180,6 +180,41 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
         hospital_bed3/bed:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+      Mass Properties:
+        Inertia: false
+        Mass: false
+      Name: RobotModel
+      TF Prefix: ""
+      Update Interval: 0
+      Value: true
+      Visual Enabled: true
+    - Alpha: 1
+      Class: rviz_default_plugins/RobotModel
+      Collision Enabled: false
+      Description File: ""
+      Description Source: Topic
+      Description Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /furniture/hospital_bed4/robot_description
+      Enabled: true
+      Links:
+        All Links Enabled: true
+        Expand Joint Details: false
+        Expand Link Details: false
+        Expand Tree: false
+        Link Tree Style: Links in Alphabetic Order
+        hospital_bed4/base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        hospital_bed4/bed:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -413,25 +448,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 22.62765884399414
+      Distance: 23.639923095703125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 5.874050617218018
-        Y: 9.080596923828125
-        Z: -9.105460166931152
+        X: 6.675188064575195
+        Y: 9.857060432434082
+        Z: -8.6860990524292
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.0297960042953491
+      Pitch: 0.9897960424423218
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.595983505249023
+      Yaw: 4.720984935760498
     Saved: ~
 Window Geometry:
   Displays:

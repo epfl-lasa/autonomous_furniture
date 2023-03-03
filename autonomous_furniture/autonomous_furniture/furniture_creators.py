@@ -161,7 +161,7 @@ def create_hospital_bed(
     if goal_pose is None:
         goal_pose = start_pose
 
-    control_points = np.array([[0.6, 0], [-0.6, 0]])
+    control_points = np.array([[0.5, 0], [-0.5, 0]])
 
     table_shape = Cuboid(
         axes_length=np.array([2.0, 1.0]),
