@@ -71,6 +71,10 @@ WORKDIR ${HOME}/ros2_ws/src
 COPY autonomous_furniture autonomous_furniture
 COPY objects_descriptions objects_descriptions
 
+WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
+RUN python3 -m pip install -r requirements.txt
+# TODO: remove requirements.txt files
+
 # Setup Colcon
 # RUN mkdir -p ${COLCON_HOME}
 # COPY --chown=${USER}:${USER} ./config/colcon ${COLCON_HOME}

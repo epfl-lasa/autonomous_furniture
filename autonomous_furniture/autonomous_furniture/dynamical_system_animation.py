@@ -85,10 +85,15 @@ class DynamicalSystemAnimation(Animator):
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
 
+            self.agent_pos_saver[jj].append(self.agent[jj].position)
+
         if not anim:
             return
 
+        print(f"Doing Step: {ii}")
+
         self.ax.clear()
+
         for jj in range(self.number_agent):
             global_control_points = self.agent[jj].get_global_control_points()
             self.ax.plot(global_control_points[0, :], global_control_points[1, :], "ko")
@@ -109,28 +114,31 @@ class DynamicalSystemAnimation(Animator):
                 marker="o",
                 linestyle="",  ##k=black, o=dot
             )
-            if self.agent[jj]._static == False:
-                self.ax.plot(
-                    self.agent[jj]._goal_pose.position[0],
-                    self.agent[jj]._goal_pose.position[1],
-                    color=color,
-                    marker="*",
-                    markersize=10,
-                )
-                self.agent_pos_saver[jj].append(self.agent[jj].position)
-                x_values = np.zeros(len(self.agent_pos_saver[jj]))
-                y_values = x_values.copy()
-                for i in range(len(self.agent_pos_saver[jj])):
-                    x_values[i] = self.agent_pos_saver[jj][i][0]
-                    y_values[i] = self.agent_pos_saver[jj][i][1]
 
-                self.ax.plot(
-                    x_values,
-                    y_values,
-                    color=color,
-                    linestyle="dashed",
-                )
-            self.ax.set_aspect("equal", adjustable="box")
+            # if self.agent[jj]._static == False:
+
+            self.ax.plot(
+                self.agent[jj]._goal_pose.position[0],
+                self.agent[jj]._goal_pose.position[1],
+                color=color,
+                marker="*",
+                markersize=10,
+            )
+
+            x_values = np.zeros(len(self.agent_pos_saver[jj]))
+            y_values = x_values.copy()
+            for i in range(len(self.agent_pos_saver[jj])):
+                x_values[i] = self.agent_pos_saver[jj][i][0]
+                y_values[i] = self.agent_pos_saver[jj][i][1]
+
+            self.ax.plot(
+                x_values,
+                y_values,
+                color=color,
+                linestyle="dashed",
+            )
+
+            # breakpoint()
 
         # Drawing and adjusting of the axis
         # for agent in range(self.num_agent):
@@ -148,28 +156,37 @@ class DynamicalSystemAnimation(Animator):
         #         markersize=12,
         #     )
 
-        self.ax.set_xlim(self.x_lim)
-        self.ax.set_ylim(self.y_lim)
-        self.ax.set_xlabel("x [m]", fontsize=9)
-        self.ax.set_ylabel("y [m]", fontsize=9)
-        plt.tight_layout()
-
-        # breakpoint()
-        for jj in range(self.number_agent):
-            if len(self.obstacle_colors) > jj:
-                color = self.obstacle_colors[jj]
-            else:
-                color = np.array([176, 124, 124]) / 255.0
-
+        if len(self.obstacle_colors):
+            for jj in range(self.number_agent):
+                plot_obstacles(
+                    ax=self.ax,
+                    obstacle_container=[self.obstacle_environment[jj]],
+                    x_lim=self.x_lim,
+                    y_lim=self.y_lim,
+                    showLabel=False,
+                    obstacle_color=self.obstacle_colors[jj],
+                    draw_reference=False,
+                    set_axes=False,
+                )
+        else:
             plot_obstacles(
                 ax=self.ax,
-                obstacle_container=[self.obstacle_environment[jj]],
+                obstacle_container=self.obstacle_environment,
                 x_lim=self.x_lim,
                 y_lim=self.y_lim,
                 showLabel=False,
-                obstacle_color=color,
+                obstacle_color=np.array([176, 124, 124]) / 255.0,
                 draw_reference=False,
+                set_axes=False,
             )
+
+        self.ax.set_xlabel("x [m]", fontsize=9)
+        self.ax.set_ylabel("y [m]", fontsize=9)
+
+        self.ax.set_aspect("equal", adjustable="box")
+        self.ax.set_xlim(self.x_lim)
+        self.ax.set_ylim(self.y_lim)
+        plt.tight_layout()
 
     def has_converged(self, it: int) -> bool:
         if not self.check_convergence:

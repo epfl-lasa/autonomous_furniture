@@ -57,6 +57,7 @@ Run the indoor, dense environment:
 
 ``` shell
 python3 furniture_publishers/dense_environment.py
+ros2 launch autonomous_furniture dense_environment.launch.py
 ```
 
 ### Build and Run

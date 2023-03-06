@@ -23,22 +23,12 @@ from autonomous_furniture.launch_helper_functions import create_qolo_nodes
 def generate_launch_description():
     furnite_nodes = []
 
-    n_tables = 4
+    n_tables = 10
     for ii in range(n_tables):
         furnite_nodes.append(
             node_creator(
-                furniture_name=f"table{ii}",
-                urdf_file_name="table.urdf.xacro",
-                topicspace="furniture",
-            )
-        )
-
-    n_chairs = 16
-    for ii in range(n_chairs):
-        furnite_nodes.append(
-            node_creator(
-                furniture_name=f"chair{ii}",
-                urdf_file_name="chair.urdf.xacro",
+                furniture_name=f"hospital_bed{ii}",
+                urdf_file_name="hospital_bed.urdf.xacro",
                 topicspace="furniture",
             )
         )
@@ -55,7 +45,7 @@ def generate_launch_description():
         name="rviz2",
         arguments=[
             "-d",
-            os.path.join(rviz_base_path, "config", "busy_environment.rviz")
+            os.path.join(rviz_base_path, "config", "multi_bed.rviz")
             # PathJoinSubstitution(
             #     [
             #         FindPackageShare("autonomous_furniture"),
