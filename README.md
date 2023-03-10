@@ -71,11 +71,11 @@ Requirements: python, ROS2
 
 To setup the repository create "workspace/src" directory then clone the repository into the "src" directory:
 ```shell
-cd workspace 
+cd workspace/src
 ```
 
 ```shell
-git clone --recurse-submodules git@github.com:epfl-lasa/autonomous_furniture.git ./src
+git clone --recurse-submodules git@github.com:epfl-lasa/autonomous_furniture.git
 ```
 (Make sure that the submodule dynamic_obstacle_avoidance is in autonomous_furniture/libraries, and various_tools is in autonomous_furniture/libraries/dynamic_obstacle_avoidance/lib)
 
@@ -88,8 +88,9 @@ Be sure your directory structure looks like this:
 .
 └── workspace
     └──src
-        ├── autonomous_furniture
-        └── objects_descriptions
+        └──autonomous_furniture
+            ├── autonomous_furniture
+            └── objects_descriptions
 ```
 if not ROS2 will fail to build and through mising package errors.
 
@@ -113,7 +114,7 @@ sudo apt install ros-<ros2-distro>-xacro
 ### Python Install
 Go to file directory:
 ```shell
-cd src/autonomous_furniture
+cd src/autonomous_furniture/autonomous_furniture
 ```
 
 ## 
@@ -164,7 +165,7 @@ ros2 launch autonomous_furniture <env of choice>.launch.py
 Replace "env of choice" with any of the available environment in the launch directory.
 In the second terminal go to the autonomous_furniture directory and start the pipenv shell:
 ```shell
-cd workspace/src/autonomous_furniture/l
+cd workspace/src/autonomous_furniture/autonomous_furniture/
 pipenv shell
 ```
 The run the corresponding python publisher:
@@ -194,7 +195,7 @@ You may encounter as few errors at first a few of those are the following:
 * Missing packages when launching python files --> this may be due to detached submodules
   * Reattach submodules:
 ```shell
-cd workspace/src/autonomous_furniture/libraries/dynamic_obstacle_avoidance/
+cd workspace/src/autonomous_furniture/autonomous_furniture/libraries/dynamic_obstacle_avoidance/
 git checkout feat/mobilerobot
 cd lib/various_tools/
 git pull origin main
