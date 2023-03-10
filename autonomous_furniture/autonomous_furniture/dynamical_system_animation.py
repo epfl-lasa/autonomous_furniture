@@ -84,7 +84,10 @@ class DynamicalSystemAnimation(Animator):
     def update_step(self, ii, anim: bool = True):
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
-                mini_drag=self.mini_drag, version=self.version, emergency_stop=self.emergency_stop, safety_module=self.safety_module
+                mini_drag=self.mini_drag,
+                version=self.version,
+                emergency_stop=self.emergency_stop,
+                safety_module=self.safety_module,
             )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)

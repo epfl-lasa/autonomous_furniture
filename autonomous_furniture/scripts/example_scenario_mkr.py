@@ -89,7 +89,13 @@ def multi_simulation(
 
 
 def single_simulation(
-    scen: int, nb_furniture: int, do_drag: str, safety_module: bool, emergency_stop: bool, version: str = "v1", anim: bool = True
+    scen: int,
+    nb_furniture: int,
+    do_drag: str,
+    safety_module: bool,
+    emergency_stop: bool,
+    version: str = "v1",
+    anim: bool = True,
 ):
     my_animation = DynamicalSystemAnimation(
         it_max=500,
@@ -112,7 +118,7 @@ def single_simulation(
     my_animation.animation_name = anim_name
 
     my_scenario.setup()
-    
+
     n_agents = nb_furniture
     cm = plt.get_cmap("gist_rainbow")
     color_list = [cm(1.0 * ii / n_agents) for ii in range(n_agents)]
@@ -128,8 +134,7 @@ def single_simulation(
         safety_module=safety_module,
         emergency_stop=emergency_stop,
         obstacle_colors=color_list,
-        figsize=(5.0,5.0),
-        
+        figsize=(5.0, 5.0),
     )
     print(
         f"Number of fur  : {nb_furniture} | Alg with drag : {do_drag} | version : {version} | Number of fold : {scen}"
@@ -179,16 +184,24 @@ def main():
 def run_single():
     scen = 240
     nb_furniture = 10
-    version = "v1"
-    emergency_stop = False
-    safety_module = False
+    version = "v2"
+    emergency_stop = True
+    safety_module = True
     for do_drag in ["dragdist"]:
-        single_simulation(scen, nb_furniture, do_drag, safety_module, emergency_stop, version=version,anim=True)
+        single_simulation(
+            scen,
+            nb_furniture,
+            do_drag,
+            safety_module,
+            emergency_stop,
+            version=version,
+            anim=True,
+        )
 
 
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
-    
+
     # main()
     run_single()

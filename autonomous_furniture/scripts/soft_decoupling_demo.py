@@ -75,9 +75,8 @@ def priority_demo():
             goal_pose=goal2,
             priority_value=1,
             name="obstacle",
-            static=True
+            static=True,
         ),
-
     ]
 
     my_animation = DynamicalSystemAnimation(
@@ -92,11 +91,11 @@ def priority_demo():
         agent=my_furniture,
         x_lim=[-3, 8],
         y_lim=[-2, 7],
-        version="v1",
+        version="v2",
         mini_drag="nodrag",
         safety_module=False,
         emergency_stop=False,
-        figsize=(5,5)
+        figsize=(5, 5),
     )
 
     my_animation.run(save_animation=args.rec)

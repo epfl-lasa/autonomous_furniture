@@ -154,7 +154,6 @@ class AttractorDynamics(DynamicalSystem):
         max_repulsion = np.dot(unit_dir_agent, unit_lin_vel)
 
         if self.state[furniture_eval] == "idle":
-
             if max_repulsion <= 0.0:
                 self.state[furniture_eval] = "idle"
                 return np.zeros(self.dim), self.go_to_pk
@@ -275,7 +274,6 @@ class AttractorDynamics(DynamicalSystem):
         env,
         const_speed: bool = True,
     ) -> np.ndarray:
-
         vel = obs_avoidance_interpolation_moving(
             position=position, initial_velocity=initial_velocity, obs=env
         )

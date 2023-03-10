@@ -56,7 +56,6 @@ class DynamicalSystemAnimation:
         dt_step=0.03,
         dt_sleep=0.1,
     ):
-
         num_obs = len(obstacle_environment)
         if start_position.ndim > 1:
             num_agent = len(start_position)

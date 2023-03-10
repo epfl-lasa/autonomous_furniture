@@ -75,7 +75,6 @@ class ObjectArea:
         self._total_area_covered = 0  # Total area covered during the simulation
 
     def init(self, grid):
-
         pass
 
     # create a function in furniture rectangle to check if the point belongs to rectangle

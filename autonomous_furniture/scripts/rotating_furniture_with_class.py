@@ -36,7 +36,6 @@ class DynamicalSystemAnimation(Animator):
         x_lim=None,
         y_lim=None,
     ):
-
         dim = 2
         self.number_agent = len(agent)
 

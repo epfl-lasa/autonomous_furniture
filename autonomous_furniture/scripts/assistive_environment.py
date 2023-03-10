@@ -38,7 +38,6 @@ class DynamicFurniture:
         dt_step=0.05,
         dt_sleep=0.1,
     ):
-
         num_obs = len(furniture_env)
         total_ctl_pts = 0
         for furniture in furniture_env:
