@@ -50,9 +50,15 @@ print(os.getcwd())
 
 folder_new_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/new_safety_module"
 folder_no_safety = "/home/menichel/ros2_ws/src/autonomous_furniture/autonomous_furniture/metrics/no_safety_module"
-folders = [folder_new_safety, folder_no_safety]
+folders = [folder_no_safety,folder_new_safety]
 
-def compare_v2_vs_v1():
+fig_size=[6,6]
+fig_dpi=120
+tick_size=12
+label_size=15
+legend_size=15
+
+def compare_convergence_rate():
     diff_dist = []
     list_algo = ["dragdist"]
     list_vers = ["v2"]
@@ -60,41 +66,67 @@ def compare_v2_vs_v1():
     converg_data = np.zeros((len(folders), len(list_fur)))
     nb_folds = number_scen(3, list_algo[0], list_vers[0])
 
+    # for ll, nb_fur in enumerate(list_fur):
+    #     dist_data = np.zeros((2, nb_folds))
+    #     for algo in list_algo:
+    #         kk = 0
+
+    #         for jj, folder in enumerate(folders):
+    #             data = json.load(
+    #                 open(
+    #                     f"{folder}/distance_nb{nb_fur}_{algo}_{list_vers[0]}.json",
+    #                     "r",
+    #                 )
+    #             )
+
+    #             dist = np.zeros(nb_folds)
+
+    #             # for agent in data.keys():
+    #             for ii in range(nb_fur):
+    #                 dist = dist + [
+    #                     data[f"agent_{ii}"]["total_dist"][mm]
+    #                     / data[f"agent_{ii}"]["direct_dist"][mm]
+    #                     for mm in range(nb_folds)
+    #                 ]
+    #                 # sum_direct_dist += data[f"agent_{ii}"]["direct_dist"]
+    #                 # times += data[f"agent_{ii}"]["time_conv"]
+
+    #             dist /= nb_fur
+
+    #             dist_data[kk, :] = dist
+    #             converg_data[jj, ll] = data["converged"].count(True)
+
+    #             kk += 1
+    #             # conv_data.append(data["converged"].count(True))
+
+    #         temp = dist_data[0, :] - dist_data[1, :]
+    #         diff_dist.append(dist_data[0, :] - dist_data[1, :])
+    
+    converg_data = np.zeros([3, len(list_fur)])
     for ll, nb_fur in enumerate(list_fur):
-        dist_data = np.zeros((2, nb_folds))
-        for algo in list_algo:
-            kk = 0
+        data_prev = json.load( #load data from previous work
+            open(
+                f"{folder_no_safety}/distance_nb{nb_fur}_nodrag_v1.json",
+                "r",
+            )
+        )
+        converg_data[0, ll] = data_prev["converged"].count(True)
 
-            for jj, folder in enumerate(folders):
-                data = json.load(
-                    open(
-                        f"{folder}/distance_nb{nb_fur}_{algo}_{list_vers[0]}.json",
-                        "r",
-                    )
-                )
+        data_no_safety = json.load( #load data from new work without safety module
+            open(
+                f"{folder_no_safety}/distance_nb{nb_fur}_dragdist_v2.json",
+                "r",
+            )
+        )
+        converg_data[1, ll] = data_no_safety["converged"].count(True)
 
-                dist = np.zeros(nb_folds)
-
-                # for agent in data.keys():
-                for ii in range(nb_fur):
-                    dist = dist + [
-                        data[f"agent_{ii}"]["total_dist"][mm]
-                        / data[f"agent_{ii}"]["direct_dist"][mm]
-                        for mm in range(nb_folds)
-                    ]
-                    # sum_direct_dist += data[f"agent_{ii}"]["direct_dist"]
-                    # times += data[f"agent_{ii}"]["time_conv"]
-
-                dist /= nb_fur
-
-                dist_data[kk, :] = dist
-                converg_data[jj, ll] = data["converged"].count(True)
-
-                kk += 1
-                # conv_data.append(data["converged"].count(True))
-
-            temp = dist_data[0, :] - dist_data[1, :]
-            diff_dist.append(dist_data[0, :] - dist_data[1, :])
+        data_yes_safety = json.load( #load data from new work without safety module
+            open(
+                f"{folder_new_safety}/distance_nb{nb_fur}_dragdist_v2.json",
+                "r",
+            )
+        )
+        converg_data[2, ll] = data_yes_safety["converged"].count(True)
 
     # Nb fur to compare :
     # fur_number = 6
@@ -108,12 +140,33 @@ def compare_v2_vs_v1():
     # )
 
     # plot_box(diff_dist, list_fur)
-    plot_bar(converg_data, ["yes_safety", "no_safety"])
+    label = ["HDSM", "DDHDSM", "SDDHDSM"]
+    barWidth = 0.25
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    # plt.legend(fontsize=legend_size)
+    
+    br1 = np.arange(len(converg_data[0,:]))
+    br0 = br1 - barWidth
+    br2 = br1 + barWidth
+    
+    plt.bar(br1, converg_data[0,:], color="blue", width=barWidth, edgecolor="grey", label=label[0])
+    plt.bar(br2, converg_data[1,:], color="green", width=barWidth, edgecolor="grey", label=label[1])
+    plt.bar(br0, converg_data[2,:], color="orange", width=barWidth, edgecolor="grey", label=label[2])
 
-    plt.legend()
+    plt.xlabel("Number of furnitures", fontsize=label_size)
+    plt.ylabel("Converged scenario[%]", fontsize=label_size)
+    plt.xticks(np.arange(len(converg_data[0,:])), [3, 4, 5, 6, 7, 8, 9, 10])
+    plt.tight_layout()
+
+    for bars in ax.containers:
+        ax.bar_label(bars, fontsize=label_size)
+
+    plt.legend(fontsize=legend_size)
     plt.show()
 
-def compare_drag_vs_nodrag():
+def compare_travelled_distance():
 
     delete_collisions_from_data = True  # Whether or not we take into consideration for the graph all the scenarios
     # or the ones where both alg did not register collisions
@@ -138,7 +191,7 @@ def compare_drag_vs_nodrag():
                 data.append(
                     json.load(
                         open(
-                            f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                            f"{folder_new_safety}/distance_nb{nb_fur}_{algo}_{version}.json",
                             "r",
                         )
                     )
@@ -186,11 +239,9 @@ def compare_drag_vs_nodrag():
         plt.setp(bp["caps"], color=color)
         plt.setp(bp["medians"], color="black")
 
-    plt.figure()
-    plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
+    plt.figure(figsize=fig_size, dpi=fig_dpi)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
     bpr = plt.boxplot(
         data_drag_temp,
         positions=np.array(range(len(data_drag_temp))) * 2.0 + 0.4,
@@ -206,16 +257,16 @@ def compare_drag_vs_nodrag():
         patch_artist=True,
     )
     set_box_color(bpl, "red")
-    set_box_color(bpr, "green")  # colors are from http://colorbrewer2.org/
+    set_box_color(bpr, "orange")  # colors are from http://colorbrewer2.org/
 
-    plt.plot([], c="red", label="TSVMA")
-    plt.plot([], c="green", label="SVMA")
+    plt.plot([], c="red", label="DHDSM")
+    plt.plot([], c="orange", label="DDHDSM")
 
-    plt.xlabel("Number of agents", fontsize=9)
+    plt.xlabel("Number of agents", fontsize=label_size)
     plt.ylabel(
-        "Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=9
+        "Mean relative distance travelled, $\overline{\mathcal{D}}$ [-]", fontsize=label_size
     )
-    plt.legend()
+    plt.legend(fontsize=legend_size)
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
 
@@ -270,60 +321,37 @@ def plot_box(data, labels: list, save: bool = False):
             f"autonomous_furniture/metrics/distance_nb{nb_fur}.png", format="png"
         )
 
-
-def plot_bar(data, label):
-    barWidth = 0.25
-    fig2 = plt.subplots(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
-
-    drag = data[0, :]
-    nodrag = data[1, :]
-
-    br1 = np.arange(len(drag))
-    br2 = [x + barWidth for x in br1]
-
-    plt.bar(br1, drag, color="r", width=barWidth, edgecolor="grey", label=label[0])
-    plt.bar(br2, nodrag, color="g", width=barWidth, edgecolor="grey", label=label[1])
-
-    plt.xlabel("Number of furnitures", fontsize=10)
-    plt.ylabel("Converged scenario[%]", fontsize=10)
-    plt.xticks([r + barWidth for r in range(len(drag))], [3, 4, 5, 6, 7, 8, 9, 10])
-    plt.tight_layout()
-
-
 def plot_collisions():
 
     list_nb_fur = [3, 4, 5, 6, 7, 8, 9]
     list_version = ["v2"]
-    list_algo = ["nodrag", "dragdist"]
+    list_algo = ["dragdist"]
 
     collisions_data = []
     nb_collisions_data = []
     for algo in list_algo:
         for vers in list_version:
-            collisions_data_temp = []
-            nb_collisions = []
+            for folder in folders:
+                collisions_data_temp = []
+                nb_collisions = []
 
-            for idx, nb_fur in enumerate(list_nb_fur):
+                for idx, nb_fur in enumerate(list_nb_fur):
 
-                data = json.load(
-                    open(
-                        f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
-                        "r",
+                    data = json.load(
+                        open(
+                            f"{folder}/distance_nb{nb_fur}_{algo}_{vers}.json",
+                            "r",
+                        )
                     )
-                )
-                collisions_data_temp.append(data["collisions_ser"])
-                has_collision = [1 for i in data["collisions_ser"] if i > 0]
-                nb_collisions.append(len(has_collision))
+                    collisions_data_temp.append(data["collisions"])
+                    has_collision = [1 for i in data["collisions"] if i > 0]
+                    nb_collisions.append(len(has_collision))
 
-            nb_collisions_data.append(nb_collisions)
+                nb_collisions_data.append(nb_collisions)
 
     width = 0.25
     #Full ERM_temp= [4, 17, 38, 56, 74, 87, 97, 99]
     ERM_temp = [
-        4,
         17,
         38,
         56,
@@ -336,33 +364,31 @@ def plot_collisions():
 
     # br1 = np.arange(len(drag))
     # br2 = [x + barWidth for x in br1]
-    fig, ax = plt.subplots(figsize=(3.7, 3.7), dpi=120)
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
     # plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=9)
-    plt.yticks(fontsize=9)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
 
     # plt.bar(
     #     pos + 0.5 * width, ERM_temp, color="blue", width=width, label="previous work"
     # )
-
-    plt.bar(
-        pos - 0.5 * width,
-        nb_collisions_data[0],
-        color="red",
-        width=width,
-        label="TSVMA",
-    )
-    plt.bar(pos + 0.5*width, nb_collisions_data[1], color="green", width=width, label="SVMA")
+    br1 = pos
+    br0 = pos-width
+    br2 = pos+width
+    
+    plt.bar(br0,ERM_temp,color="blue",width=width,label="HDSM",)
+    plt.bar(br1, nb_collisions_data[0], color="green", width=width, label="DDHDSM")
+    plt.bar(br2, nb_collisions_data[1], color="orange", width=width, label="SDDHDSM")
+    
     plt.xticks(pos, list_nb_fur)
 
     for bars in ax.containers:
-        ax.bar_label(bars, fontsize=9)
+        ax.bar_label(bars, fontsize=label_size)
 
-    plt.xlabel("Number of agents", fontsize=10)
-    plt.ylabel(
-        "Percentage of scenarios with serious collisions, $\mathcal{C}$[%]", fontsize=10
-    )
-    plt.legend(fontsize=10)
+    plt.xlabel("Number of agents", fontsize=label_size)
+    plt.ylabel("Scenarios with virtual collisions [%]", fontsize=label_size)
+    plt.legend(fontsize=legend_size)
+    plt.tight_layout()
     plt.show()
 
 
@@ -503,7 +529,7 @@ def plot_prox_graph():
     # pers_list = [1 - pers_list[ii] / (ii + 1) for ii in range(step)]
     # furn_list = [1 - furn_list[ii] / (ii + 1) for ii in range(step)]
 
-    fig, ax = plt.subplots(figsize=(3.5, 3.5), dpi=120)
+    fig, ax = plt.subplots(figsize=fig_size, dpi=fig_dpi)
     xmin = 0
     xmax = 200
     ymin = 2
@@ -512,11 +538,11 @@ def plot_prox_graph():
     plt.ylim(ymin, ymax)
     plt.xlim(xmin, xmax)
 
-    plt.xticks(fontsize=9)
-    plt.yticks(fontsize=9)
-    plt.xlabel("Step", fontsize=9)
-
-    plt.ylabel("Distance from mobile agent [m]", fontsize=9)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
+    plt.xlabel("Step", fontsize=label_size)
+    
+    plt.ylabel("Distance from mobile agent [m]", fontsize=label_size)
     plt.plot(range(step), pers_list_equal, color="orange", linestyle="dashed")
     plt.plot(range(step), furn_list_equal, color="red", linestyle="dashed")
     # plt.plot(
@@ -533,12 +559,12 @@ def plot_prox_graph():
     # plt.plot(0, furn_list[0], "o", color=(221 / 255, 16 / 255, 16 / 255))
     # plt.vlines(step-1, 0, furn_list[step-1], linestyle="dashed", color="black")
     plt.plot(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "go")
-    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0], np.min(pers_list_equal), "%f" %np.round(np.min(pers_list_equal),3))
+    ax.text(np.where(pers_list_equal==np.min(pers_list_equal))[0][0]-5, np.min(pers_list_equal)+0.15, "%.2f" %np.round(np.min(pers_list_equal),2))
     
     plt.plot(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "go")
-    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0], np.min(pers_list_priority), "%f" %np.round(np.min(pers_list_priority),3))
+    ax.text(np.where(pers_list_priority==np.min(pers_list_priority))[0][0]-5, np.min(pers_list_priority)+0.15, "%.2f" %np.round(np.min(pers_list_priority),2))
 
-    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"], fontsize=9)
+    plt.legend(["$d_P^{equal}$", "$d_O^{equal}$", "$d_P^{priority}$", "$d_O^{priority}$"], fontsize=legend_size)
     plt.tight_layout()
     plt.show()
 
@@ -548,7 +574,7 @@ def plot_time():
 
     list_algo = ["nodrag"]
     list_vers = ["v1", "v2"]
-    list_fur = [3, 4, 5, 6, 7, 8, 9, 10]
+    list_fur = [3, 4, 5, 6, 7]
     nb_folds = number_scen(list_fur[0], list_algo[0], list_vers[0])
 
     data_drag_temp = []  # TODO temp to remove
@@ -563,7 +589,7 @@ def plot_time():
                 data.append(
                     json.load(
                         open(
-                            f"{folder}/distance_nb{nb_fur}_{algo}_{version}.json",
+                            f"{folder_no_safety}/distance_nb{nb_fur}_{algo}_{version}.json",
                             "r",
                         )
                     )
@@ -610,10 +636,9 @@ def plot_time():
         plt.setp(bp["medians"], color="black")
 
     plt.figure()
-    plt.figure(figsize=(3.5, 3.5), dpi=120)
-    plt.xticks(fontsize=8.5)
-    plt.yticks(fontsize=8.5)
-    plt.legend(fontsize=1.5)
+    plt.figure(figsize=fig_size, dpi=fig_dpi)
+    plt.xticks(fontsize=tick_size)
+    plt.yticks(fontsize=tick_size)
 
     bpr = plt.boxplot(
         data_drag_temp,
@@ -629,27 +654,25 @@ def plot_time():
         widths=0.6,
         patch_artist=True,
     )
-    set_box_color(bpl, "red")
-    set_box_color(bpr, "green")  # colors are from http://colorbrewer2.org/
+    set_box_color(bpl, "blue")
+    set_box_color(bpr, "red")  # colors are from http://colorbrewer2.org/
 
-    plt.plot([], c="red", label="v1")
-    plt.plot([], c="green", label="v2")
+    plt.plot([], c="blue", label="HDSM")
+    plt.plot([], c="red", label="DHDSM")
 
-    plt.xlabel("Number of agents", fontsize=9)
-    plt.ylabel(
-        "Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=9
-    )
-    plt.legend()
+    plt.xlabel("Number of agents", fontsize=label_size)
+    plt.ylabel("Mean relative time to converge, $\overline{\mathcal{T}}$ [-]", fontsize=label_size)
+    plt.legend(fontsize=label_size)
 
     plt.xticks(range(0, len(ticks) * 2, 2), ticks)
     plt.tight_layout()
 
 
 if __name__ == "__main__":
-    # compare_v2_vs_v1()
-    # compare_drag_vs_nodrag()
-    # plot_collisions()
-    plot_prox_graph()
+    compare_convergence_rate()
+    # compare_travelled_distance()
+    plot_collisions()
+    # plot_prox_graph()
     # plot_proximity()
     # plot_time()
     plt.legend()

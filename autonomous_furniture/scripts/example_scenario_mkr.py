@@ -179,7 +179,7 @@ def main():
 def run_single():
     scen = 240
     nb_furniture = 10
-    version = "v2"
+    version = "v1"
     emergency_stop = False
     safety_module = False
     for do_drag in ["dragdist"]:
@@ -189,6 +189,6 @@ def run_single():
 if __name__ == "__main__":
     plt.close("all")
     plt.ion()
-
+    
     # main()
     run_single()

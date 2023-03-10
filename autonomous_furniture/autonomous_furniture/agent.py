@@ -249,7 +249,7 @@ class BaseAgent(ABC):
         ).T
 
     def get_goal_control_points(self):
-        """Get gaol-control-points in global frame."""
+        """Get goal-control-points in global frame."""
         return np.array(
             [
                 self._goal_pose.transform_position_from_relative(ctp)
@@ -397,12 +397,12 @@ class Furniture(BaseAgent):
         # for soft decoupling ###
         # TODO : Do we want to enable rotation along other axis in the futur ?
         angular_vel = np.zeros((1, self._control_points.shape[1]))
-
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
 
         # plt.arrow(self.position[0], self.position[1], initial_velocity[0],
         #       initial_velocity[1], head_width=0.1, head_length=0.2, color='g')
+        d = LA.norm(self.position - self._goal_pose.position)
 
         if version == "v2":
             initial_velocity = obs_avoidance_interpolation_moving(
@@ -411,127 +411,167 @@ class Furniture(BaseAgent):
                 obs=environment_without_me,
                 self_priority=self.priority,
             )
+            # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
 
-        # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
+            initial_magnitude = LA.norm(initial_velocity)
 
-        initial_magnitude = LA.norm(initial_velocity)
+            # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
+            if mini_drag == "dragvel": #a1 computed depending on the velocity
 
-        # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
-        d = LA.norm(self.position - self._goal_pose.position)
-        if mini_drag == "dragvel":  # a1 computed depending on the velocity
-            w1_hat = self.virtual_drag
-            w2_hat_max = 1000
-            if LA.norm(initial_velocity) != 0:
-                w2_hat = self._dynamics.maximum_velocity / LA.norm(initial_velocity) - 1
-                if w2_hat > w2_hat_max:
+                w1_hat = self.virtual_drag
+                w2_hat_max = 1000
+                if LA.norm(initial_velocity) != 0:
+                    w2_hat = (
+                        self._dynamics.maximum_velocity / LA.norm(initial_velocity) - 1
+                    )
+                    if w2_hat > w2_hat_max:
+                        w2_hat = w2_hat_max
+                else:
                     w2_hat = w2_hat_max
+
+                w1 = w1_hat / (w1_hat + w2_hat)
+                w2 = 1 - w1
+            elif mini_drag == "dragdist": #a1 computed as in the paper depending on the distance
+
+                kappa = self.virtual_drag
+                k = 0.01
+                r = d/(d+k)
+                alpha = 1.5
+                w1 = 1 / 2 * (1 + np.tanh(kappa*(d - alpha)))*r
+                w2 = 1 - w1
+
+            elif mini_drag == "nodrag": #no virtual drag
+                w1 = 0
+                w2 = 1
             else:
-                w2_hat = w2_hat_max
+                print("Error in the name of the type of drag to use")
+                w1 = 0
+                w2 = 1
 
-            w1 = w1_hat / (w1_hat + w2_hat)
-            w2 = 1 - w1
+            # Direction (angle), of the linear_velocity in the global frame
+            lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
-        elif (
-            mini_drag == "dragdist"
-        ):  # a1 computed as in the paper depending on the distance
-            kappa = self.virtual_drag
-            k = 0.01
-            r = d / (d + k)
-            alpha = 1.5
-            w1 = 1 / 2 * (1 + np.tanh(kappa * (d - alpha))) * r
-            w2 = 1 - w1
-
-        elif mini_drag == "nodrag":  # no virtual drag
-            w1 = 0
-            w2 = 1
-        else:
-            print("Error in the name of the type of drag to use")
-            w1 = 0
-            w2 = 1
-
-        # Direction (angle), of the linear_velocity in the global frame
-        lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
-
-        # Make the smallest rotation- the furniture has to pi symetric
-        drag_angle = lin_vel_dir - self.orientation
-        # Case where there is no symetry in the furniture
-        if np.abs(drag_angle) > np.pi:
-            drag_angle = -1 * (2 * np.pi - drag_angle)
-
-        # Case where we consider for instance PI-symetry for the furniture
-        if np.abs(drag_angle) > np.pi / 2 and not self.object_type == ObjectType.CHAIR:
-            if self.orientation > 0:
-                orientation_sym = self.orientation - np.pi
-            else:
-                orientation_sym = self.orientation + np.pi
-
-            drag_angle = lin_vel_dir - orientation_sym
-            if drag_angle > np.pi / 2:
+            # Make the smallest rotation- the furniture has to pi symetric
+            drag_angle = lin_vel_dir - self.orientation
+            # Case where there is no symetry in the furniture
+            if np.abs(drag_angle) > np.pi:
                 drag_angle = -1 * (2 * np.pi - drag_angle)
 
-        goal_angle = self._goal_pose.orientation - self.orientation
-        if np.abs(goal_angle) > np.pi:
-            goal_angle = -1 * (2 * np.pi - goal_angle)
+            # Case where we consider for instance PI-symetry for the furniture
+            if (
+                np.abs(drag_angle) > np.pi / 2
+            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we have to change this value
+                if self.orientation > 0:
+                    orientation_sym = self.orientation - np.pi
+                else:
+                    orientation_sym = self.orientation + np.pi
 
-        if (
-            np.abs(goal_angle) > np.pi / 2
-        ) and not self.object_type == ObjectType.CHAIR:
-            # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-            if self.orientation > 0:
-                orientation_sym = self.orientation - np.pi
-            else:
-                orientation_sym = self.orientation + np.pi
+                drag_angle = lin_vel_dir - orientation_sym
+                if drag_angle > np.pi / 2:
+                    drag_angle = -1 * (2 * np.pi - drag_angle)
 
-            goal_angle = self._goal_pose.orientation - orientation_sym
-            if goal_angle > np.pi / 2:
+            goal_angle = self._goal_pose.orientation - self.orientation
+            if np.abs(goal_angle) > np.pi:
                 goal_angle = -1 * (2 * np.pi - goal_angle)
 
-        # TODO Very clunky : Rather make a function out of it
-        K = 3  # K proportionnal parameter for the speed
-        # Initial angular_velocity is computedenv
-        initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
+            if (
+                np.abs(goal_angle) > np.pi / 2
+            ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+                if self.orientation > 0:
+                    orientation_sym = self.orientation - np.pi
+                else:
+                    orientation_sym = self.orientation + np.pi
 
-        ### Calculate the velocity of the control points given the initial angular
-        # and linear velocity of the agent ###
-        for ii in range(self._control_points.shape[1]):
-            # doing the cross product formula by "hand" than using the funct
-            tang_vel = [
-                -initial_angular_vel * self._control_points[ii, 1],
-                initial_angular_vel * self._control_points[ii, 0],
-            ]
-            tang_vel = self.get_veloctity_in_global_frame(tang_vel)
-            init_velocities[:, ii] = initial_velocity + tang_vel
+                goal_angle = self._goal_pose.orientation - orientation_sym
+                if goal_angle > np.pi / 2:
+                    goal_angle = -1 * (2 * np.pi - goal_angle)
 
-            ctp = global_control_points[:, ii]
-            velocities[:, ii] = obs_avoidance_interpolation_moving(
-                position=ctp,
-                initial_velocity=init_velocities[:, ii],
-                obs=environment_without_me,
-                self_priority=self.priority,
+            # TODO Very clunky : Rather make a function out of it
+            K = 3  # K proportionnal parameter for the speed
+            # Initial angular_velocity is computedenv
+            initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
+            ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
+            for ii in range(self._control_points.shape[1]):
+                # doing the cross product formula by "hand" than using the funct
+                tang_vel = [
+                    -initial_angular_vel * self._control_points[ii, 1],
+                    initial_angular_vel * self._control_points[ii, 0],
+                ]
+                tang_vel = self.get_veloctity_in_global_frame(tang_vel)
+                init_velocities[:, ii] = initial_velocity + tang_vel
+
+                ctp = global_control_points[:, ii]
+                velocities[:, ii] = obs_avoidance_interpolation_moving(
+                    position=ctp,
+                    initial_velocity=init_velocities[:, ii],
+                    obs=environment_without_me,
+                    self_priority=self.priority,
+                )
+                # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
+                #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
+                # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
+                #           ii], head_width=0.1, head_length=0.2, color='m')
+
+            ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ### 
+            self.linear_velocity = np.sum(
+                velocities * np.tile(weights, (self.dimension, 1)), axis=1
             )
-            # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
-            #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
-            # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
-            #           ii], head_width=0.1, head_length=0.2, color='m')
 
-        ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
-        self.linear_velocity = np.sum(
-            velocities * np.tile(weights, (self.dimension, 1)), axis=1
-        )
+            # normalization to the initial velocity
+            self.linear_velocity = (
+                initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+            )
+            # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+            #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
-        if vel_norm := LA.norm(self.linear_velocity):
-            self.linear_velocity = initial_magnitude * self.linear_velocity / vel_norm
-        # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-        #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
+            for ii in range(self._control_points.shape[1]):
+                angular_vel[0, ii] = weights[ii] * np.cross(
+                    global_control_points[:, ii] - self._shape.center_position,
+                    velocities[:, ii] - self.linear_velocity,
+                )
 
-        for ii in range(self._control_points.shape[1]):
-            angular_vel[0, ii] = weights[ii] * np.cross(
-                global_control_points[:, ii] - self._shape.center_position,
-                velocities[:, ii] - self.linear_velocity,
+            self.angular_velocity = np.sum(angular_vel)
+
+        
+        elif version=="v1":
+            goal_pos_ctr_pts = self.get_goal_control_points()
+            actual_pos_ctr_pts = self.get_global_control_points()
+            for i in range(self._control_points.shape[1]):
+                #define direction as initial velocities
+                ctr_pt_i = np.array([actual_pos_ctr_pts[0][i], actual_pos_ctr_pts[1][i]]) #extract i-th actual control points position
+                ctr_pt_i_goal = np.array([goal_pos_ctr_pts[0][i], goal_pos_ctr_pts[1][i]]) #extract i-th goal control points position
+                initial_velocity = ctr_pt_i_goal-ctr_pt_i
+                # initial_velocity /= LA.norm(initial_velocity) #normalize vector
+                velocities[:,i] = obs_avoidance_interpolation_moving(
+                                    position=ctr_pt_i,
+                                    initial_velocity=initial_velocity,
+                                    obs=environment_without_me,
+                                    self_priority=self.priority,
+                                    )
+
+                # obs_avoidance_interpolation_moving
+            
+            ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ### 
+            self.linear_velocity = np.sum(
+                velocities * np.tile(weights, (self.dimension, 1)), axis=1
             )
 
-        self.angular_velocity = np.sum(angular_vel)
+            # # normalization to the initial velocity
+            if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
+                self.linear_velocity = (
+                    self._dynamics.maximum_velocity * self.linear_velocity / LA.norm(self.linear_velocity)
+                )
+            # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+            #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
+            for ii in range(self._control_points.shape[1]):
+                angular_vel[0, ii] = weights[ii] * np.cross(
+                    global_control_points[:, ii] - self._shape.center_position,
+                    velocities[:, ii] - self.linear_velocity,
+                )
+
+            self.angular_velocity = np.sum(angular_vel)
+                
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if safety_module or emergency_stop: #collect the gamma values of all the control points
             gamma_values = np.zeros(
@@ -549,39 +589,38 @@ class Furniture(BaseAgent):
                     global_control_points[:, ii], environment_without_me
                 )
 
-        if safety_module:
-            if d > self.d_critic:
-                self.gamma_critic = self.gamma_critic_max
-            else:
-                self.gamma_critic = (
-                    self.gamma_critic_min
-                    + d
-                    * (self.gamma_critic_max - self.gamma_critic_min)
-                    / self.d_critic
-                )
-
-            # Check if the gamma function is below the critical or emergency value
-            list_critic_gammas = []
-            for ii in range(global_control_points.shape[1]):
-                if gamma_values[ii] < self.gamma_critic:
-                    list_critic_gammas.append(ii)
-                    self.color = "k"  # np.array([221, 16, 16]) / 255.0
-
-            if len(list_critic_gammas) > 0:
-                self.evaluate_safety_repulsion(
-                    list_critic_gammas=list_critic_gammas,
-                    environment_without_me=environment_without_me,
-                    global_control_points=global_control_points,
-                    obs_idx=obs_idx,
-                    gamma_values=gamma_values,
-                )
-                
-        if emergency_stop:
-            # if any gamma values are lower od equal gamma_stop
-            if any(x <= self.gamma_stop for x in gamma_values):
-                # print("EMERGENCY STOP")
-                self.angular_velocity = 0
-                self.linear_velocity = [0, 0]
+            if safety_module:
+                #define gramma_critic
+                if d > self.d_critic:
+                    self.gamma_critic = self.gamma_critic_max
+                else:
+                    self.gamma_critic = (
+                        self.gamma_critic_min
+                        + d
+                        * (self.gamma_critic_max - self.gamma_critic_min)
+                        / self.d_critic
+                    )
+                # Check if the gamma function is below gramma_critic
+                list_critic_gammas = []
+                for ii in range(global_control_points.shape[1]):
+                    if gamma_values[ii] < self.gamma_critic:
+                        list_critic_gammas.append(ii)
+                        self.color = "k"  # np.array([221, 16, 16]) / 255.0
+                if len(list_critic_gammas) > 0:
+                    self.evaluate_safety_repulsion(
+                        list_critic_gammas=list_critic_gammas,
+                        environment_without_me=environment_without_me,
+                        global_control_points=global_control_points,
+                        obs_idx=obs_idx,
+                        gamma_values=gamma_values,
+                    )
+                    
+            if emergency_stop:
+                # if any gamma values are lower od equal gamma_stop
+                if any(x <= self.gamma_stop for x in gamma_values):
+                    # print("EMERGENCY STOP")
+                    self.angular_velocity = 0
+                    self.linear_velocity = [0, 0]
 
 
     def evaluate_safety_repulsion(
