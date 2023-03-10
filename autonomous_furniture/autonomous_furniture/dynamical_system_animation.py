@@ -38,12 +38,16 @@ class DynamicalSystemAnimation(Animator):
         anim: bool = True,
         mini_drag: str = "nodrag",
         version: str = "v1",
+        safety_module: bool = True,
+        emergency_stop: bool = True,
         check_convergence: bool = True,
         obstacle_colors=["orange", "blue", "red"],
         figsize=(3.0, 2.5),
     ):
         self.mini_drag = mini_drag
         self.version = version
+        self.safety_module = safety_module
+        self.emergency_stop = emergency_stop
         self.check_convergence = check_convergence
 
         dim = 2
@@ -80,7 +84,7 @@ class DynamicalSystemAnimation(Animator):
     def update_step(self, ii, anim: bool = True):
         for jj in range(self.number_agent):
             self.agent[jj].update_velocity(
-                mini_drag=self.mini_drag, version=self.version, emergency_stop=True
+                mini_drag=self.mini_drag, version=self.version, emergency_stop=self.emergency_stop, safety_module=self.safety_module
             )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)
@@ -90,7 +94,7 @@ class DynamicalSystemAnimation(Animator):
         if not anim:
             return
 
-        print(f"Doing Step: {ii}")
+        # print(f"Doing Step: {ii}")
 
         self.ax.clear()
 

@@ -82,7 +82,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
         # obstacle_colors=[],
     )
 
-    my_animation.run(save_animation=True)
+    my_animation.run(save_animation=False)
     my_animation.logs(len(agent_list))
 
 
