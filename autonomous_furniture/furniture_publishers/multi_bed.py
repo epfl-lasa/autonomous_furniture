@@ -23,7 +23,7 @@ def create_environment(n_agents: int = 10):
     x_lim = [0, 12]
     y_lim = [0, 9]
     # random.seed(7)
-    random.seed(3)
+    # random.seed(3)
 
     obstacle_environment = GlobalObstacleContainer()
 
@@ -64,21 +64,27 @@ def run_ten_bed_animation_matplotlib(it_max=800):
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
-        dt_simulation=0.01,
-        dt_sleep=0.01,
-        animation_name="multiple_bed_animation",
+        dt_simulation=0.04,
+        dt_sleep=0.04,
+        animation_name=str(n_agents)+"_bed_animation",
         file_type=".gif",
     )
 
+    x_lim_anim = [x_lim[0]-1.5, x_lim[1]+1.5]
+    y_lim_anim = [y_lim[0]-1.5, y_lim[1]+1.5]
+
+    
     my_animation.setup(
         obstacle_environment=GlobalObstacleContainer(),
         agent=agent_list,
-        x_lim=x_lim,
-        y_lim=y_lim,
+        x_lim=x_lim_anim,
+        y_lim=y_lim_anim,
         figsize=(5, 4),
         version="v2",
         mini_drag="dragdist",
         obstacle_colors=color_list,
+        emergency_stop=True,
+        safety_module=True,
         # obstacle_colors=[],
     )
 
