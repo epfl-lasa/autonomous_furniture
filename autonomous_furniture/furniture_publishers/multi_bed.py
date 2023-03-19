@@ -14,16 +14,18 @@ from autonomous_furniture.agent import Furniture, Person
 
 from autonomous_furniture.obstacle_container import GlobalObstacleContainer
 from autonomous_furniture.furniture_creators import create_hospital_bed
+from autonomous_furniture.furniture_creators import add_walls
 from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 
 
-def create_environment(n_agents: int = 10):
+def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
     import random
 
     x_lim = [0, 12]
     y_lim = [0, 9]
     # random.seed(7)
-    # random.seed(3)
+    random.seed(3)
+    # random.seed(6)
 
     obstacle_environment = GlobalObstacleContainer()
 
@@ -48,7 +50,28 @@ def create_environment(n_agents: int = 10):
         )
         agent_list.append(new_bed)
 
-    return agent_list, x_lim, y_lim
+    if do_person:
+        start_position = [x_lim[1], y_lim[0]]
+        goal_position = [x_lim[0], y_lim[1]]
+        goal_pose = ObjectPose(position=goal_position)
+        person = Person(
+            center_position=start_position,
+            priority_value=100,
+            goal_pose=goal_pose,
+            obstacle_environment=GlobalObstacleContainer.get(),
+            margin=0.7,
+        )
+        agent_list.append(person)
+
+    if do_walls:
+        # add walls
+        wall_width = 0.5
+        area_enlargement = 1.5
+        agent_list = add_walls(
+            x_lim, y_lim, agent_list, wall_width, area_enlargement, wall_margin=0.7
+        )
+
+    return agent_list, x_lim, y_lim, wall_width, area_enlargement
 
 
 def run_ten_bed_animation_matplotlib(it_max=800):
@@ -56,24 +79,31 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     import matplotlib.pyplot as plt
     from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
-    agent_list, x_lim, y_lim = create_environment()
+    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(
+        do_walls=True, do_person=True
+    )
 
     n_agents = len(agent_list)
+    if wall_width != None:
+        n_agents -= 4  # take out the walls from the counting
     cm = plt.get_cmap("gist_rainbow")
     color_list = [cm(1.0 * ii / n_agents) for ii in range(n_agents)]
+    if wall_width != None:
+        for i in range(4):
+            color_list.append("grey")
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
         dt_simulation=0.04,
         dt_sleep=0.04,
-        animation_name=str(n_agents)+"_bed_animation",
+        animation_name=str(n_agents) + "_bed_animation",
         file_type=".gif",
     )
 
-    x_lim_anim = [x_lim[0]-1.5, x_lim[1]+1.5]
-    y_lim_anim = [y_lim[0]-1.5, y_lim[1]+1.5]
+    total_enlargement = wall_width / 2 + area_enlargement
+    x_lim_anim = [x_lim[0] - total_enlargement, x_lim[1] + total_enlargement]
+    y_lim_anim = [y_lim[0] - total_enlargement, y_lim[1] + total_enlargement]
 
-    
     my_animation.setup(
         obstacle_environment=GlobalObstacleContainer(),
         agent=agent_list,
@@ -98,7 +128,7 @@ def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
     from rclpy.node import Node
     from autonomous_furniture.rviz_animator import RvizSimulator
 
-    agent_list, x_lim, y_lim = create_environment()
+    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment()
 
     ## Start ROS Node
     print("Starting publishing node")

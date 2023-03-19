@@ -93,7 +93,7 @@ class BaseAgent(ABC):
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.2,
+        gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.05,
     ) -> None:
         super().__init__()
@@ -101,11 +101,11 @@ class BaseAgent(ABC):
         self._shape = shape
 
         self.object_type = object_type
-        self.maximum_linear_velocity = 1.0 # m/s
-        self.maximum_angular_velocity = 5.0 # rad/s
-        self.maximum_linear_acceleration = 2.0 # m/s^2
-        self.maximum_angular_acceleration = 5.0 # rad/s^2
-        
+        self.maximum_linear_velocity = 1.0  # m/s
+        self.maximum_angular_velocity = 5.0  # rad/s
+        self.maximum_linear_acceleration = 2.0  # m/s^2
+        self.maximum_angular_acceleration = 5.0  # rad/s^2
+
         self.symmetry = symmetry
 
         # Default values for new variables
@@ -376,7 +376,6 @@ class Furniture(BaseAgent):
         safety_module: bool = True,
         time_step: float = 0.1,
     ) -> None:
-        
         if self._static:
             self.linear_velocity = [0.0, 0.0]
             self.angular_velocity = 0.0
@@ -386,7 +385,7 @@ class Furniture(BaseAgent):
         if self.angular_velocity == None:
             self.angular_velocity = 0.0
         angular_velocity_old = self.angular_velocity
-        
+
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -489,18 +488,30 @@ class Furniture(BaseAgent):
                         obs_idx=obs_idx,
                         gamma_values=gamma_values,
                     )
-            
-        self.apply_linear_and_angular_acceleration_constraints(linear_velocity_old, angular_velocity_old, time_step)
 
-    def apply_linear_and_angular_acceleration_constraints(self, linear_velocity_old, angular_velocity_old, time_step):
+        self.apply_linear_and_angular_acceleration_constraints(
+            linear_velocity_old, angular_velocity_old, time_step
+        )
+
+    def apply_linear_and_angular_acceleration_constraints(
+        self, linear_velocity_old, angular_velocity_old, time_step
+    ):
         # This function checks whether the difference in new computed kinematics and old kinematics exceeds the acceleration limits
-        linear_velocity_difference = self.linear_velocity-linear_velocity_old
-        angular_velocity_difference = self.angular_velocity-angular_velocity_old
-        linear_velocity_difference_allowed = self.maximum_linear_acceleration*time_step
-        angular_velocity_difference_allowed = self.maximum_angular_acceleration*time_step
-        
+        linear_velocity_difference = self.linear_velocity - linear_velocity_old
+        angular_velocity_difference = self.angular_velocity - angular_velocity_old
+        linear_velocity_difference_allowed = (
+            self.maximum_linear_acceleration * time_step
+        )
+        angular_velocity_difference_allowed = (
+            self.maximum_angular_acceleration * time_step
+        )
+
         if LA.norm(linear_velocity_difference) > linear_velocity_difference_allowed:
-            vel_correction = linear_velocity_difference/LA.norm(linear_velocity_difference)*linear_velocity_difference_allowed
+            vel_correction = (
+                linear_velocity_difference
+                / LA.norm(linear_velocity_difference)
+                * linear_velocity_difference_allowed
+            )
             # plt.clf()
             # plt.arrow(self.position[0], self.position[1], linear_velocity_old[0],
             #           linear_velocity_old[1], head_width=0.01, head_length=0.01, color='red')
@@ -510,15 +521,19 @@ class Furniture(BaseAgent):
             #           linear_velocity_difference[1], head_width=0.01, head_length=0.01, color='purple')
 
             self.linear_velocity = linear_velocity_old + vel_correction
-            
+
             # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
             #           self.linear_velocity[1], head_width=0.01, head_length=0.01, color='green')
             # plt.arrow(self.position[0]+linear_velocity_old[0], self.position[1]+linear_velocity_old[1], vel_correction[0],
             #           vel_correction[1], head_width=0.01, head_length=0.01, color='blue')
 
         if LA.norm(angular_velocity_difference) > angular_velocity_difference_allowed:
-            self.angular_velocity = angular_velocity_old + angular_velocity_difference/LA.norm(angular_velocity_difference)*angular_velocity_difference_allowed
-
+            self.angular_velocity = (
+                angular_velocity_old
+                + angular_velocity_difference
+                / LA.norm(angular_velocity_difference)
+                * angular_velocity_difference_allowed
+            )
 
     def compute_gamma_critic(self, d):
         # compute gamma critic
@@ -575,7 +590,7 @@ class Furniture(BaseAgent):
             if drag_angle > np.pi / 2:
                 drag_angle = -1 * (2 * np.pi - drag_angle)
         return drag_angle
-    
+
     def compute_goal_angle(self):
         goal_angle = self._goal_pose.orientation - self.orientation
         if np.abs(goal_angle) > np.pi:
@@ -691,11 +706,11 @@ class Furniture(BaseAgent):
         gamma_values: np.ndarray,
     ) -> None:
         (
-            gamma_list_colliding, #list with critical gamma value
-            normal_list_tot, #list with all normal directions of critical obstacles for each control point
-            weight_list_tot, #list with all weights of each normal direction for each critical obstacle
-            normals_for_ang_vel, #list with already weighted normal direction for each control point
-            control_point_d_list, #list with distance from each control point with critical obstacle to center of mass
+            gamma_list_colliding,  # list with critical gamma value
+            normal_list_tot,  # list with all normal directions of critical obstacles for each control point
+            weight_list_tot,  # list with all weights of each normal direction for each critical obstacle
+            normals_for_ang_vel,  # list with already weighted normal direction for each control point
+            control_point_d_list,  # list with distance from each control point with critical obstacle to center of mass
         ) = self.collect_infos_for_crit_ctr_points(
             list_critic_gammas_indx,
             environment_without_me,
@@ -704,7 +719,7 @@ class Furniture(BaseAgent):
             gamma_values,
         )
 
-        #CALCULATE THE OPTIMAL ESCAPE DIRECTION AND THE ANGULAR VELOCITY CORRECTION TERM
+        # CALCULATE THE OPTIMAL ESCAPE DIRECTION AND THE ANGULAR VELOCITY CORRECTION TERM
         normal_list_tot_combined = []
         weight_list_tot_combined = []
         ang_vel_weights = []
@@ -727,26 +742,36 @@ class Furniture(BaseAgent):
             axis=0,
         )  # calculate the escape direction given all obstacles proximity
 
-        ang_vel_weights = ang_vel_weights / np.sum(ang_vel_weights) #normalize weights
+        ang_vel_weights = ang_vel_weights / np.sum(ang_vel_weights)  # normalize weights
         ang_vel_corr = np.sum(
             ang_vel_corr * np.tile(ang_vel_weights, (1, 1)).transpose(), axis=0
         )
 
         if np.dot(self.linear_velocity, normal_combined) < 0:
             # the is a colliding trajectory we need to correct!
-            b = 1 / ((self.gamma_critic - 1) * (np.min(gamma_list_colliding) - 1)) #compute the correction parameter
+            b = 1 / (
+                (self.gamma_critic - 1) * (np.min(gamma_list_colliding) - 1)
+            )  # compute the correction parameter
             self.linear_velocity += (
                 b * normal_combined
             )  # correct linear velocity to deviate it away from collision trajectory
 
-            if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity: #resize speed if it passes maximum speed
+            if (
+                LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity
+            ):  # resize speed if it passes maximum speed
                 self.linear_velocity *= self._dynamics.maximum_velocity / LA.norm(
                     self.linear_velocity
                 )
 
-            self.angular_velocity += ang_vel_corr * b #correct angular velocity to rotate in a safer position
-            self.angular_velocity = self.angular_velocity[0] #make angular velocity a scalar instead of a 1x1 array
-            if LA.norm(self.angular_velocity) > self.maximum_angular_velocity: #resize speed if it passes maximum speed
+            self.angular_velocity += (
+                ang_vel_corr * b
+            )  # correct angular velocity to rotate in a safer position
+            self.angular_velocity = self.angular_velocity[
+                0
+            ]  # make angular velocity a scalar instead of a 1x1 array
+            if (
+                LA.norm(self.angular_velocity) > self.maximum_angular_velocity
+            ):  # resize speed if it passes maximum speed
                 self.angular_velocity = self.angular_velocity / LA.norm(
                     self.angular_velocity
                 )
@@ -1020,6 +1045,7 @@ class Person(BaseAgent):
         center_position: Optional[np.ndarray] = None,
         radius: float = 0.5,
         margin: float = 1,
+        emergency_stop: bool = True,
         **kwargs,
     ) -> None:
         _shape = Ellipse(
@@ -1038,15 +1064,19 @@ class Person(BaseAgent):
             **kwargs,
         )  # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
 
+        self.maximum_velocity = 1
+        self.maximum_acceleration = 3
+        self.emergency_stop = emergency_stop
+        self.gamma_stop = self.gamma_critic_min - 0.3
         self._dynamics = LinearSystem(
-            attractor_position=self.position, maximum_velocity=1
+            attractor_position=self.position, maximum_velocity=self.maximum_velocity
         )
 
     @property
     def margin_absolut(self):
         return self._shape.margin_absolut
 
-    def update_velocity(self, **kwargs):
+    def update_velocity(self, time_step, **kwargs):
         environment_without_me = self.get_obstacles_without_me()
         global_control_points = self.get_global_control_points()
         global_goal_control_points = self.get_goal_control_points()
@@ -1057,15 +1087,31 @@ class Person(BaseAgent):
         self._dynamics.attractor_position = global_goal_control_points[:, 0]
 
         if not self._static:
+            velocity_old = self.linear_velocity
+
+            if self.emergency_stop:
+                gamma_indx, min_gamma = self.get_gamma_product_crowd(
+                    self.position, self.get_obstacles_without_me()
+                )
+                if min_gamma <= self.gamma_stop:
+                    self.linear_velocity = [0, 0]
+                    return
+
             initial_velocity = self._dynamics.evaluate(ctp)
-            velocity = obs_avoidance_interpolation_moving(
+            self.linear_velocity = obs_avoidance_interpolation_moving(
                 position=ctp,
                 initial_velocity=initial_velocity,
                 obs=environment_without_me,
                 self_priority=self.priority,
             )
+            if LA.norm(self.linear_velocity) > self.maximum_velocity:
+                # apply velocity constraints
+                self.linear_velocity *= self.maximum_velocity / LA.norm(
+                    self.linear_velocity
+                )
 
-            self.linear_velocity = velocity
+            self.apply_acceleration_constraints(velocity_old, time_step)
+
         else:
             self.linear_velocity = [0, 0]
 
@@ -1092,6 +1138,19 @@ class Person(BaseAgent):
         self._list_prox.append(
             dmin
         )  # Temporary metric used for the prox graph of the report, can be deleted
+
+    def apply_acceleration_constraints(self, velocity_old, time_step):
+        # This function checks whether the difference in new computed kinematics and old kinematics exceeds the acceleration limits
+        velocity_difference = self.linear_velocity - velocity_old
+        velocity_difference_allowed = self.maximum_acceleration * time_step
+
+        if LA.norm(velocity_difference) > velocity_difference_allowed:
+            vel_correction = (
+                velocity_difference
+                / LA.norm(velocity_difference)
+                * velocity_difference_allowed
+            )
+            self.linear_velocity = velocity_old + vel_correction
 
     # def get_distance_to_surface(
     #     self, position, in_obstacle_frame: bool = True, margin_absolut: float = None

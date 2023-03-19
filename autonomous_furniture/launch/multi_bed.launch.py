@@ -37,7 +37,7 @@ def generate_launch_description():
     # qolo_nodes = create_qolo_nodes()
 
     # Rviz path -> this could be obtained if correctly installed..
-    rviz_base_path = "/home/"+os.getlogin()+"/ros2_ws/src/autonomous_furniture"
+    rviz_base_path = "/home/" + os.getlogin() + "/ros2_ws/src/autonomous_furniture"
 
     rviz_node = Node(
         package="rviz2",

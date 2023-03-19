@@ -150,7 +150,7 @@ class RvizSimulator(Node):
                 mini_drag="dragdist",
                 version="v2",
                 emergency_stop=True,
-                time_step = self.dt_simulation,
+                time_step=self.dt_simulation,
             )
             # self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)

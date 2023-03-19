@@ -148,6 +148,62 @@ def create_four_chair_arrangement(
     return agent_list
 
 
+def add_walls(
+    x_lim, y_lim, agent_list, wall_width=0.5, area_enlargement=1.5, wall_margin=0.5
+) -> Furniture:
+    # adds walls to the simulation
+    total_displacement_center = wall_width / 2 + area_enlargement
+    center_left = [x_lim[0] - total_displacement_center, np.average(y_lim)]
+    center_down = [np.average(x_lim), y_lim[0] - total_displacement_center]
+    center_right = [x_lim[1] + total_displacement_center, np.average(y_lim)]
+    center_up = [np.average(x_lim), y_lim[1] + total_displacement_center]
+    center_array = [center_left, center_down, center_right, center_up]
+    orientation_array = [np.pi / 2, 0.0, np.pi / 2, 0.0]
+    horizontal_wall_axis = np.array(
+        [x_lim[1] - x_lim[0] + total_displacement_center * 2, wall_width]
+    )
+    vertical_wall_axis = np.array(
+        [y_lim[1] - y_lim[0] + total_displacement_center * 2, wall_width]
+    )
+    axis_array = [
+        vertical_wall_axis,
+        horizontal_wall_axis,
+        vertical_wall_axis,
+        horizontal_wall_axis,
+    ]
+
+    for i in range(4):
+        wall_pose = ObjectPose(
+            position=center_array[i], orientation=orientation_array[i]
+        )
+
+        wall_shape = Cuboid(
+            axes_length=axis_array[i],
+            center_position=wall_pose.position,
+            margin_absolut=wall_margin,
+            orientation=wall_pose.orientation,
+            tail_effect=False,
+        )
+        control_points = np.array(
+            [[-axis_array[i][0] / 2, 0.0], [axis_array[i][0] / 2, 0.0]]
+        )
+        wall = Furniture(
+            shape=wall_shape,
+            obstacle_environment=GlobalObstacleContainer.get(),
+            control_points=control_points,
+            goal_pose=wall_pose,
+            priority_value=1.0,
+            name="wall",
+            object_type=ObjectType.OTHER,
+            symmetry=math.pi,
+            static=True,
+        )
+
+        agent_list.append(wall)
+
+    return agent_list
+
+
 def create_hospital_bed(
     start_pose: ObjectPose,
     goal_pose: Optional[ObjectPose] = None,
