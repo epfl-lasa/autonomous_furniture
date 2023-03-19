@@ -88,6 +88,7 @@ class DynamicalSystemAnimation(Animator):
                 version=self.version,
                 emergency_stop=self.emergency_stop,
                 safety_module=self.safety_module,
+                time_step=self.dt_simulation,
             )
             self.agent[jj].compute_metrics(self.dt_simulation)
             self.agent[jj].do_velocity_step(self.dt_simulation)

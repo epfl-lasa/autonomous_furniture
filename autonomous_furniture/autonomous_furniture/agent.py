@@ -94,14 +94,18 @@ class BaseAgent(ABC):
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
         gamma_critic_min: float = 1.2,
-        gamma_stop: float = 1.1,
+        gamma_stop: float = 1.05,
     ) -> None:
         super().__init__()
 
         self._shape = shape
 
         self.object_type = object_type
-        self.maximum_velocity = 1.0
+        self.maximum_linear_velocity = 1.0 # m/s
+        self.maximum_angular_velocity = 5.0 # rad/s
+        self.maximum_linear_acceleration = 2.0 # m/s^2
+        self.maximum_angular_acceleration = 5.0 # rad/s^2
+        
         self.symmetry = symmetry
 
         # Default values for new variables
@@ -343,7 +347,7 @@ class Furniture(BaseAgent):
         super().__init__(**kwargs)
         self._dynamics = LinearSystem(
             attractor_position=self._goal_pose.position,
-            maximum_velocity=self.maximum_velocity,
+            maximum_velocity=self.maximum_linear_velocity,
         )
 
         # Seems to be used nowhere, mb to be removed
@@ -361,7 +365,7 @@ class Furniture(BaseAgent):
         self.direct_distance = LA.norm(self._goal_pose.position - self.position)
         self._dynamics = LinearSystem(
             attractor_position=self._goal_pose.position,
-            maximum_velocity=self.maximum_velocity,
+            maximum_velocity=self.maximum_linear_velocity,
         )
 
     def update_velocity(
@@ -370,7 +374,19 @@ class Furniture(BaseAgent):
         version: str = "v1",
         emergency_stop: bool = True,
         safety_module: bool = True,
+        time_step: float = 0.1,
     ) -> None:
+        
+        if self._static:
+            self.linear_velocity = [0.0, 0.0]
+            self.angular_velocity = 0.0
+            return
+
+        linear_velocity_old = self.linear_velocity
+        if self.angular_velocity == None:
+            self.angular_velocity = 0.0
+        angular_velocity_old = self.angular_velocity
+        
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
         # TODO : Make it a method to be called outside the class
@@ -379,7 +395,6 @@ class Furniture(BaseAgent):
         if not len(environment_without_me):
             self.linear_velocity = self._dynamics.evaluate(self.position)
             self.angular_velocity = 0
-            breakpoint()
 
         weights = self.get_weight_of_control_points(
             global_control_points, environment_without_me
@@ -387,11 +402,6 @@ class Furniture(BaseAgent):
 
         velocities = np.zeros((self.dimension, self._control_points.shape[1]))
         init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-
-        if self._static:
-            self.linear_velocity = [0, 0.0]
-            self.angular_velocity = 0
-            return
 
         ### Calculate initial linear and angular velocity of the agent
         # for soft decoupling ###
@@ -479,6 +489,36 @@ class Furniture(BaseAgent):
                         obs_idx=obs_idx,
                         gamma_values=gamma_values,
                     )
+            
+        self.apply_linear_and_angular_acceleration_constraints(linear_velocity_old, angular_velocity_old, time_step)
+
+    def apply_linear_and_angular_acceleration_constraints(self, linear_velocity_old, angular_velocity_old, time_step):
+        # This function checks whether the difference in new computed kinematics and old kinematics exceeds the acceleration limits
+        linear_velocity_difference = self.linear_velocity-linear_velocity_old
+        angular_velocity_difference = self.angular_velocity-angular_velocity_old
+        linear_velocity_difference_allowed = self.maximum_linear_acceleration*time_step
+        angular_velocity_difference_allowed = self.maximum_angular_acceleration*time_step
+        
+        if LA.norm(linear_velocity_difference) > linear_velocity_difference_allowed:
+            vel_correction = linear_velocity_difference/LA.norm(linear_velocity_difference)*linear_velocity_difference_allowed
+            # plt.clf()
+            # plt.arrow(self.position[0], self.position[1], linear_velocity_old[0],
+            #           linear_velocity_old[1], head_width=0.01, head_length=0.01, color='red')
+            # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+            #           self.linear_velocity[1], head_width=0.01, head_length=0.01, color='yellow')
+            # plt.arrow(self.position[0]+linear_velocity_old[0], self.position[1]+linear_velocity_old[1], linear_velocity_difference[0],
+            #           linear_velocity_difference[1], head_width=0.01, head_length=0.01, color='purple')
+
+            self.linear_velocity = linear_velocity_old + vel_correction
+            
+            # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
+            #           self.linear_velocity[1], head_width=0.01, head_length=0.01, color='green')
+            # plt.arrow(self.position[0]+linear_velocity_old[0], self.position[1]+linear_velocity_old[1], vel_correction[0],
+            #           vel_correction[1], head_width=0.01, head_length=0.01, color='blue')
+
+        if LA.norm(angular_velocity_difference) > angular_velocity_difference_allowed:
+            self.angular_velocity = angular_velocity_old + angular_velocity_difference/LA.norm(angular_velocity_difference)*angular_velocity_difference_allowed
+
 
     def compute_gamma_critic(self, d):
         # compute gamma critic
@@ -706,7 +746,7 @@ class Furniture(BaseAgent):
 
             self.angular_velocity += ang_vel_corr * b #correct angular velocity to rotate in a safer position
             self.angular_velocity = self.angular_velocity[0] #make angular velocity a scalar instead of a 1x1 array
-            if LA.norm(self.angular_velocity) > 1.0: #resize speed if it passes maximum speed
+            if LA.norm(self.angular_velocity) > self.maximum_angular_velocity: #resize speed if it passes maximum speed
                 self.angular_velocity = self.angular_velocity / LA.norm(
                     self.angular_velocity
                 )
