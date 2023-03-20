@@ -40,7 +40,7 @@ def generate_launch_description():
             )
         )
 
-    wall_nodes = create_room_with_four_walls(room_axes=[7, 10])
+    wall_nodes = create_room_with_four_walls(room_axes=[9, 7])
     qolo_nodes = create_qolo_nodes()
 
     # Rviz path -> this could be obtained if correctly installed..

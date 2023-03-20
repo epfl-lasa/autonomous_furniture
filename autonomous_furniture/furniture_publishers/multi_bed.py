@@ -122,13 +122,13 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     my_animation.logs(len(agent_list))
 
 
-def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
+def run_ten_bed_animation_rviz(it_max: int = 1000, go_to_center: bool = False):
     """Run environment using ros and rviz"""
     import rclpy
     from rclpy.node import Node
     from autonomous_furniture.rviz_animator import RvizSimulator
 
-    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment()
+    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(do_walls=True, do_person=True)
 
     ## Start ROS Node
     print("Starting publishing node")
@@ -157,5 +157,5 @@ def run_ten_bed_animation_rviz(it_max: int = 800, go_to_center: bool = False):
 
 
 if (__name__) == "__main__":
-    run_ten_bed_animation_matplotlib(it_max=1000)
-    # run_ten_bed_animation_rviz(it_max=200)
+    # run_ten_bed_animation_matplotlib(it_max=1000)
+    run_ten_bed_animation_rviz(it_max=1000)
