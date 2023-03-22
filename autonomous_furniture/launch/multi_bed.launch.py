@@ -23,7 +23,7 @@ from autonomous_furniture.launch_helper_functions import create_qolo_nodes
 def generate_launch_description():
     furnite_nodes = []
 
-    n_tables = 10
+    n_tables = 8
     for ii in range(n_tables):
         furnite_nodes.append(
             node_creator(
@@ -33,8 +33,8 @@ def generate_launch_description():
             )
         )
 
-    wall_nodes = create_room_with_four_walls(room_axes=[7, 10])
-    # qolo_nodes = create_qolo_nodes()
+    wall_nodes = create_room_with_four_walls(room_axes=[14, 11], center=[6, 4.5])
+    qolo_nodes = create_qolo_nodes()
 
     # Rviz path -> this could be obtained if correctly installed..
     rviz_base_path = "/home/" + os.getlogin() + "/ros2_ws/src/autonomous_furniture"
@@ -65,4 +65,4 @@ def generate_launch_description():
         rviz_node,
     ]
     # return LaunchDescription(nodes + furnite_nodes + wall_nodes + qolo_nodes)
-    return LaunchDescription(nodes + furnite_nodes + wall_nodes)
+    return LaunchDescription(nodes + furnite_nodes + wall_nodes + qolo_nodes)

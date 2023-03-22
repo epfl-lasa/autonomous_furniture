@@ -93,8 +93,8 @@ class BaseAgent(ABC):
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.1,
-        gamma_stop: float = 1.05,
+        gamma_critic_min: float = 1.2,
+        gamma_stop: float = 1.1,
     ) -> None:
         super().__init__()
 
@@ -103,7 +103,7 @@ class BaseAgent(ABC):
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
         self.maximum_angular_velocity = 5.0  # rad/s
-        self.maximum_linear_acceleration = 2.0  # m/s^2
+        self.maximum_linear_acceleration = 3.0  # m/s^2
         self.maximum_angular_acceleration = 5.0  # rad/s^2
 
         self.symmetry = symmetry
@@ -1064,8 +1064,8 @@ class Person(BaseAgent):
             **kwargs,
         )  # ALWAYS USE np.array([[0,0]]) and not np.array([0,0])
 
-        self.maximum_velocity = 1
-        self.maximum_acceleration = 3
+        self.maximum_velocity = 0.9
+        self.maximum_acceleration = 2
         self.emergency_stop = emergency_stop
         self.gamma_stop = self.gamma_critic_min - 0.3
         self._dynamics = LinearSystem(

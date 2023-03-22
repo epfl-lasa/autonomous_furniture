@@ -78,7 +78,7 @@ class ScenarioLauncher:
         self.grid = Grid(x_lim, y_lim, [], self._resolution)
 
     def creation(
-        self,
+        self, goal_poses: list[ObjectPose] = None
     ):  # Peut être mettre ça dans l'initialisation plutôt que dans une autre méthode
         # Reset the list othe tuple representing the coordianates of free and occupied space
         self.reset_index()
@@ -91,9 +91,12 @@ class ScenarioLauncher:
                 self._init_index_free_space, self._init_index_occupied_space
             )
             # Finding the goal pose of the furniture
-            goal_pose = self.place_agent_randomly(
-                self._goal_index_free_space, self._goal_index_occupied_space
-            )
+            if goal_poses == None:
+                goal_pose = self.place_agent_randomly(
+                    self._goal_index_free_space, self._goal_index_occupied_space
+                )
+            else:
+                goal_pose = goal_poses[ii]
 
             # TODO This is hardcoded and has to be changed for instance the goal location has to be randomly posed as well
             self._init_setup.append(init_pose)

@@ -208,7 +208,8 @@ def create_hospital_bed(
     start_pose: ObjectPose,
     goal_pose: Optional[ObjectPose] = None,
     name: str = "",
-    margin_absolut: float = 0.7
+    margin_absolut: float = 0.7,
+    axes_length=np.array([2.0, 1.0])
     # center_position: np.ndarray, goal_pose: Optional[np.ndarray] = None
 ) -> Furniture:
     if not len(name):
@@ -220,7 +221,7 @@ def create_hospital_bed(
     control_points = np.array([[0.5, 0], [-0.5, 0]])
 
     table_shape = Cuboid(
-        axes_length=np.array([2.0, 1.0]),
+        axes_length=axes_length,
         center_position=start_pose.position,
         margin_absolut=margin_absolut,
         orientation=start_pose.orientation,

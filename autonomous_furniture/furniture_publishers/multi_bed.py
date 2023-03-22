@@ -24,13 +24,15 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
     x_lim = [0, 12]
     y_lim = [0, 9]
     # random.seed(7)
-    random.seed(3)
-    # random.seed(6)
+    # random.seed(3)
+    random.seed(6)
 
     obstacle_environment = GlobalObstacleContainer()
 
     sample_bed = create_hospital_bed(
-        start_pose=ObjectPose(position=np.zeros(2), orientation=0)
+        start_pose=ObjectPose(position=np.zeros(2), orientation=0),
+        margin_absolut=0.3,
+        axes_length=np.array([2.2, 1.1]),
     )
     my_scenario = ScenarioLauncher(
         nb_furniture=n_agents,
@@ -38,7 +40,28 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
         x_lim=x_lim,
         y_lim=y_lim,
     )
-    my_scenario.creation()
+    # create goal poses
+    goal_poses = []
+    for i in range(n_agents):
+        goal_orientation_i = np.pi / 2
+        if (i % 2) == 0:  # divide agents in 2 rows
+            goal_position_i = [
+                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * i,
+                y_lim[0] + sample_bed._shape.axes_length[0] / 2,
+            ]
+        else:
+            goal_position_i = [
+                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * i - 1,
+                y_lim[0]
+                + sample_bed._shape.axes_with_margin[0]
+                + sample_bed._shape.axes_length[0] / 2
+                + 0.75,
+            ]
+
+        goal_i = ObjectPose(position=goal_position_i, orientation=goal_orientation_i)
+        goal_poses.append(goal_i)
+
+    my_scenario.creation(goal_poses)
 
     obstacle_environment.empty()
 
@@ -47,6 +70,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
         new_bed = create_hospital_bed(
             start_pose=my_scenario._init_setup[ii],
             goal_pose=my_scenario._goal_setup[ii],
+            margin_absolut=0.3,
         )
         agent_list.append(new_bed)
 
@@ -59,7 +83,8 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
             priority_value=100,
             goal_pose=goal_pose,
             obstacle_environment=GlobalObstacleContainer.get(),
-            margin=0.7,
+            margin=0.6,
+            name="qolo_human",
         )
         agent_list.append(person)
 
@@ -94,8 +119,8 @@ def run_ten_bed_animation_matplotlib(it_max=800):
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
-        dt_simulation=0.04,
-        dt_sleep=0.04,
+        dt_simulation=0.01,
+        dt_sleep=0.01,
         animation_name=str(n_agents) + "_bed_animation",
         file_type=".gif",
     )
@@ -128,7 +153,9 @@ def run_ten_bed_animation_rviz(it_max: int = 1000, go_to_center: bool = False):
     from rclpy.node import Node
     from autonomous_furniture.rviz_animator import RvizSimulator
 
-    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(do_walls=True, do_person=True)
+    agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(
+        do_walls=True, do_person=False
+    )
 
     ## Start ROS Node
     print("Starting publishing node")

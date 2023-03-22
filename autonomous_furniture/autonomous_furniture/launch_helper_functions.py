@@ -12,6 +12,8 @@ from launch.substitutions import (
     LaunchConfiguration,
 )
 
+import numpy as np
+
 URDF_DIRECTORY = "objects_descriptions"
 
 
@@ -112,34 +114,39 @@ def create_wall_node(
     return new_node
 
 
-def create_room_with_four_walls(room_axes):
-    """Creates a wall with center at [0,0]."""
+def create_room_with_four_walls(room_axes, center=[0, 0]):
+    """Creates a wall with center at center."""
+
+    center_wall_0 = np.array([0, room_axes[1] / 2.0]) + np.array(center)
+    center_wall_1 = np.array([room_axes[0] / 2.0, 0]) + np.array(center)
+    center_wall_2 = np.array([0, -1 * room_axes[1] / 2.0]) + np.array(center)
+    center_wall_3 = np.array([-1 * room_axes[0] / 2.0, 0]) + np.array(center)
 
     wall_nodes = []
     wall_nodes.append(
         create_wall_node(
-            position=[0, room_axes[1] / 2.0],
+            position=center_wall_0,
             length=room_axes[0],
-            orientation_in_degree=00.0,
+            orientation_in_degree=0.0,
         )
     )
     wall_nodes.append(
         create_wall_node(
-            position=[room_axes[0] / 2.0, 0],
+            position=center_wall_1,
             length=room_axes[1],
             orientation_in_degree=90.0,
         )
     )
     wall_nodes.append(
         create_wall_node(
-            position=[0, -1 * room_axes[1] / 2.0],
+            position=center_wall_2,
             length=room_axes[0],
             orientation_in_degree=180.0,
         )
     )
     wall_nodes.append(
         create_wall_node(
-            position=[-1 * room_axes[0] / 2.0, 0],
+            position=center_wall_3,
             length=room_axes[1],
             orientation_in_degree=270.0,
         )

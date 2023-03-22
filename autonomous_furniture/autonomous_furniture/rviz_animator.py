@@ -110,6 +110,9 @@ class RvizSimulator(Node):
 
         elif object_type is ObjectType.QOLO:
             self.odom_transformer.transform.translation.z = 0.2
+            self.odom_transformer.transform.rotation = euler_to_quaternion(
+                0, 0, pose.orientation
+            )  # rpy
 
         # send the joint state and transform
         self.broadcaster.sendTransform(self.odom_transformer)
@@ -157,11 +160,13 @@ class RvizSimulator(Node):
 
         for ii, agent in enumerate(self.agent):
             if agent.object_type == ObjectType.QOLO:
-                u_obs_vel = agent.linear_velocity / np.linalg.norm(obs_vel)
-                x_vec = np.array([1, 0])
-                dot_prod = np.dot(x_vec, u_obs_vel)
-                qolo_dir = np.arccos(dot_prod)
-                agent.orientation = qolo_dir
+                # u_obs_vel = agent.linear_velocity / np.linalg.norm(agent.linear_velocity)
+                # x_vec = np.array([1, 0])
+                # dot_prod = np.dot(x_vec, u_obs_vel)
+                # qolo_dir = np.arccos(dot_prod)
+                agent.pose.orientation = np.arctan2(
+                    agent.linear_velocity[1], agent.linear_velocity[0]
+                )
 
             self.update_state_publisher(
                 pose=agent.pose,
@@ -174,7 +179,7 @@ class RvizSimulator(Node):
         self.publish_furniture_type(
             publish_type=ObjectType.HOSPITAL_BED, base_name="hospital_bed"
         )
-        # self.publish_furniture_type(publish_type=ObjectType.QOLO, base_name="qolo")
+        self.publish_furniture_type(publish_type=ObjectType.QOLO, base_name="qolo")
 
     def publish_furniture_type(self, publish_type: ObjectType, base_name: str):
         it_obj = 0
