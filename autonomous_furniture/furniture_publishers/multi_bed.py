@@ -31,7 +31,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
 
     sample_bed = create_hospital_bed(
         start_pose=ObjectPose(position=np.zeros(2), orientation=0),
-        margin_absolut=0.3,
+        margin_absolut=0.5,
         axes_length=np.array([2.2, 1.1]),
     )
     my_scenario = ScenarioLauncher(
@@ -55,7 +55,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
                 y_lim[0]
                 + sample_bed._shape.axes_with_margin[0]
                 + sample_bed._shape.axes_length[0] / 2
-                + 0.75,
+                + 0.5,
             ]
 
         goal_i = ObjectPose(position=goal_position_i, orientation=goal_orientation_i)
@@ -70,7 +70,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
         new_bed = create_hospital_bed(
             start_pose=my_scenario._init_setup[ii],
             goal_pose=my_scenario._goal_setup[ii],
-            margin_absolut=0.3,
+            margin_absolut=0.5,
         )
         agent_list.append(new_bed)
 
@@ -119,8 +119,8 @@ def run_ten_bed_animation_matplotlib(it_max=800):
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
-        dt_simulation=0.01,
-        dt_sleep=0.01,
+        dt_simulation=0.02,
+        dt_sleep=0.02,
         animation_name=str(n_agents) + "_bed_animation",
         file_type=".gif",
     )
@@ -134,7 +134,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
         agent=agent_list,
         x_lim=x_lim_anim,
         y_lim=y_lim_anim,
-        figsize=(5, 4),
+        figsize=(10, 8),
         version="v2",
         mini_drag="dragdist",
         obstacle_colors=color_list,
@@ -154,7 +154,7 @@ def run_ten_bed_animation_rviz(it_max: int = 1000, go_to_center: bool = False):
     from autonomous_furniture.rviz_animator import RvizSimulator
 
     agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(
-        do_walls=True, do_person=False
+        do_walls=True, do_person=True
     )
 
     ## Start ROS Node

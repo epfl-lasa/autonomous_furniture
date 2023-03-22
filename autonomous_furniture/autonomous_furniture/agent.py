@@ -102,9 +102,9 @@ class BaseAgent(ABC):
 
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
-        self.maximum_angular_velocity = 5.0  # rad/s
+        self.maximum_angular_velocity = 1.0  # rad/s
         self.maximum_linear_acceleration = 3.0  # m/s^2
-        self.maximum_angular_acceleration = 5.0  # rad/s^2
+        self.maximum_angular_acceleration = 3.0  # rad/s^2
 
         self.symmetry = symmetry
 

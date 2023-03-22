@@ -163,10 +163,11 @@ class RvizSimulator(Node):
                 # u_obs_vel = agent.linear_velocity / np.linalg.norm(agent.linear_velocity)
                 # x_vec = np.array([1, 0])
                 # dot_prod = np.dot(x_vec, u_obs_vel)
-                # qolo_dir = np.arccos(dot_prod)
-                agent.pose.orientation = np.arctan2(
+                qolo_dir = np.arctan2(
                     agent.linear_velocity[1], agent.linear_velocity[0]
                 )
+                if qolo_dir != 0:
+                    agent.pose.orientation = qolo_dir
 
             self.update_state_publisher(
                 pose=agent.pose,
