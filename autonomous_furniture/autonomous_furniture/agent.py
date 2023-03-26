@@ -93,7 +93,7 @@ class BaseAgent(ABC):
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.2,
+        gamma_critic_min: float = 1.4,
         gamma_stop: float = 1.1,
     ) -> None:
         super().__init__()
@@ -103,8 +103,8 @@ class BaseAgent(ABC):
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
         self.maximum_angular_velocity = 1.0  # rad/s
-        self.maximum_linear_acceleration = 3.0  # m/s^2
-        self.maximum_angular_acceleration = 3.0  # rad/s^2
+        self.maximum_linear_acceleration = 4.0  # m/s^2
+        self.maximum_angular_acceleration = 10.0  # rad/s^2
 
         self.symmetry = symmetry
 
@@ -489,6 +489,8 @@ class Furniture(BaseAgent):
                         gamma_values=gamma_values,
                     )
 
+        self.apply_velocity_constraints()
+
         self.apply_linear_and_angular_acceleration_constraints(
             linear_velocity_old, angular_velocity_old, time_step
         )
@@ -641,19 +643,19 @@ class Furniture(BaseAgent):
         self.linear_velocity = np.sum(
             velocities * np.tile(weights, (self.dimension, 1)), axis=1
         )
-        if initial_magnitude == None:
-            # check whether velocity is greater than maximum speed
-            if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
-                self.linear_velocity = (
-                    self._dynamics.maximum_velocity
-                    * self.linear_velocity
-                    / LA.norm(self.linear_velocity)
-                )
-        else:
-            # normalization to the initial linear velocity
-            self.linear_velocity = (
-                initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
-            )
+        # if initial_magnitude == None:
+        #     # check whether velocity is greater than maximum speed
+        #     if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
+        #         self.linear_velocity = (
+        #             self._dynamics.maximum_velocity
+        #             * self.linear_velocity
+        #             / LA.norm(self.linear_velocity)
+        #         )
+        # else:
+        #     # normalization to the initial linear velocity
+        #     self.linear_velocity = (
+        #         initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
+        #     )
         # angular velocity
         global_control_points = self.get_global_control_points()
         for ii in range(self._control_points.shape[1]):
@@ -756,25 +758,27 @@ class Furniture(BaseAgent):
                 b * normal_combined
             )  # correct linear velocity to deviate it away from collision trajectory
 
-            if (
-                LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity
-            ):  # resize speed if it passes maximum speed
-                self.linear_velocity *= self._dynamics.maximum_velocity / LA.norm(
-                    self.linear_velocity
-                )
-
             self.angular_velocity += (
                 ang_vel_corr * b
             )  # correct angular velocity to rotate in a safer position
             self.angular_velocity = self.angular_velocity[
                 0
             ]  # make angular velocity a scalar instead of a 1x1 array
-            if (
-                LA.norm(self.angular_velocity) > self.maximum_angular_velocity
-            ):  # resize speed if it passes maximum speed
-                self.angular_velocity = self.angular_velocity / LA.norm(
-                    self.angular_velocity
-                )
+
+    def apply_velocity_constraints(self):
+        if (
+            LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity
+        ):  # resize speed if it passes maximum speed
+            self.linear_velocity *= self._dynamics.maximum_velocity / LA.norm(
+                self.linear_velocity
+            )
+
+        if (
+            LA.norm(self.angular_velocity) > self.maximum_angular_velocity
+        ):  # resize speed if it passes maximum speed
+            self.angular_velocity = self.angular_velocity / LA.norm(
+                self.angular_velocity * self.maximum_angular_velocity
+            )
 
     def collect_infos_for_crit_ctr_points(
         self,

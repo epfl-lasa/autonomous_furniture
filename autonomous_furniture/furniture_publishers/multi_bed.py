@@ -80,7 +80,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
         goal_pose = ObjectPose(position=goal_position)
         person = Person(
             center_position=start_position,
-            priority_value=100,
+            priority_value=1e3,
             goal_pose=goal_pose,
             obstacle_environment=GlobalObstacleContainer.get(),
             margin=0.6,
@@ -119,8 +119,8 @@ def run_ten_bed_animation_matplotlib(it_max=800):
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
-        dt_simulation=0.02,
-        dt_sleep=0.02,
+        dt_simulation=0.01,
+        dt_sleep=0.01,
         animation_name=str(n_agents) + "_bed_animation",
         file_type=".gif",
     )
