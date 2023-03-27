@@ -78,7 +78,6 @@ class RvizSimulator(Node):
 
         self.ii = 0
         self._pause = False
-
         self.timer = self.create_timer(self.period, self.update_step)
 
     def update_state_publisher(
@@ -89,7 +88,7 @@ class RvizSimulator(Node):
     ):
         self.odom_transformer.child_frame_id = frame_prefix + "/" + "base_link"
 
-        now = self.get_clock().now()
+        now = 
         self.odom_transformer.header.stamp = now.to_msg()
         self.odom_transformer.transform.translation.x = pose.position[0]
         self.odom_transformer.transform.translation.y = pose.position[1]
