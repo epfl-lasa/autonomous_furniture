@@ -8,8 +8,8 @@ docker run \
 		--net host \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $HOME/.Xauthority:/home/ros/.Xauthority \
-		-v "$(pwd)"/autonomous_furniture/:/home/ros/ros2_ws/src/autonomous_furniture:rw\
-		-v "$(pwd)"/objects_descriptions/:/home/ros/ros2_ws/src/objects_descriptions:rw\
+		-v "$(pwd)"/../autonomous_furniture/:/home/ros/ros2_ws/src/autonomous_furniture:rw\
+		-v "$(pwd)"/../objects_descriptions/:/home/ros/ros2_ws/src/objects_descriptions:rw\
 		-v /home/lukas/Code/nonlinear_obstacle_avoidance/nonlinear_avoidance:/home/ros/python/nonlinear_obstacle_avoidance/nonlinear_avoidance:rw\
 		ros2_autonomous_furniture
 

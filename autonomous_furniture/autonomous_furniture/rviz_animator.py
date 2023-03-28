@@ -88,8 +88,7 @@ class RvizSimulator(Node):
     ):
         self.odom_transformer.child_frame_id = frame_prefix + "/" + "base_link"
 
-        now = 
-        self.odom_transformer.header.stamp = now.to_msg()
+        self.odom_transformer.header.stamp = self.get_clock().now().to_msg()
         self.odom_transformer.transform.translation.x = pose.position[0]
         self.odom_transformer.transform.translation.y = pose.position[1]
         self.odom_transformer.transform.translation.z = 0.0
