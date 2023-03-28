@@ -9,7 +9,7 @@ from rclpy.qos import QoSProfile
 from tf2_ros import TransformBroadcaster, TransformStamped
 
 from vartools.states import ObjectPose
-from vartools.dynamical_systems import QuadraticAxisConvergence  # LinearSystem
+from vartools.dynamical_systems import QuadraticAxisConvergence, LinearSystem
 
 from nonlinear_avoidance.rotation_container import RotationContainer
 from nonlinear_avoidance.avoidance import RotationalAvoider
@@ -73,6 +73,8 @@ class RvizQolo:
     it_count: int = 0
     _frame_id: str = ""
 
+    required_margin: int = 0.5
+
     def __post_init__(self):
         self._frame_id = f"qolo{str(self.it_count)}/base_link"
 
@@ -98,7 +100,12 @@ class RvizQolo:
 # @dataclass(slots=True)c
 class RvizQoloAnimator(Node):
     def __init__(
-        self, it_max: int, dt_sleep: float = 0.05, dt_simulation: float = 0.01
+        self,
+        robot,
+        avoider,
+        it_max: int,
+        dt_sleep: float = 0.05,
+        dt_simulation: float = 0.01,
     ) -> None:
         self.animation_paused = False
 
@@ -106,7 +113,7 @@ class RvizQoloAnimator(Node):
         self.dt_sleep = dt_sleep
         self.dt_simulation = dt_simulation
 
-        super().__init__("qolo_publisher")
+        super().__init__("transform_publisher")
 
         self.period = self.dt_simulation
 
@@ -121,17 +128,19 @@ class RvizQoloAnimator(Node):
         self._pause = False
         self.timer = self.create_timer(self.period, self.update_step)
 
+        self.avoider = avoider
+        self.robot = robot
+
     def update_step(self) -> None:
         self.ii += 1
+
+        self.robot.twist.linear = self.avoider.evaluate(self.robot.position)
+        self.robot.update_step(self.dt_simulation)
 
         self.transform_stamped.header.stamp = self.get_clock().now().to_msg()
 
         # Only avoid QOLO
-        self.transform_stamped = self.qolo.update_transform(self.transform_stamped)
-        self.broadcaster.sendTransform(self.transform_stamped)
-
-        # Only avoid QOLO
-        self.transform_stamped = self.qolo.update_transform(self.transform_stamped)
+        self.transform_stamped = self.robot.update_transform(self.transform_stamped)
         self.broadcaster.sendTransform(self.transform_stamped)
 
 
@@ -146,6 +155,9 @@ def main(it_max=1000):
         dimension=2,
         attractor_position=np.array([8, 0]),
     )
+    convergence_dynamics = LinearSystem(
+        attractor_position=initial_dynamics.attractor_position
+    )
 
     obstacle_environment = RotationContainer()
     obstacle_environment.add_obstacle(
@@ -155,15 +167,18 @@ def main(it_max=1000):
         )
     )
 
-    obstacle_environment.set_convergence_directions(initial_dynamics)
+    # obstacle_environment.set_convergence_directions(initial_dynamics)
 
     my_avoider = RotationalAvoider(
         initial_dynamics=initial_dynamics,
         obstacle_environment=obstacle_environment,
+        convergence_system=convergence_dynamics,
     )
 
     for ii in range(it_max):
-        pass
+        qolo.twist.linear = my_avoider.evaluate(qolo.pose.position)
+
+        qolo.update_step()
 
 
 if (__name__) == "__main__":
