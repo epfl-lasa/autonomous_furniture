@@ -62,6 +62,14 @@ WORKDIR ${HOME}/python/dynamic_obstacle_avoidance
 RUN python3 -m pip install -r requirements.txt
 RUN python3 -m pip install --editable .
 
+# Install Nonlinear Dynamics
+WORKDIR ${HOME}/python
+RUN git clone -b main https://github.com/hubernikus/nonlinear_obstacle_avoidance.git
+WORKDIR ${HOME}/python/nonlinear_obstacle_avoidance
+RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --editable .
+# pip install git+git://github.com/hubernikus/nonlinear_obstacle_avoidance.git
+
 # ROS-ENV setup
 USER ros
 RUN mkdir -p ${HOME}/ros2_ws/src
