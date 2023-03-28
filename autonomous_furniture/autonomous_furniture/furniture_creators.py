@@ -40,7 +40,7 @@ def create_chair(
     # control_points = np.array([[-0.05, 0], [0.05, 0.0]])
     control_points = np.array([[0.0, -0.00], [0, 0.00]])
 
-    table_shape = Cuboid(
+    shape_ = Cuboid(
         axes_length=np.array([0.7, 0.6]),
         center_position=start_pose.position,
         margin_absolut=margin_absolut,
@@ -49,7 +49,7 @@ def create_chair(
     )
 
     new_furniture = Furniture(
-        shape=table_shape,
+        shape=shape_,
         obstacle_environment=GlobalObstacleContainer(),
         control_points=control_points,
         goal_pose=goal_pose,
@@ -76,7 +76,7 @@ def create_table(
 
     control_points = np.array([[0.45, 0], [-0.45, 0]])
 
-    table_shape = Cuboid(
+    shape_ = Cuboid(
         axes_length=np.array([1.8, 0.8]),
         center_position=start_pose.position,
         margin_absolut=margin_absolut,
@@ -85,7 +85,7 @@ def create_table(
     )
 
     new_furniture = Furniture(
-        shape=table_shape,
+        shape=shape_,
         obstacle_environment=GlobalObstacleContainer.get(),
         control_points=control_points,
         goal_pose=goal_pose,

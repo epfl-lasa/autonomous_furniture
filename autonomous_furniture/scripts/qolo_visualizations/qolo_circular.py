@@ -1,3 +1,4 @@
+from typing import ClassVar, Optional
 from dataclasses import dataclass, field
 import logging
 
@@ -8,8 +9,13 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile
 from tf2_ros import TransformBroadcaster, TransformStamped
 
-from vartools.states import ObjectPose
+from vartools.states import Pose, Twist
 from vartools.dynamical_systems import QuadraticAxisConvergence, LinearSystem
+
+from dynamic_obstacle_avoidance.obstacles import Obstacle
+from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
+
+from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
 
 from nonlinear_avoidance.rotation_container import RotationContainer
 from nonlinear_avoidance.avoidance import RotationalAvoider
@@ -20,38 +26,79 @@ from autonomous_furniture.furniture_creators import create_hospital_bed
 # from autonomous_furniture.rviz_animator import RvizSimulator
 
 
-@dataclass(slots=True)
-class Pose2D:
-    position: np.ndarray = np.zeros(2)
-    orientation: float = 0.0
-
-
-@dataclass(slots=True)
-class Twist2D:
-    linear: np.ndarray = np.zeros(2)
-    angular: float = 0.0
-
-
 # @dataclass(slots=True)
 class SimpleAgent:
-    pose: Pose2D = field(default_factory=lambda: Pose2D())
-    twist: Twist2D = field(default_factory=lambda: Twist2D())
+    pose: Pose = field(default_factory=lambda: Pose.create_trivial())
+    twist: Twist = field(default_factory=lambda: Twist.create_trivial())
+    shapes: list[Obstacle]
     frame_id: str = ""
+
+    def update_obstacle_shapes(self):
+        for obs in shapes:
+            obs.pose = self.pose.transform_pose_from_relative(obs.pose)
+
+
+@dataclass(slots=True)
+class AgentContainer:
+    _agent_list: list[SimpleAgent] = field(default_factory=list)
+
+    def append(self, agent: SimpleAgent) -> None:
+        self._agent_list.append(agent)
+
+    def get_obstacles(
+        self,
+        excluding_agents: list[SimpleAgent] = [],
+        level: Optional[int] = None,
+        desired_margin: Optional[float] = None,
+    ) -> BaseContainer:
+        """Returns an ObstacleContainer based on the obstacles, i.e., the avoidance-shapes."""
+        # Note that the (mutable) default argument is never changed.
+
+        container_ = ObstacleContainer()
+        for agent in self._agent_list:
+            if agent in excluding_agents:
+                continue
+
+            for obs in agent.shapes:
+                if desired_margin is not None:
+                    obs.margin_absolut = desired_margin
+                if level is None:
+                    container_.append(obs)
+                    continue
+
+                # TODO: only take specific level [future implementation]
+                pass
+
+        return container_
 
 
 @dataclass(slots=True)
 class RvizTable(SimpleAgent):
-    pose: Pose2D = field(default_factory=lambda: Pose2D())
-    twist: Twist2D = field(default_factory=lambda: Twist2D())
-    it_count: int = 0
+    pose: Pose = field(default_factory=lambda: Pose.create_trivial(2))
+    twist: Twist = field(default_factory=lambda: Twist.create_trivial(2))
     _frame_id: str = ""
 
-    def __post_init__(self):
+    it_count: ClassVar[int] = 0
+    shapes: list[Obstacle] = field(
+        default_factory=lambda: [
+            Cuboid(pose=Pose.create_trivial(2), axes_length=np.array([2.0, 1.0]))
+        ]
+    )
+    local_poses: list[Obstacle] = field(
+        default_factory=lambda: [Pose.create_trivial(2)]
+    )
+
+    level_list: Optional[list[int]] = None
+
+    def __post_init__(self) -> None:
         self._frame_id = f"qolo{str(self.it_count)}/base_link"
+        RvizTable.it_count += 1
 
     def update_step(self, dt: float) -> None:
         self.pose.position = self.pose.position + self.twist.linear * dt
         self.pose.orientation = self.pose.orientation + self.twist.angular * dt
+
+        self.update_obstacle_shapes()
 
     def update_transform(
         self, transform_stamped: TransformBroadcaster
@@ -68,8 +115,8 @@ class RvizTable(SimpleAgent):
 
 @dataclass(slots=True)
 class RvizQolo:
-    pose: Pose2D = field(default_factory=lambda: Pose2D())
-    twist: Twist2D = field(default_factory=lambda: Twist2D())
+    pose: Pose = field(default_factory=lambda: Pose.create_trivial(2))
+    twist: Twist = field(default_factory=lambda: Twist.create_trivial(2))
     it_count: int = 0
     _frame_id: str = ""
 
@@ -90,9 +137,10 @@ class RvizQolo:
         transform_stamped.transform.translation.y = self.pose.position[1]
         transform_stamped.transform.translation.z = 0.2
 
+        # roll-pitch-yaw
         transform_stamped.transform.rotation = euler_to_quaternion(
             0, 0, self.pose.orientation
-        )  # rpy
+        )
 
         return transform_stamped
 
@@ -144,10 +192,10 @@ class RvizQoloAnimator(Node):
         self.broadcaster.sendTransform(self.transform_stamped)
 
 
-def main(it_max=1000):
-    start_position = np.array([0, 0])
+def main(it_max: int = 1000, delta_time: float = 0.1):
+    start_position = np.array([3, 0])
     start_orientation = 0
-    qolo = RvizQolo(pose=Pose2D(position=start_position, orientation=start_orientation))
+    qolo = RvizQolo(pose=Pose(position=start_position, orientation=start_orientation))
 
     initial_dynamics = QuadraticAxisConvergence(
         stretching_factor=3,
@@ -159,26 +207,23 @@ def main(it_max=1000):
         attractor_position=initial_dynamics.attractor_position
     )
 
-    obstacle_environment = RotationContainer()
-    obstacle_environment.add_obstacle(
-        create_hospital_bed(
-            start_pose=ObjectPose(position=np.array([0, 0]), orientation=0),
-            margin_absolut=qolo.required_margin,
-        )
-    )
-
+    agent_container = AgentContainer()
+    agent_container.append(RvizTable(pose=Pose.create_trivial(2)))
     # obstacle_environment.set_convergence_directions(initial_dynamics)
 
     my_avoider = RotationalAvoider(
         initial_dynamics=initial_dynamics,
-        obstacle_environment=obstacle_environment,
         convergence_system=convergence_dynamics,
     )
 
     for ii in range(it_max):
-        qolo.twist.linear = my_avoider.evaluate(qolo.pose.position)
-
-        qolo.update_step()
+        qolo.twist.linear = my_avoider.avoid(
+            position=qolo.pose.position,
+            obstacle_list=agent_container.get_obstacles(
+                desired_margin=qolo.required_margin
+            ),
+        )
+        qolo.update_step(dt=delta_time)
 
 
 if (__name__) == "__main__":
