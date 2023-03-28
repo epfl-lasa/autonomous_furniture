@@ -1,7 +1,6 @@
 import os
 import math
 
-from ament_index_python.packages import get_package_share_directory
 from ament_index_python.packages import get_package_share_path
 
 from launch_ros.actions import Node
@@ -21,11 +20,6 @@ def node_creator(furniture_name, urdf_file_name, topicspace=""):
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
 
     path_to_urdf = get_package_share_path(URDF_DIRECTORY) / "urdf" / urdf_file_name
-
-    urdf = os.path.join(
-        get_package_share_directory(URDF_DIRECTORY),
-        os.path.join("urdf", urdf_file_name),
-    )
 
     if len(topicspace):
         namespace = topicspace + "/" + furniture_name + "/"
@@ -55,7 +49,7 @@ def node_creator(furniture_name, urdf_file_name, topicspace=""):
                 ),
             }
         ],
-        arguments=[urdf],
+        arguments=[str(path_to_urdf)],
     )
 
     return new_node
@@ -70,13 +64,7 @@ def create_wall_node(
     wall_counter=[0],
 ):
     use_sim_time = LaunchConfiguration("use_sim_time", default="false")
-
     path_to_urdf = get_package_share_path(URDF_DIRECTORY) / "urdf" / urdf_file_name
-
-    urdf = os.path.join(
-        get_package_share_directory(URDF_DIRECTORY),
-        os.path.join("urdf", urdf_file_name),
-    )
 
     rot = orientation_in_degree * math.pi / 180.0
     new_node = Node(
@@ -105,7 +93,7 @@ def create_wall_node(
                 ),
             }
         ],
-        arguments=[urdf],
+        arguments=[str(path_to_urdf)],
     )
 
     # Increment counter
