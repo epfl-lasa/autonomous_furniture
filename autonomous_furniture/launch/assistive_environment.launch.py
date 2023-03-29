@@ -42,9 +42,7 @@ def generate_launch_description():
 
     wall_nodes = create_room_with_four_walls(room_axes=[9, 7])
     qolo_nodes = create_qolo_nodes()
-
-    # Rviz path -> this could be obtained if correctly installed..
-    rviz_base_path = "/home/" + os.getlogin() + "/ros2_ws/src/autonomous_furniture"
+    package_path = get_package_share_path("autonomous_furniture")
 
     rviz_node = Node(
         package="rviz2",
@@ -52,13 +50,7 @@ def generate_launch_description():
         name="rviz2",
         arguments=[
             "-d",
-            os.path.join(rviz_base_path, "config", "assistive_environment.rviz")
-            # PathJoinSubstitution(
-            #     [
-            #         FindPackageShare("autonomous_furniture"),
-            #         "config/assistive_environment.rviz",
-            #     ]
-            # ),
+            str(package_path / "config" / "assistive_environment.rviz"),
         ],
         output="log",
     )

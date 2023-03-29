@@ -21,8 +21,8 @@ from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
     import random
 
-    x_lim = [0, 12]
-    y_lim = [0, 9]
+    x_lim: list[float] = [0, 12]
+    y_lim: list[float] = [0, 9]
     # random.seed(7)
     # random.seed(3)
     random.seed(6)
@@ -34,6 +34,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
         margin_absolut=0.5,
         axes_length=np.array([2.2, 1.1]),
     )
+
     my_scenario = ScenarioLauncher(
         nb_furniture=n_agents,
         furniture_shape=sample_bed._shape,

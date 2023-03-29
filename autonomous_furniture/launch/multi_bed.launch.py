@@ -20,10 +20,8 @@ from autonomous_furniture.launch_helper_functions import create_room_with_four_w
 from autonomous_furniture.launch_helper_functions import create_qolo_nodes
 
 
-def generate_launch_description():
+def generate_launch_description(n_tables: int = 8):
     furnite_nodes = []
-
-    n_tables = 8
     for ii in range(n_tables):
         furnite_nodes.append(
             node_creator(

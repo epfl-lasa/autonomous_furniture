@@ -6,7 +6,8 @@ autonomous_furniture/scripts/*.json
 .venv/**
 venv/**
 
-# Data-files
+autonomous_furniture/.venv/**
+autonomous_furniture/venv/**
 
 
 **/*.egg-info/*
