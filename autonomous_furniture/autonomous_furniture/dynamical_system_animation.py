@@ -103,9 +103,6 @@ class DynamicalSystemAnimation(Animator):
         self.ax.clear()
 
         for jj in range(self.number_agent):
-            global_control_points = self.agent[jj].get_global_control_points()
-            self.ax.plot(global_control_points[0, :], global_control_points[1, :], "ko")
-
             goal_control_points = self.agent[
                 jj
             ].get_goal_control_points()  ##plot agent center position
@@ -115,11 +112,22 @@ class DynamicalSystemAnimation(Animator):
             else:
                 color = "black"
 
+            global_control_points = self.agent[jj].get_global_control_points()
+            self.ax.scatter(global_control_points[0, :], global_control_points[1, :], color=color, marker="o")
+
             self.ax.plot(
                 goal_control_points[0, :],
                 goal_control_points[1, :],
                 color=color,
                 marker="o",
+                linestyle="",  ##k=black, o=dot
+            )
+
+            self.ax.plot(
+                self.agent[jj].position[0],
+                self.agent[jj].position[1],
+                color=color,
+                marker="*",
                 linestyle="",  ##k=black, o=dot
             )
 
@@ -146,6 +154,10 @@ class DynamicalSystemAnimation(Animator):
                 linestyle="dashed",
             )
 
+            for i in range(len(global_control_points[0,:])):
+                margins = plt.Circle((global_control_points[0, i], global_control_points[1, i]), self.agent[jj].margin_absolut, color="black", linestyle="dashed", fill=False)
+                self.ax.add_patch(margins)
+            
             # breakpoint()
 
         # Drawing and adjusting of the axis
@@ -164,29 +176,29 @@ class DynamicalSystemAnimation(Animator):
         #         markersize=12,
         #     )
 
-        if len(self.obstacle_colors):
-            for jj in range(self.number_agent):
-                plot_obstacles(
-                    ax=self.ax,
-                    obstacle_container=[self.obstacle_environment[jj]],
-                    x_lim=self.x_lim,
-                    y_lim=self.y_lim,
-                    showLabel=False,
-                    obstacle_color=self.obstacle_colors[jj],
-                    draw_reference=False,
-                    set_axes=False,
-                )
-        else:
-            plot_obstacles(
-                ax=self.ax,
-                obstacle_container=self.obstacle_environment,
-                x_lim=self.x_lim,
-                y_lim=self.y_lim,
-                showLabel=False,
-                obstacle_color=np.array([176, 124, 124]) / 255.0,
-                draw_reference=False,
-                set_axes=False,
-            )
+        # if len(self.obstacle_colors):
+        #     for jj in range(self.number_agent):
+        #         plot_obstacles(
+        #             ax=self.ax,
+        #             obstacle_container=[self.obstacle_environment[jj]],
+        #             x_lim=self.x_lim,
+        #             y_lim=self.y_lim,
+        #             showLabel=False,
+        #             obstacle_color=self.obstacle_colors[jj],
+        #             draw_reference=False,
+        #             set_axes=False,
+        #         )
+        # else:
+        #     plot_obstacles(
+        #         ax=self.ax,
+        #         obstacle_container=self.obstacle_environment,
+        #         x_lim=self.x_lim,
+        #         y_lim=self.y_lim,
+        #         showLabel=False,
+        #         obstacle_color=np.array([176, 124, 124]) / 255.0,
+        #         draw_reference=False,
+        #         set_axes=False,
+        #     )
 
         self.ax.set_xlabel("x [m]", fontsize=9)
         self.ax.set_ylabel("y [m]", fontsize=9)
