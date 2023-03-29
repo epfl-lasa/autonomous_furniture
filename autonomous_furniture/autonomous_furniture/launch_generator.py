@@ -55,6 +55,7 @@ def generate_launch_description(
     room_axes: list[float] = [14, 11],
     room_center: list[float] = [6, 4.5],
     n_qolos: int = 1,
+    create_rviz: bool = False,
 ):
     wall_nodes = create_room_with_four_walls(room_axes=room_axes, center=room_center)
 
@@ -65,13 +66,15 @@ def generate_launch_description(
     # Rviz path -> this could be obtained if correctly installed..
     package_directory = get_package_share_path("autonomous_furniture")
 
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", str(package_directory / "config" / "multi_bed.rviz")],
-        output="log",
-    )
+    if create_rviz:
+        rviz_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            name="rviz2",
+            arguments=["-d", str(package_directory / "config" / "multi_bed.rviz")],
+            output="log",
+        )
+        node_list.append(rviz_node)
 
     nodes = [
         DeclareLaunchArgument(
@@ -79,7 +82,6 @@ def generate_launch_description(
             default_value="false",
             description="Use simulation (Gazebo) clock if true",
         ),
-        rviz_node,
     ]
     # return LaunchDescription(nodes + furnite_nodes + wall_nodes + qolo_nodes)
     return LaunchDescription(nodes + node_list + wall_nodes + qolo_nodes)
