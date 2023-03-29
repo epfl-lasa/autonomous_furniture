@@ -312,7 +312,7 @@ class BaseAgent(ABC):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
 
     def get_weight_of_control_points(self, control_points, environment_without_me):
-        cutoff_gamma = 1e-4  # TODO : This value has to be big and not small
+        cutoff_gamma = 10  # TODO : This value has to be big and not small
         # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
         gamma_values = np.zeros(control_points.shape[1])
         obs_idx = np.zeros(control_points.shape[1])
@@ -437,13 +437,14 @@ class Furniture(BaseAgent):
             velocities = self.ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel, init_velocities, velocities, initial_velocity
             )
-            self.agent_kinematics_from_ctr_point_vel(
-                velocities, angular_vel, weights, initial_magnitude
-            )
 
         elif version == "v1":
             velocities = self.compute_ctr_point_vel_from_obs_avoidance(velocities)
-            self.agent_kinematics_from_ctr_point_vel(velocities, angular_vel, weights)
+        
+        else: 
+            print("INVALID VERSION: cHOOSE v1 or v2")
+        
+        self.agent_kinematics_from_ctr_point_vel(velocities, angular_vel, weights, use_LSQ = True)
 
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
@@ -636,9 +637,10 @@ class Furniture(BaseAgent):
         return velocities
 
     def agent_kinematics_from_ctr_point_vel(
-        self, velocities, angular_vel, weights, initial_magnitude=None
+        self, velocities, angular_vel, weights, use_LSQ=True
     ):
         ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
+        # if use_LSQ==False:
         # linear velocity
         self.linear_velocity = np.sum(
             velocities * np.tile(weights, (self.dimension, 1)), axis=1
@@ -664,7 +666,27 @@ class Furniture(BaseAgent):
                 velocities[:, ii] - self.linear_velocity,
             )
         self.angular_velocity = np.sum(angular_vel)
-
+            
+        # elif use_LSQ==True:
+        #     #solve wheighted LSQ x = (A^T*W*A)^-1*A^T*W*b
+        #     N = self._control_points.shape[0]*2
+        #     w_diag = np.zeros(N) #diagonal of weights matrix
+        #     A = np.zeros((N,3)) # A matrix
+        #     b = np.zeros((N)) #
+        #     for i in range(self._control_points.shape[0]):
+        #         n = i*2
+        #         w_diag[n:n+2] = [weights[i], weights[i]]
+        #         A[n:n+2,:] = np.array([[1, 0, -self._control_points[i,1]],[0, 1, self._control_points[i,0]]])
+        #         b[n:n+2] = velocities[:,i]
+        #     W = np.diag(w_diag)
+        #     ATW = np.matmul(np.transpose(A), W)
+        #     ATWA = np.matmul(ATW, A)
+        #     ATWb = np.matmul(ATW, b)
+        #     x = np.matmul(np.linalg.inv(ATWA), ATWb)
+            
+        #     self.linear_velocity = x[0:2]
+        #     self.angular_velocity = x[2]
+            
     def compute_ang_weights(self, mini_drag, initial_velocity, d):
         # Computing the weights of the angle to reach (w1 and w2 are a1 and a2 in the paper)
         if mini_drag == "dragvel":  # a1 computed depending on the velocity

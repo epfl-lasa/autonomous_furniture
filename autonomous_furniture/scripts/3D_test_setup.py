@@ -86,8 +86,8 @@ def priority_demo(args=[]):
         y_lim=[-2, 7],
         version="v2",
         mini_drag="dragdist",
-        safety_module=True,
-        emergency_stop=True,
+        safety_module=False,
+        emergency_stop=False,
     )
 
     my_animation.run(save_animation=args.rec)
