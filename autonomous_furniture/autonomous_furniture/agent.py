@@ -399,13 +399,13 @@ class Furniture(BaseAgent):
             global_control_points, environment_without_me
         )
 
-        velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-        init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        velocities = np.zeros((self.dimension, self._control_points.shape[0]))
+        init_velocities = np.zeros((self.dimension, self._control_points.shape[0]))
 
         ### Calculate initial linear and angular velocity of the agent
         # for soft decoupling ###
         # TODO : Do we want to enable rotation along other axis in the futur ?
-        angular_vel = np.zeros((1, self._control_points.shape[1]))
+        angular_vel = np.zeros((1, self._control_points.shape[0]))
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
 
@@ -550,7 +550,7 @@ class Furniture(BaseAgent):
     def compute_ctr_point_vel_from_obs_avoidance(self, velocities):
         goal_pos_ctr_pts = self.get_goal_control_points()
         actual_pos_ctr_pts = self.get_global_control_points()
-        for i in range(self._control_points.shape[1]):
+        for i in range(self._control_points.shape[0]):
             # define direction as initial velocities
             ctr_pt_i = np.array(
                 [actual_pos_ctr_pts[0][i], actual_pos_ctr_pts[1][i]]
@@ -615,7 +615,7 @@ class Furniture(BaseAgent):
         self, initial_angular_vel, init_velocities, velocities, initial_velocity
     ):
         ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
-        for ii in range(self._control_points.shape[1]):
+        for ii in range(self._control_points.shape[0]):
             # doing the cross product formula by "hand" than using the funct
             tang_vel = [
                 -initial_angular_vel * self._control_points[ii, 1],
@@ -658,7 +658,7 @@ class Furniture(BaseAgent):
         #     )
         # angular velocity
         global_control_points = self.get_global_control_points()
-        for ii in range(self._control_points.shape[1]):
+        for ii in range(self._control_points.shape[0]):
             angular_vel[0, ii] = weights[ii] * np.cross(
                 global_control_points[:, ii] - self._shape.center_position,
                 velocities[:, ii] - self.linear_velocity,
@@ -889,12 +889,12 @@ class Furniture(BaseAgent):
                 global_control_points[:, ii], environment_without_me
             )
 
-        velocities = np.zeros((self.dimension, self._control_points.shape[1]))
-        init_velocities = np.zeros((self.dimension, self._control_points.shape[1]))
+        velocities = np.zeros((self.dimension, self._control_points.shape[0]))
+        init_velocities = np.zeros((self.dimension, self._control_points.shape[0]))
 
         if not self._static:
             # TODO : Do we want to enable rotation along other axis in the futur ?
-            angular_vel = np.zeros((1, self._control_points.shape[1]))
+            angular_vel = np.zeros((1, self._control_points.shape[0]))
 
             # First we compute the initial velocity at the "center", ugly
             initial_velocity = self._dynamics.evaluate(self.position)
@@ -980,8 +980,8 @@ class Furniture(BaseAgent):
             # Initial angular_velocity is computed
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
 
-            sign_project = np.zeros(self._control_points.shape[1])
-            for ii in range(self._control_points.shape[1]):
+            sign_project = np.zeros(self._control_points.shape[0])
+            for ii in range(self._control_points.shape[0]):
                 # doing the cross product formula by "hand" than using the funct
                 tang_vel = [
                     -initial_angular_vel * self._control_points[ii, 1],
@@ -1029,7 +1029,7 @@ class Furniture(BaseAgent):
             # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
             #           self.linear_velocity[1], head_width=0.1, head_length=0.2, color='b')
 
-            for ii in range(self._control_points.shape[1]):
+            for ii in range(self._control_points.shape[0]):
                 angular_vel[0, ii] = weights[ii] * np.cross(
                     global_control_points[:, ii] - self._shape.center_position,
                     velocities[:, ii] - self.linear_velocity,
@@ -1041,7 +1041,9 @@ class Furniture(BaseAgent):
             self.linear_velocity = [0, 0]
             self.angular_velocity = 0
 
-
+# class Furniture3D(BaseAgent):
+    
+    
 class Person(BaseAgent):
     def __init__(
         self,
