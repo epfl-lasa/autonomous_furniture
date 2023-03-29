@@ -1,4 +1,5 @@
 import copy
+import time
 import logging
 import multiprocessing
 from typing import ClassVar, Optional
@@ -25,6 +26,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 from tf2_ros import TransformBroadcaster, TransformStamped
+from visualization_msgs.msg import Marker, MarkerArray
 import launch
 
 from autonomous_furniture.launch_generator import create_bed_node
@@ -43,14 +45,14 @@ class SimpleAgent:
 
     it_count: ClassVar[int] = 0
 
+    def __post_init__(self) -> None:
+        # They are all published as 'robots'
+        self.name = f"furniture{str(self.it_count)}"
+        RvizTable.it_count += 1
+
     @property
     def frame_id(self):
         return self.name + "/base_link"
-
-    def __post_init__(self) -> None:
-        # They are all published as 'robots'
-        self.name = f"robot{str(self.it_count)}"
-        RvizTable.it_count += 1
 
 
 def update_shapes_of_agent(agent):
@@ -64,7 +66,7 @@ def update_shapes_of_agent(agent):
 class RvizTable(SimpleAgent):
     shapes: list[Obstacle] = field(
         default_factory=lambda: [
-            Cuboid(pose=Pose.create_trivial(2), axes_length=np.array([2.0, 1.0]))
+            Cuboid(pose=Pose.create_trivial(2), axes_length=np.array([1.5, 0.75]))
         ]
     )
     local_poses: list[Obstacle] = field(
@@ -91,7 +93,7 @@ class RvizTable(SimpleAgent):
         transform_stamped.transform.translation.z = 0.2
 
         transform_stamped.transform.rotation = euler_to_quaternion(
-            0, 0, self.pose.orientation
+            0, 0, (-1) * self.pose.orientation
         )
 
         return transform_stamped
@@ -112,7 +114,7 @@ class RvizQolo:
     )
     required_margin: int = 0.5
 
-    name: str = "qolo"
+    name: str = "qolo_human"
 
     def update_step(self, dt: float) -> None:
         self.pose.position = self.pose.position + self.twist.linear * dt
@@ -203,10 +205,76 @@ class AgentTransformBroadCaster(Node):
         for agent in agent_container:
             # Only avoid QOLO
             self.transform_stamped = agent.update_transform(self.transform_stamped)
-            try:
-                self.broadcaster.sendTransform(self.transform_stamped)
-            except:
-                breakpoint()
+            self.broadcaster.sendTransform(self.transform_stamped)
+
+
+class GrassPublisher(Node):
+    def __init__(self, x_lim=[-5, 5], y_lim=[-5, 5]):
+        super().__init__("environment_publisher")
+        markers_array = MarkerArray()
+
+        self.publisher_ = self.create_publisher(MarkerArray, "environment", 3)
+        markers_array.markers.append(self.create_ground())
+        markers_array.markers.append(
+            self.create_grass(x_pos=0.0, y_pos=4.0, ns="grass0")
+        )
+        markers_array.markers.append(
+            self.create_grass(x_pos=0.0, y_pos=-4.0, ns="grass1")
+        )
+
+        self.publisher_.publish(markers_array)
+
+    def create_ground(self, ns="ground"):
+        marker = Marker()
+        # def publish_cube(self):
+        marker.header.frame_id = "world"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = ns
+        marker.id = 0
+        marker.type = 1  # is cube
+        # marker.action = visualization_msgs::Marker::ADD
+        marker.pose.position.x = 0.0
+        marker.pose.position.y = 0.0
+        marker.pose.position.z = 0.0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 10.0
+        marker.scale.y = 10.0
+        marker.scale.z = 0.01
+        # 255, 87, 51.
+        marker.color.a = 1.0
+        marker.color.r = 211 / 256.0
+        marker.color.g = 211 / 256.0
+        marker.color.b = 211 / 256.0
+        return marker
+
+    def create_grass(self, x_pos=0.0, y_pos=-4.0, ns="grass"):
+        # def publish_cube(self):
+        marker = Marker()
+        marker.header.frame_id = "world"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = ns
+        marker.id = 0
+        marker.type = 1  # is cube
+        # marker.action = visualization_msgs::Marker::ADD
+        marker.pose.position.x = x_pos
+        marker.pose.position.y = y_pos
+        marker.pose.position.z = 0.0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 10.0
+        marker.scale.y = 3.0
+        marker.scale.z = 0.2
+        # 255, 87, 51.
+        marker.color.a = 1.0
+        marker.color.r = 100 / 256.0
+        marker.color.g = 252 / 256.0
+        marker.color.b = 20 / 256.0
+        return marker
 
 
 class RvizQoloAnimator(Animator):
@@ -214,30 +282,45 @@ class RvizQoloAnimator(Animator):
         self,
         broadcaster: Optional[AgentTransformBroadCaster] = None,
         do_plotting: bool = True,
-        x_lim=[-10, 10],
-        y_lim=[-10, 10],
+        x_lim=[-5, 5],
+        y_lim=[-5, 5],
     ) -> None:
         self.x_lim = x_lim
         self.y_lim = y_lim
 
-        start_position = np.array([4, 4])
+        start_position = np.array([-4.8, 1.5])
         start_orientation = 0
         self.robot = RvizQolo(
             pose=Pose(position=start_position, orientation=start_orientation)
         )
 
         initial_dynamics = QuadraticAxisConvergence(
-            stretching_factor=3,
+            stretching_factor=5,
             maximum_velocity=1.0,
             dimension=2,
-            attractor_position=np.array([8, 0]),
+            attractor_position=np.array([4.5, -1]),
         )
         convergence_dynamics = LinearSystem(
             attractor_position=initial_dynamics.attractor_position
         )
 
         self.agent_container = AgentContainer()
-        self.agent_container.append(RvizTable(pose=Pose.create_trivial(2)))
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[-3.0, 1], orientation=np.pi / 2))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[-2.0, -2], orientation=0))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[2.5, -1.5], orientation=np.pi / 2))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[4.0, 1], orientation=-0.4 * np.pi))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[0.3, -0.2], orientation=-0.3 * np.pi))
+        )
+
         self.avoider = RotationalAvoider(
             initial_dynamics=initial_dynamics,
             convergence_system=convergence_dynamics,
@@ -248,6 +331,8 @@ class RvizQoloAnimator(Animator):
         self.do_plotting = do_plotting
         if do_plotting:
             self.fig, self.ax = plt.subplots()
+        else:
+            self.fig = None
 
         # Initial update of transform
         update_shapes_of_agent(self.robot)
@@ -303,23 +388,23 @@ def main(
     it_max: int = 1000,
     delta_time: float = 0.1,
     do_ros: bool = True,
+    # do_plotting: bool = False,
     do_plotting: bool = True,
 ):
 
     if do_ros:
         broadcaster = AgentTransformBroadCaster()
+        publisher = GrassPublisher()
     else:
         broadcaster = None
+
     animator = RvizQoloAnimator(
         it_max=it_max,
         dt_simulation=delta_time,
         dt_sleep=delta_time,
     )
     animator.setup(
-        broadcaster=broadcaster,
-        do_plotting=True,
-        x_lim=[-10, 10],
-        y_lim=[-10, 10],
+        broadcaster=broadcaster, do_plotting=do_plotting, x_lim=[-5, 5], y_lim=[-5, 5]
     )
 
     # Create launch rviz
@@ -328,19 +413,14 @@ def main(
         nodes.append(agent.get_node())
 
     print("Done Launching")
-    # if do_ros:
-    # ros_animator = RosAnimatorNode(animator)
-    # process = multiprocessing.Process(target=animator.spin).start()
-    animator.run()
-    # process = multiprocessing.Process(target=animator.run).start()
-    print("End of script")
-    if True:
-        return
+    if do_plotting:
+        animator.run()
+    else:
+        for ii in range(it_max):
+            animator.update_step(ii)
+            time.sleep(delta_time)
 
-    launch_description = generate_launch_description(nodes, create_rviz=False)
-    launch_service = launch.LaunchService()
-    launch_service.include_launch_description(launch_description)
-    process = multiprocessing.Process(target=launch_service.run).start()
+    print("End of script")
 
 
 if (__name__) == "__main__":

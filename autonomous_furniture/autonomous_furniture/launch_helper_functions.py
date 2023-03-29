@@ -24,7 +24,7 @@ def node_creator(furniture_name, urdf_file_name, topicspace=""):
     if len(topicspace):
         namespace = topicspace + "/" + furniture_name + "/"
     else:
-        namespace = furniture_name + "/"
+        namespace = furniture_name
 
     new_node = Node(
         package="robot_state_publisher",
