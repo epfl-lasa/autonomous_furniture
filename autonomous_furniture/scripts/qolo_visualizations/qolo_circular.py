@@ -209,20 +209,37 @@ class AgentTransformBroadCaster(Node):
 
 
 class GrassPublisher(Node):
+    line_length = 1.0
+    x_lim = [-5, 5]
+
     def __init__(self, x_lim=[-5, 5], y_lim=[-5, 5]):
         super().__init__("environment_publisher")
-        markers_array = MarkerArray()
+        self.markers_array = MarkerArray()
 
         self.publisher_ = self.create_publisher(MarkerArray, "environment", 3)
-        markers_array.markers.append(self.create_ground())
-        markers_array.markers.append(
+        self.markers_array.markers.append(self.create_ground())
+        self.markers_array.markers.append(
             self.create_grass(x_pos=0.0, y_pos=4.0, ns="grass0")
         )
-        markers_array.markers.append(
+        self.markers_array.markers.append(
             self.create_grass(x_pos=0.0, y_pos=-4.0, ns="grass1")
         )
 
-        self.publisher_.publish(markers_array)
+        self.place_lines(n_lines=5)
+        # Line
+        self.publisher_.publish(self.markers_array)
+
+    def place_lines(self, n_lines: int) -> None:
+        x_range = self.x_lim[1] - self.x_lim[0]
+        delta_x = (x_range - self.line_length) / (n_lines - 1)
+
+        for ii in range(5):
+            name = f"line{ii}"
+            x_pos = delta_x * ii + self.line_length * 0.5 + self.x_lim[0]
+            print(x_pos)
+            self.markers_array.markers.append(
+                self.create_center_line(x_pos=x_pos, y_pos=0.0, ns=name)
+            )
 
     def create_ground(self, ns="ground"):
         marker = Marker()
@@ -276,6 +293,32 @@ class GrassPublisher(Node):
         marker.color.b = 20 / 256.0
         return marker
 
+    def create_center_line(self, x_pos=0.0, y_pos=0.0, ns="line"):
+        # def publish_cube(self):
+        marker = Marker()
+        marker.header.frame_id = "world"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = ns
+        marker.id = 0
+        marker.type = 1  # is cube
+        # marker.action = visualization_msgs::Marker::ADD
+        marker.pose.position.x = x_pos
+        marker.pose.position.y = y_pos
+        marker.pose.position.z = 0.0
+        marker.pose.orientation.x = 0.0
+        marker.pose.orientation.y = 0.0
+        marker.pose.orientation.z = 0.0
+        marker.pose.orientation.w = 1.0
+        marker.scale.x = 1.0
+        marker.scale.y = 0.2
+        marker.scale.z = 0.02
+        # 255, 87, 51.
+        marker.color.a = 1.0
+        marker.color.r = 255 / 256.0
+        marker.color.g = 255 / 256.0
+        marker.color.b = 255 / 256.0
+        return marker
+
 
 class RvizQoloAnimator(Animator):
     def setup(
@@ -288,17 +331,21 @@ class RvizQoloAnimator(Animator):
         self.x_lim = x_lim
         self.y_lim = y_lim
 
-        start_position = np.array([-4.8, 1.5])
+        start_position = np.array([-4.4, 1.5])
         start_orientation = 0
         self.robot = RvizQolo(
             pose=Pose(position=start_position, orientation=start_orientation)
         )
 
-        initial_dynamics = QuadraticAxisConvergence(
-            stretching_factor=5,
-            maximum_velocity=1.0,
-            dimension=2,
-            attractor_position=np.array([4.5, -1]),
+        attractor = np.array([4.5, 0])
+        # initial_dynamics = QuadraticAxisConvergence(
+        #     stretching_factor=10,
+        #     maximum_velocity=1.0,
+        #     dimension=2,
+        #     attractor_position=attractor,
+        # )
+        initial_dynamics = LinearSystem(
+            attractor_position=attractor, maximum_velocity=1.0
         )
         convergence_dynamics = LinearSystem(
             attractor_position=initial_dynamics.attractor_position
@@ -306,19 +353,19 @@ class RvizQoloAnimator(Animator):
 
         self.agent_container = AgentContainer()
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-3.0, 1], orientation=np.pi / 2))
+            RvizTable(pose=Pose(position=[-2.5, 1], orientation=-0.1 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-2.0, -2], orientation=0))
+            RvizTable(pose=Pose(position=[-2.0, -1.5], orientation=np.pi / 2))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[2.5, -1.5], orientation=np.pi / 2))
+            RvizTable(pose=Pose(position=[0.6, -1.5], orientation=0.2 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[4.0, 1], orientation=-0.4 * np.pi))
+            RvizTable(pose=Pose(position=[2.5, -0.3], orientation=0.4 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[0.3, -0.2], orientation=-0.3 * np.pi))
+            RvizTable(pose=Pose(position=[0.3, 1.3], orientation=-0.3 * np.pi))
         )
 
         self.avoider = RotationalAvoider(
