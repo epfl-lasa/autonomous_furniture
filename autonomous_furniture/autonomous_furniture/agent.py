@@ -469,7 +469,7 @@ class Furniture(BaseAgent):
                 if any(x <= self.gamma_stop for x in gamma_values):
                     # print("EMERGENCY STOP")
                     self.angular_velocity = 0
-                    self.linear_velocity = [0, 0]
+                    self.linear_velocity = np.array([0.0, 0.0])
                     return
 
             if safety_module:
@@ -1038,12 +1038,13 @@ class Furniture(BaseAgent):
             self.angular_velocity = np.sum(angular_vel) * magnitude
 
         else:
-            self.linear_velocity = [0, 0]
-            self.angular_velocity = 0
+            self.linear_velocity = np.zeros(2)
+            self.angular_velocity = 0.0
+
 
 # class Furniture3D(BaseAgent):
-    
-    
+
+
 class Person(BaseAgent):
     def __init__(
         self,
@@ -1100,7 +1101,7 @@ class Person(BaseAgent):
                     self.position, self.get_obstacles_without_me()
                 )
                 if min_gamma <= self.gamma_stop:
-                    self.linear_velocity = [0, 0]
+                    self.linear_velocity = np.zeros(2)
                     return
 
             initial_velocity = self._dynamics.evaluate(ctp)
@@ -1119,7 +1120,7 @@ class Person(BaseAgent):
             self.apply_acceleration_constraints(velocity_old, time_step)
 
         else:
-            self.linear_velocity = [0, 0]
+            self.linear_velocity = np.zeros(2)
 
     def compute_metrics(self, delta_t):
         # compute the proximity
