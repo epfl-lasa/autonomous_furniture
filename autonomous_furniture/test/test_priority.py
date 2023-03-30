@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import rand
 
 from vartools.states import Pose
+from vartools.states import ObjectPose
 from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
@@ -25,42 +26,72 @@ args = parser.parse_args()
 
 
 def test_uneven_priority(visualize=False):
+    axis = [2.4, 1.1]
+    max_ax_len = max(axis)
+    min_ax_len = min(axis)
+
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
-    position1 = np.array([-2.0, 0.0])
-    position2 = np.array([0.0, 2.0])
-    position3 = np.array([0.0, -2.0])
 
-    goal = Pose(position=np.array([2.0, 0]), orientation=0.0)
-    margin = 0.4
+    # control_points for the cuboid
+    control_points = np.array([[0.6, 0], [-0.6, 0]])
+
+    # , orientation = 1.6) Goal of the CuboidXd
+    # , orientation = 1.6) Goal of the CuboidXd
+    goal = ObjectPose(position=np.array([6, 3]), orientation=np.pi / 2)
+
+    table_shape = CuboidXd(
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([-1, 3]),
+        margin_absolut=1,
+        orientation=np.pi / 2,
+        tail_effect=False,
+    )
+
+    goal2 = ObjectPose(position=np.array([2, 6]), orientation=np.pi / 2)
+    table_shape2 = CuboidXd(
+        axes_length=[1, 1],
+        center_position=goal2.position,
+        margin_absolut=1,
+        orientation=goal2.orientation,
+        tail_effect=False,
+    )
+
+    goal3 = ObjectPose(position=np.array([2, 0]), orientation=np.pi / 2)
+    table_shape3 = CuboidXd(
+        axes_length=[1, 1],
+        center_position=goal3.position,
+        margin_absolut=1,
+        orientation=goal3.orientation,
+        tail_effect=False,
+    )
 
     my_furniture = [
-        Person(
-            center_position=position1,
-            radius=0.8,
+        Furniture(
+            shape=table_shape2,
             obstacle_environment=obstacle_environment,
+            control_points=np.array([[0, 0], [0, 0]]),
+            goal_pose=goal2,
+            priority_value=1e3,
+            static=True,
+            name="static",
+        ),
+        Furniture(
+            shape=table_shape3,
+            obstacle_environment=obstacle_environment,
+            control_points=np.array([[0, 0], [0, 0]]),
+            goal_pose=goal3,
+            priority_value=1e-3,
+            static=True,
+            name="static",
+        ),
+        Furniture(
+            shape=table_shape,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
             goal_pose=goal,
             priority_value=1,
-            margin=margin,
-            static=False,
-        ),
-        Person(
-            center_position=position2,
-            radius=0.8,
-            obstacle_environment=obstacle_environment,
-            goal_pose=Pose(position2),
-            priority_value=1,
-            margin=margin,
-            static=True,
-        ),
-        Person(
-            center_position=position3,
-            radius=0.8,
-            obstacle_environment=obstacle_environment,
-            goal_pose=Pose(position3),
-            priority_value=4,
-            margin=margin,
-            static=True,
+            name="fur",
         ),
     ]
 
@@ -74,8 +105,8 @@ def test_uneven_priority(visualize=False):
     my_animation.setup(
         obstacle_environment,
         agent=my_furniture,
-        x_lim=[-4, 4],
-        y_lim=[-4, 4],
+        x_lim=[-3, 8],
+        y_lim=[-2, 8],
         mini_drag="dragdist",
         version="v2",
     )
@@ -85,7 +116,7 @@ def test_uneven_priority(visualize=False):
         my_animation.logs(len(my_furniture))
 
     # Check Dynamic Agent
-    my_furniture[0].update_velocity(
+    my_furniture[2].update_velocity(
         mini_drag=my_animation.mini_drag,
         version=my_animation.version,
         emergency_stop=my_animation.emergency_stop,
@@ -93,9 +124,9 @@ def test_uneven_priority(visualize=False):
         time_step=my_animation.dt_simulation,
     )
 
-    assert my_furniture[0].linear_velocity[0] > 0, "Expected to move towards attractor"
+    assert my_furniture[2].linear_velocity[0] > 0, "Expected to move towards attractor"
     assert (
-        my_furniture[0].linear_velocity[1] > 0
+        my_furniture[2].linear_velocity[1] < 0
     ), "Expected to move away from high priority"
 
     # Check that agent is really statig
@@ -116,4 +147,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)
