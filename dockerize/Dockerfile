@@ -104,6 +104,9 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash; \
 # RUN echo 'root:root' | chpasswd
 # RUN echo 'Docker!' | passwd --stdin root 
 
+# For development / testing purposes
+RUN python3 -m pip install -U pytest
+
 # USER ros
 # USER root
 

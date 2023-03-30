@@ -29,6 +29,12 @@ Make sure, the visualization is enabled (check issues below).
 
 The docker-run file is setup to automatically update local changes.
 
+### Test / Develop
+If you want to make sure that everything runs correctly, execute following command in the autonomous_furniture folder:
+``` shell
+pytest
+```
+
 ## Setup without ROS
 Following libraries are needed and need to be installed:
 
