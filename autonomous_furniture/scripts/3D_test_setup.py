@@ -64,7 +64,7 @@ def priority_demo(args=[]):
         Furniture(
             shape=table_shape2,
             obstacle_environment=obstacle_environment,
-            control_points=np.array([[-0.5, 0], [0.5, 0]]),
+            control_points=np.array([[0, -0.5], [0, 0.5]]),
             goal_pose=goal2,
             priority_value=0.001,
             static=True,
@@ -84,7 +84,7 @@ def priority_demo(args=[]):
         agent=my_furniture,
         x_lim=[-3, 8],
         y_lim=[-2, 7],
-        version="v2",
+        version="v1",
         mini_drag="dragdist",
         safety_module=True,
         emergency_stop=True,

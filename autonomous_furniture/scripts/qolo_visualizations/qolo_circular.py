@@ -391,7 +391,6 @@ def main(
     # do_plotting: bool = False,
     do_plotting: bool = True,
 ):
-
     if do_ros:
         broadcaster = AgentTransformBroadCaster()
         publisher = GrassPublisher()
@@ -429,7 +428,6 @@ if (__name__) == "__main__":
     logging.info("Simulation started.")
     rclpy.init()
     try:
-
         main()
     except KeyboardInterrupt:
         pass

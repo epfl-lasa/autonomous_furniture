@@ -18,7 +18,7 @@ from autonomous_furniture.furniture_creators import add_walls
 from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 
 
-def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
+def create_environment(do_walls=True, do_person=True, n_agents: int = 10):
     import random
 
     x_lim: list[float] = [0, 12]
@@ -43,21 +43,23 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 8):
     )
     # create goal poses
     goal_poses = []
+    k=0
     for i in range(n_agents):
         goal_orientation_i = np.pi / 2
         if (i % 2) == 0:  # divide agents in 2 rows
             goal_position_i = [
-                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * i,
+                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * k,
                 y_lim[0] + sample_bed._shape.axes_length[0] / 2,
             ]
         else:
             goal_position_i = [
-                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * i - 1,
+                x_lim[0] + (sample_bed._shape.axes_with_margin[1] / 2) * k,
                 y_lim[0]
                 + sample_bed._shape.axes_with_margin[0]
                 + sample_bed._shape.axes_length[0] / 2
                 + 0.5,
             ]
+            k += 1.5
 
         goal_i = ObjectPose(position=goal_position_i, orientation=goal_orientation_i)
         goal_poses.append(goal_i)
@@ -106,7 +108,7 @@ def run_ten_bed_animation_matplotlib(it_max=800):
     from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
     agent_list, x_lim, y_lim, wall_width, area_enlargement = create_environment(
-        do_walls=True, do_person=True
+        do_walls=True, do_person=False
     )
 
     n_agents = len(agent_list)
@@ -120,8 +122,8 @@ def run_ten_bed_animation_matplotlib(it_max=800):
 
     my_animation = DynamicalSystemAnimation(
         it_max=it_max,
-        dt_simulation=0.01,
-        dt_sleep=0.01,
+        dt_simulation=0.04,
+        dt_sleep=0.04,
         animation_name=str(n_agents) + "_bed_animation",
         file_type=".gif",
     )
@@ -185,5 +187,5 @@ def run_ten_bed_animation_rviz(it_max: int = 1000, go_to_center: bool = False):
 
 
 if (__name__) == "__main__":
-    # run_ten_bed_animation_matplotlib(it_max=1000)
-    run_ten_bed_animation_rviz(it_max=1000)
+    run_ten_bed_animation_matplotlib(it_max=1000)
+    # run_ten_bed_animation_rviz(it_max=1000)

@@ -93,7 +93,7 @@ class BaseAgent(ABC):
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.4,
+        gamma_critic_min: float = 1.2,
         gamma_stop: float = 1.1,
     ) -> None:
         super().__init__()
@@ -312,7 +312,7 @@ class BaseAgent(ABC):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
 
     def get_weight_of_control_points(self, control_points, environment_without_me):
-        cutoff_gamma = 1e-4  # TODO : This value has to be big and not small
+        cutoff_gamma = 10  # TODO : This value has to be big and not small
         # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
         gamma_values = np.zeros(control_points.shape[1])
         obs_idx = np.zeros(control_points.shape[1])
@@ -377,7 +377,7 @@ class Furniture(BaseAgent):
         time_step: float = 0.1,
     ) -> None:
         if self._static:
-            self.linear_velocity = [0.0, 0.0]
+            self.linear_velocity = np.array([0.0, 0.0])
             self.angular_velocity = 0.0
             return
 
@@ -437,13 +437,9 @@ class Furniture(BaseAgent):
             velocities = self.ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel, init_velocities, velocities, initial_velocity
             )
-            self.agent_kinematics_from_ctr_point_vel(
-                velocities, angular_vel, weights, initial_magnitude
-            )
 
         elif version == "v1":
             velocities = self.compute_ctr_point_vel_from_obs_avoidance(velocities)
-            self.agent_kinematics_from_ctr_point_vel(velocities, angular_vel, weights)
 
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
@@ -481,13 +477,16 @@ class Furniture(BaseAgent):
                         list_critic_gammas_indx.append(ii)
                         self.color = "k"  # np.array([221, 16, 16]) / 255.0
                 if len(list_critic_gammas_indx) > 0:
-                    self.evaluate_safety_repulsion(
+                    velocities = self.evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,
                         environment_without_me=environment_without_me,
                         global_control_points=global_control_points,
                         obs_idx=obs_idx,
                         gamma_values=gamma_values,
+                        velocities=velocities,
                     )
+
+        self.agent_kinematics_from_ctr_point_vel(velocities, weights)
 
         self.apply_velocity_constraints()
 
@@ -635,9 +634,7 @@ class Furniture(BaseAgent):
             )
         return velocities
 
-    def agent_kinematics_from_ctr_point_vel(
-        self, velocities, angular_vel, weights, initial_magnitude=None
-    ):
+    def agent_kinematics_from_ctr_point_vel(self, velocities, weights):
         ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
         # linear velocity
         self.linear_velocity = np.sum(
@@ -658,8 +655,9 @@ class Furniture(BaseAgent):
         #     )
         # angular velocity
         global_control_points = self.get_global_control_points()
+        angular_vel = np.zeros(self._control_points.shape[0])
         for ii in range(self._control_points.shape[0]):
-            angular_vel[0, ii] = weights[ii] * np.cross(
+            angular_vel[ii] = weights[ii] * np.cross(
                 global_control_points[:, ii] - self._shape.center_position,
                 velocities[:, ii] - self.linear_velocity,
             )
@@ -706,6 +704,7 @@ class Furniture(BaseAgent):
         global_control_points: np.ndarray,
         obs_idx: list[int],
         gamma_values: np.ndarray,
+        velocities,
     ) -> None:
         (
             gamma_list_colliding,  # list with critical gamma value
@@ -720,50 +719,56 @@ class Furniture(BaseAgent):
             obs_idx,
             gamma_values,
         )
+        # # CALCULATE THE OPTIMAL ESCAPE DIRECTION AND THE ANGULAR VELOCITY CORRECTION TERM
+        # normal_list_tot_combined = []
+        # weight_list_tot_combined = []
+        # ang_vel_weights = []
+        # ang_vel_corr = []
+        # for i in range(len(normal_list_tot)):
+        #     normal_list_tot_combined += normal_list_tot[i]
+        #     weight_list_tot_combined += weight_list_tot[i]
+        #     normal_in_local_frame = self.get_velocity_in_local_frame(
+        #         normals_for_ang_vel[i]
+        #     )
+        #     ang_vel_corr.append(normal_in_local_frame[1] * control_point_d_list[i])
+        #     ang_vel_weights.append(1 / gamma_list_colliding[i])
 
-        # CALCULATE THE OPTIMAL ESCAPE DIRECTION AND THE ANGULAR VELOCITY CORRECTION TERM
-        normal_list_tot_combined = []
-        weight_list_tot_combined = []
-        ang_vel_weights = []
-        ang_vel_corr = []
-        for i in range(len(normal_list_tot)):
-            normal_list_tot_combined += normal_list_tot[i]
-            weight_list_tot_combined += weight_list_tot[i]
-            normal_in_local_frame = self.get_velocity_in_local_frame(
-                normals_for_ang_vel[i]
-            )
-            ang_vel_corr.append(normal_in_local_frame[1] * control_point_d_list[i])
-            ang_vel_weights.append(1 / gamma_list_colliding[i])
+        # weight_list_tot_combined = weight_list_tot_combined / np.sum(
+        #     weight_list_tot_combined
+        # )  # normalize weights
+        # normal_combined = np.sum(
+        #     normal_list_tot_combined
+        #     * np.tile(weight_list_tot_combined, (self.dimension, 1)).transpose(),
+        #     axis=0,
+        # )  # calculate the escape direction given all obstacles proximity
 
-        weight_list_tot_combined = weight_list_tot_combined / np.sum(
-            weight_list_tot_combined
-        )  # normalize weights
-        normal_combined = np.sum(
-            normal_list_tot_combined
-            * np.tile(weight_list_tot_combined, (self.dimension, 1)).transpose(),
-            axis=0,
-        )  # calculate the escape direction given all obstacles proximity
+        # ang_vel_weights = ang_vel_weights / np.sum(ang_vel_weights)  # normalize weights
+        # ang_vel_corr = np.sum(
+        #     ang_vel_corr * np.tile(ang_vel_weights, (1, 1)).transpose(), axis=0
+        # )
 
-        ang_vel_weights = ang_vel_weights / np.sum(ang_vel_weights)  # normalize weights
-        ang_vel_corr = np.sum(
-            ang_vel_corr * np.tile(ang_vel_weights, (1, 1)).transpose(), axis=0
-        )
+        # if np.dot(self.linear_velocity, normal_combined) < 0:
+        #     # the is a colliding trajectory we need to correct!
+        #     b = 1 / (
+        #         (self.gamma_critic - 1) * (np.min(gamma_list_colliding) - 1)
+        #     )  # compute the correction parameter
+        #     self.linear_velocity += (
+        #         b * normal_combined
+        #     )  # correct linear velocity to deviate it away from collision trajectory
 
-        if np.dot(self.linear_velocity, normal_combined) < 0:
-            # the is a colliding trajectory we need to correct!
-            b = 1 / (
-                (self.gamma_critic - 1) * (np.min(gamma_list_colliding) - 1)
-            )  # compute the correction parameter
-            self.linear_velocity += (
-                b * normal_combined
-            )  # correct linear velocity to deviate it away from collision trajectory
+        #     self.angular_velocity += (
+        #         ang_vel_corr * b
+        #     )  # correct angular velocity to rotate in a safer position
+        #     self.angular_velocity = self.angular_velocity[
+        #         0
+        #     ]  # make angular velocity a scalar instead of a 1x1 array
 
-            self.angular_velocity += (
-                ang_vel_corr * b
-            )  # correct angular velocity to rotate in a safer position
-            self.angular_velocity = self.angular_velocity[
-                0
-            ]  # make angular velocity a scalar instead of a 1x1 array
+        for i in range(len(gamma_list_colliding)):
+            ctrpt_indx = np.where(gamma_values == gamma_list_colliding[i])[0][0]
+            if np.dot(velocities[:, ctrpt_indx], normals_for_ang_vel[i]) < 0:
+                b = 1 / ((self.gamma_critic - 1) * (gamma_list_colliding[i] - 1))
+                velocities[:, ctrpt_indx] += b * normals_for_ang_vel[i]
+        return velocities
 
     def apply_velocity_constraints(self):
         if (

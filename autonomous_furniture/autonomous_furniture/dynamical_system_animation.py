@@ -113,7 +113,12 @@ class DynamicalSystemAnimation(Animator):
                 color = "black"
 
             global_control_points = self.agent[jj].get_global_control_points()
-            self.ax.plot(global_control_points[0, :], global_control_points[1, :], color=color, marker="o")
+            self.ax.plot(
+                global_control_points[0, :],
+                global_control_points[1, :],
+                color=color,
+                marker="o",
+            )
 
             self.ax.plot(
                 goal_control_points[0, :],
@@ -157,7 +162,7 @@ class DynamicalSystemAnimation(Animator):
             # for i in range(len(global_control_points[0,:])):
             #     margins = plt.Circle((global_control_points[0, i], global_control_points[1, i]), self.agent[jj].margin_absolut, color="black", linestyle="dashed", fill=False)
             #     self.ax.add_patch(margins)
-            
+
             # breakpoint()
 
         # Drawing and adjusting of the axis
