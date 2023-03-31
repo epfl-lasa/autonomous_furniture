@@ -99,7 +99,7 @@ def priority_demo():
     )
 
     my_animation.run(save_animation=args.rec)
-    my_animation.logs(len(my_furniture))
+    # my_animation.logs(len(my_furniture))
 
 
 if __name__ == "__main__":
