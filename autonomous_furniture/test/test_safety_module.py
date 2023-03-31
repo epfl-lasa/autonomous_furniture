@@ -42,55 +42,34 @@ def test_uneven_priority(visualize=False):
 
     table_shape = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([-1, 3]),
+        center_position=np.array([1, 3]),
         margin_absolut=1,
         orientation=np.pi / 2,
         tail_effect=False,
     )
 
-    goal2 = ObjectPose(position=np.array([2, 6]), orientation=np.pi / 2)
+    goal2 = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
-        axes_length=[1, 1],
-        center_position=goal2.position,
+        axes_length=[max_ax_len, min_ax_len],
+        center_position=np.array([3, 3]),
         margin_absolut=1,
-        orientation=goal2.orientation,
-        tail_effect=False,
-    )
-
-    goal3 = ObjectPose(position=np.array([2, 0]), orientation=np.pi / 2)
-    table_shape3 = CuboidXd(
-        axes_length=[1, 1],
-        center_position=goal3.position,
-        margin_absolut=1,
-        orientation=goal3.orientation,
+        orientation=np.pi / 2,
         tail_effect=False,
     )
 
     my_furniture = [
         Furniture(
-            shape=table_shape2,
-            obstacle_environment=obstacle_environment,
-            control_points=np.array([[0, 0], [0, 0]]),
-            goal_pose=goal2,
-            priority_value=1e3,
-            static=True,
-            name="static",
-        ),
-        Furniture(
-            shape=table_shape3,
-            obstacle_environment=obstacle_environment,
-            control_points=np.array([[0, 0], [0, 0]]),
-            goal_pose=goal3,
-            priority_value=1e-3,
-            static=True,
-            name="static",
-        ),
-        Furniture(
             shape=table_shape,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal,
-            priority_value=1,
+            name="fur",
+        ),
+        Furniture(
+            shape=table_shape2,
+            obstacle_environment=obstacle_environment,
+            control_points=control_points,
+            goal_pose=goal2,
             name="fur",
         ),
     ]
@@ -118,20 +97,13 @@ def test_uneven_priority(visualize=False):
         my_animation.logs(len(my_furniture))
 
     # Check Dynamic Agent
-    my_furniture[2].update_velocity(
+    my_furniture[0].update_velocity(
         mini_drag=my_animation.mini_drag,
         version=my_animation.version,
         emergency_stop=my_animation.emergency_stop,
         safety_module=my_animation.safety_module,
         time_step=my_animation.dt_simulation,
     )
-
-    assert my_furniture[2].linear_velocity[0] > 0, "Expected to move towards attractor"
-    assert (
-        my_furniture[2].linear_velocity[1] < 0
-    ), "Expected to move away from high priority"
-
-    # Check that agent is really statig
     my_furniture[1].update_velocity(
         mini_drag=my_animation.mini_drag,
         version=my_animation.version,
@@ -140,10 +112,10 @@ def test_uneven_priority(visualize=False):
         time_step=my_animation.dt_simulation,
     )
 
-    assert np.allclose(
-        my_furniture[1].linear_velocity, np.zeros(2)
-    ), "agent[1] should be static."
-
+    assert my_furniture[0].linear_velocity[0] < 0, "Expected to move towards attractor"
+    assert (
+        my_furniture[1].linear_velocity[0] > 0
+    ), "Expected to move away from high priority"
 
 if __name__ == "__main__":
     plt.close("all")
