@@ -529,12 +529,7 @@ class Furniture(BaseAgent):
             #           vel_correction[1], head_width=0.01, head_length=0.01, color='blue')
 
         if LA.norm(angular_velocity_difference) > angular_velocity_difference_allowed:
-            self.angular_velocity = (
-                angular_velocity_old
-                + angular_velocity_difference
-                / LA.norm(angular_velocity_difference)
-                * angular_velocity_difference_allowed
-            )
+            self.angular_velocity = angular_velocity_old + angular_velocity_difference/ LA.norm(angular_velocity_difference)* angular_velocity_difference_allowed
 
     def compute_gamma_critic(self, d):
         # compute gamma critic
@@ -782,8 +777,7 @@ class Furniture(BaseAgent):
             LA.norm(self.angular_velocity) > self.maximum_angular_velocity
         ):  # resize speed if it passes maximum speed
             self.angular_velocity = self.angular_velocity / LA.norm(
-                self.angular_velocity * self.maximum_angular_velocity
-            )
+                self.angular_velocity) * self.maximum_angular_velocity
 
     def collect_infos_for_crit_ctr_points(
         self,
