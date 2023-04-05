@@ -1041,8 +1041,6 @@ class Furniture(BaseAgent):
             self.angular_velocity = 0.0
 
 
-# class Furniture3D(BaseAgent):
-
 
 class Person(BaseAgent):
     def __init__(

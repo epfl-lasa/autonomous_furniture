@@ -20,7 +20,7 @@ import argparse
 
 
 def priority_demo(args=[]):
-    axis = [3, 3]
+    axis = [3, 4]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
 
@@ -28,18 +28,18 @@ def priority_demo(args=[]):
     obstacle_environment = ObstacleContainer()
 
     # control_points for the cuboid
-    control_points = np.array([[1.5, 1.5], [-1.5, 1.5], [1.5, -1.5], [-1.5, -1.5]])
+    control_points = np.array([[2, 1.5], [2, -1.5], [-2, 1.5], [-2, -1.5]])
     # control_points = np.array([[0.6, 0.0], [-0.6, 0.0]])
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([6, 2.75]), orientation=np.pi / 2)
+    goal = ObjectPose(position=np.array([6, 2.75]), orientation=0)
 
     table_shape = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([-1, 2.75]),
         margin_absolut=0.5,
-        orientation=np.pi / 2,
+        orientation=0,
         tail_effect=False,
     )
 
@@ -74,8 +74,8 @@ def priority_demo(args=[]):
 
     my_animation = DynamicalSystemAnimation(
         it_max=1000,
-        dt_simulation=0.05,
-        dt_sleep=0.05,
+        dt_simulation=0.04,
+        dt_sleep=0.04,
         animation_name=args.name,
     )
 
