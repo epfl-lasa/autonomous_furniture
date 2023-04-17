@@ -91,7 +91,7 @@ def priority_demo():
         agent=my_furniture,
         x_lim=[-3, 8],
         y_lim=[-2, 7],
-        version="v2",
+        version="v1",
         mini_drag="nodrag",
         safety_module=False,
         emergency_stop=False,

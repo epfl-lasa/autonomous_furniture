@@ -121,4 +121,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)

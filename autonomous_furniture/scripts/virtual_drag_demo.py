@@ -102,7 +102,7 @@ def priority_demo():
         x_lim=[-3, 8],
         y_lim=[-2, 7],
         version="v2",
-        mini_drag="nodrag",
+        mini_drag="dragdist",
         emergency_stop=False,
         safety_module=False,
     )
