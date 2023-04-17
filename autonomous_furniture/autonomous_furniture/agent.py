@@ -38,7 +38,9 @@ from autonomous_furniture.agent_helper_functions import (
     agent_kinematics_from_ctr_point_vel,
     apply_velocity_constraints,
     apply_linear_and_angular_acceleration_constraints,
-    evaluate_safety_repulsion
+    evaluate_safety_repulsion,
+    get_gamma_product_crowd,
+    get_weight_of_control_points
 )
 
 # from vartools.states
@@ -284,78 +286,8 @@ class BaseAgent(ABC):
         """Returns the transform of the velocity from global to relative frame."""
         return self._shape.pose.transform_direction_to_relative(velocity)
 
-    @staticmethod
-    def get_weight_from_gamma(
-        gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
-    ):
-        weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
-        weights = weights / frac_gamma_nth
-        weights = 1.0 / weights
-        weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
-        weights = weights / n_points
-        return weights
-
-    @staticmethod
-    def get_gamma_product_crowd(position, env, show_collision_info: bool = False):
-        if not len(env):
-            # Very large number
-            return 1e20
-
-        gamma_list = np.zeros(len(env))
-        for ii, obs in enumerate(env):
-            gamma_list[ii] = obs.get_gamma(position, in_global_frame=True)
-
-        n_obs = len(gamma_list)
-
-        # Total gamma [1, infinity]
-        # Take root of order 'n_obs' to make up for the obstacle multiple
-        if any(gamma_list < 1):
-            BaseAgent.number_collisions += 1
-            if show_collision_info:
-                print("[INFO] Collision")
-            return 0, 0
-
-        gamma = np.min(gamma_list)
-        index = int(np.argmin(gamma_list))
-
-        if np.isnan(gamma):
-            # Debugging
-            breakpoint()
-        return index, gamma
-
     def get_obstacles_without_me(self):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
-
-    def get_weight_of_control_points(self, control_points, environment_without_me):
-        cutoff_gamma = 10  # TODO : This value has to be big and not small
-        # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
-        gamma_values = np.zeros(control_points.shape[1])
-        obs_idx = np.zeros(control_points.shape[1])
-        for ii in range(control_points.shape[1]):
-            obs_idx[ii], gamma_values[ii] = self.get_gamma_product_crowd(
-                control_points[:, ii], environment_without_me
-            )
-
-        ctl_point_weight = np.zeros(gamma_values.shape)
-        ind_nonzero = gamma_values < cutoff_gamma
-        if not any(ind_nonzero):  # TODO Case he there is ind_nonzero
-            # ctl_point_weight[-1] = 1
-            ctl_point_weight = np.full(gamma_values.shape, 1 / control_points.shape[1])
-        # for index in range(len(gamma_values)):
-        ctl_point_weight[ind_nonzero] = self.get_weight_from_gamma(
-            gamma_values[ind_nonzero],
-            cutoff_gamma=cutoff_gamma,
-            n_points=control_points.shape[1],
-        )
-
-        ctl_point_weight_sum = np.sum(ctl_point_weight)
-        if ctl_point_weight_sum > 1:
-            ctl_point_weight = ctl_point_weight / ctl_point_weight_sum
-        else:
-            ctl_point_weight[-1] += 1 - ctl_point_weight_sum
-
-        return ctl_point_weight
-
 
 class Furniture(BaseAgent):
     def __init__(self, **kwargs) -> None:
@@ -403,14 +335,14 @@ class Furniture(BaseAgent):
 
         initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
-        # TODO : Make it a method to be called outside the class
+        # TODO : Make it a method to be called outside the classw
         global_control_points = self.get_global_control_points()
 
         if not len(environment_without_me):
-            self.linear_velocity = self._dynamics.evaluate(self.position)
-            self.angular_velocity = 0
+            while 1<2:
+                print("ERROR NO OBSTACLES FOUND!")
 
-        weights = self.get_weight_of_control_points(
+        weights = get_weight_of_control_points(
             global_control_points, environment_without_me
         )
 
@@ -460,6 +392,7 @@ class Furniture(BaseAgent):
                 actual_orientation=self.orientation,
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
+                DSM=True
             )
 
         elif version == "v1":
@@ -486,7 +419,7 @@ class Furniture(BaseAgent):
                 (
                     obs_idx[ii],
                     gamma_values[ii],
-                ) = self.get_gamma_product_crowd(  # TODO: Done elsewhere, for efficiency maybe will need to be delete
+                ) = get_gamma_product_crowd(  # TODO: Done elsewhere, for efficiency maybe will need to be delete
                     global_control_points[:, ii], environment_without_me
                 )
 
@@ -515,7 +448,24 @@ class Furniture(BaseAgent):
                     for i in range(self._control_points.shape[0]):
                         plt.arrow(self._control_points[i][0], self._control_points[i][1], velocities[i,0],
                                 velocities[i,1], head_width=0.01, head_length=0.01, color='red')
-                        
+                    linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
+                        velocities,
+                        weights,
+                        global_control_points=self.get_global_control_points(),
+                        ctrpt_number=self._control_points.shape[0],
+                        global_reference_position=self.position,
+                    )
+                    velocities = ctr_point_vel_from_agent_kinematics(
+                        angular_velocity,
+                        linear_velocity,
+                        number_ctrpt=self._control_points.shape[0],
+                        local_control_points=self._control_points,
+                        global_control_points=self.get_global_control_points(),
+                        actual_orientation=self.orientation,
+                        environment_without_me=self.get_obstacles_without_me(),
+                        priority=self.priority,
+                        DSM=False
+                    )
                     velocities = evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,
                         environment_without_me=environment_without_me,
@@ -933,13 +883,13 @@ class Furniture(BaseAgent):
         # TODO : Make it a method to be called outside the class
         global_control_points = self.get_global_control_points()
 
-        weights = self.get_weight_of_control_points(
+        weights = get_weight_of_control_points(
             global_control_points, environment_without_me
         )
 
         gamma_values = np.zeros(global_control_points.shape[1])
         for ii in range(global_control_points.shape[1]):
-            gamma_values[ii] = self.get_gamma_product_crowd(
+            gamma_values[ii] = get_gamma_product_crowd(
                 global_control_points[:, ii], environment_without_me
             )
 
@@ -1148,7 +1098,7 @@ class Person(BaseAgent):
             velocity_old = self.linear_velocity
 
             if self.emergency_stop:
-                gamma_indx, min_gamma = self.get_gamma_product_crowd(
+                gamma_indx, min_gamma = get_gamma_product_crowd(
                     self.position, self.get_obstacles_without_me()
                 )
                 if min_gamma <= self.gamma_stop:

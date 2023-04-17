@@ -138,10 +138,10 @@ def ctr_point_vel_from_agent_kinematics(
     actual_orientation,
     environment_without_me,
     priority,
+    DSM,
 ):
     ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
     velocities = np.zeros((2, number_ctrpt))
-    init_velocities = np.zeros((2, number_ctrpt))
 
     for ii in range(number_ctrpt):
         # doing the cross product formula by "hand" than using the funct
@@ -150,15 +150,16 @@ def ctr_point_vel_from_agent_kinematics(
             initial_angular_vel * local_control_points[ii, 0],
         ]
         tang_vel = get_veloctity_in_global_frame(actual_orientation, tang_vel)
-        init_velocities[:, ii] = initial_velocity + tang_vel
+        velocities[:, ii] = initial_velocity + tang_vel
 
         ctp = global_control_points[:, ii]
-        velocities[:, ii] = obs_avoidance_interpolation_moving(
-            position=ctp,
-            initial_velocity=init_velocities[:, ii],
-            obs=environment_without_me,
-            self_priority=priority,
-        )
+        if DSM:
+            velocities[:, ii] = obs_avoidance_interpolation_moving(
+                position=ctp,
+                initial_velocity=velocities[:, ii],
+                obs=environment_without_me,
+                self_priority=priority,
+            )
     return velocities
 
 
@@ -379,3 +380,70 @@ def get_veloctity_in_global_frame(orientation, velocity) -> np.ndarray:
     ])
     velocity = np.dot(R,velocity)
     return velocity
+
+def get_gamma_product_crowd(position, env):
+    if not len(env):
+        # Very large number
+        return 1e20
+
+    gamma_list = np.zeros(len(env))
+    for ii, obs in enumerate(env):
+        gamma_list[ii] = obs.get_gamma(position, in_global_frame=True)
+
+    n_obs = len(gamma_list)
+
+    # Total gamma [1, infinity]
+    # Take root of order 'n_obs' to make up for the obstacle multiple
+    if any(gamma_list < 1):
+        # BaseAgent.number_collisions += 1
+        # if show_collision_info:
+        #     print("[INFO] Collision")
+        return 0, 0
+
+    gamma = np.min(gamma_list)
+    index = int(np.argmin(gamma_list))
+
+    if np.isnan(gamma):
+        # Debugging
+        breakpoint()
+    return index, gamma
+
+def get_weight_from_gamma(
+    gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
+):
+    weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
+    weights = weights / frac_gamma_nth
+    weights = 1.0 / weights
+    weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
+    weights = weights / n_points
+    return weights
+
+def get_weight_of_control_points(control_points, environment_without_me):
+    cutoff_gamma = 10  # TODO : This value has to be big and not small
+    # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
+    gamma_values = np.zeros(control_points.shape[1])
+    obs_idx = np.zeros(control_points.shape[1])
+    for ii in range(control_points.shape[1]):
+        obs_idx[ii], gamma_values[ii] = get_gamma_product_crowd(
+            control_points[:, ii], environment_without_me
+        )
+
+    ctl_point_weight = np.zeros(gamma_values.shape)
+    ind_nonzero = gamma_values < cutoff_gamma
+    if not any(ind_nonzero):  # TODO Case he there is ind_nonzero
+        # ctl_point_weight[-1] = 1
+        ctl_point_weight = np.full(gamma_values.shape, 1 / control_points.shape[1])
+    # for index in range(len(gamma_values)):
+    ctl_point_weight[ind_nonzero] = get_weight_from_gamma(
+        gamma_values[ind_nonzero],
+        cutoff_gamma=cutoff_gamma,
+        n_points=control_points.shape[1],
+    )
+
+    ctl_point_weight_sum = np.sum(ctl_point_weight)
+    if ctl_point_weight_sum > 1:
+        ctl_point_weight = ctl_point_weight / ctl_point_weight_sum
+    else:
+        ctl_point_weight[-1] += 1 - ctl_point_weight_sum
+
+    return ctl_point_weight

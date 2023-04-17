@@ -37,7 +37,9 @@ from autonomous_furniture.agent_helper_functions import (
     agent_kinematics_from_ctr_point_vel,
     apply_velocity_constraints,
     apply_linear_and_angular_acceleration_constraints,
-    evaluate_safety_repulsion
+    evaluate_safety_repulsion,
+    get_gamma_product_crowd,
+    get_weight_of_control_points
 )
 
 # from vartools.states
@@ -57,8 +59,9 @@ class Furniture3D:
         shape_container: ObstacleContainer,
         shape_positions: Optional[np.ndarray],
         obstacle_environment: ObstacleContainer,
+        starting_pose: ObjectPose,
+        control_points: Optional[np.ndarray],
         priority_value: float = 1.0,
-        control_points: Optional[np.ndarray] = None,
         parking_pose: ObjectPose = None,
         goal_pose: ObjectPose = None,
         name: str = "no_name",
@@ -85,7 +88,8 @@ class Furniture3D:
         self.color = np.array([176, 124, 124]) / 255.0
 
         self.priority = priority_value
-        self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
+        # self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
+        self.virtual_drag = 1
         # TODO maybe append the shape directly in bos env,
         # and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
@@ -93,10 +97,11 @@ class Furniture3D:
         self._parking_pose = parking_pose
         self._shape_positions = shape_positions
         self._goal_pose = goal_pose
+        self._reference_pose = starting_pose
 
         # Adding the current shape of the agent to the list of
         # obstacle_env so as to be visible to other agents
-        for i in enumerate(self._shape_container):
+        for i in range(len(self._shape_container)):
             self._obstacle_environment.append(self._shape_container[i])
 
         self._static = static
@@ -107,7 +112,7 @@ class Furniture3D:
         self.stop: bool = False
 
         # metrics
-        self.direct_distance = LA.norm(goal_pose.position - self.position)
+        self.direct_distance = LA.norm(goal_pose.position - self._reference_pose.position)
         self.total_distance = 0
         self.time_conv = 0
         self.time_conv_direct = 0
@@ -128,16 +133,68 @@ class Furniture3D:
         # agent should stop when a ctrpoint reaches a gamma value under this threshold
         self.gamma_stop = gamma_stop
 
-        self.linea_velocity = 0.0
+        self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
 
-    def update_velocity(self) -> None:
+    def get_obstacles_without_me(self):
+        obs_env_without_me = ObstacleContainer()
+        for i in range(len(self._obstacle_environment)):
+            obs = self._obstacle_environment[i]
+            save_obs=True
+            for j in range(len(self._shape_container)):
+                shape=self._shape_container[j]
+                if obs==shape:
+                    save_obs = False
+            if save_obs:
+                obs_env_without_me.append(obs)
+        return obs_env_without_me
+
+    def get_global_control_points(self):
+        return np.array(
+            [
+                self._reference_pose.transform_position_from_relative(ctp)
+                for ctp in self._control_points
+            ]
+        ).T
+
+    def get_goal_control_points(self):
+        """Get goal-control-points in global frame."""
+        return np.array(
+            [
+                self._goal_pose.transform_position_from_relative(ctp)
+                for ctp in self._control_points
+            ]
+        ).T
+
+    def update_shape_kinematics(self):
+        #set the shape's linear and angular velocity, maybe not the right place do define it once we try multiple layers?
+        for i in range(len(self._shape_container)):
+            if self._static:
+                self._shape_container[i].twist.angular=0.0
+                self._shape_container[i].twist.linear=np.zeros(2)
+            else:
+                #angular velocity in rigid bodies is always the same in each point
+                self._shape_container[i].twist.angular = self.angular_velocity
+                #linear velocity follows the gemeral rigid body equation
+                shape_position_global = self._reference_pose.transform_position_from_relative(self._shape_positions[i].copy())
+                shape_position_global_wrt_ref = shape_position_global-self._reference_pose.position
+                self._shape_container[i].twist.linear[0] = self.linear_velocity[0]-self.angular_velocity*shape_position_global_wrt_ref[1]
+                self._shape_container[i].twist.linear[1] = self.linear_velocity[1]+self.angular_velocity*shape_position_global_wrt_ref[0]
+
+    def do_velocity_step(self, dt):
+        self.update_shape_kinematics()
+        self._shape_container.do_velocity_step(dt)
+        self._reference_pose.update(dt, ObjectTwist(linear=self.linear_velocity, angular=self.angular_velocity))
+        
+
+    def update_velocity(
         self,
-        mini_drag: str = ("nodrag",)
-        version: str = ("v1",)
-        emergency_stop: bool = (True,)
-        safety_module: bool = (True,)
-        time_step: float = (0.04,)
+        mini_drag: str = "nodrag",
+        version: str = "v1",
+        emergency_stop: bool = True,
+        safety_module: bool = True,
+        time_step: float = 0.1,
+    ) -> None:
 
         # if static velocities will always be 0 per definition
         if self._static:
@@ -152,41 +209,58 @@ class Furniture3D:
         angular_velocity_old = self.angular_velocity
 
         environment_without_me = self.get_obstacles_without_me()
+        
         if not len(environment_without_me):
-            self.linear_velocity = self._dynamics.evaluate(self.position)
-            self.angular_velocity = 0
-
+            while 1<2:
+                print("ERROR NO OBSTACLES FOUND!")
+            
         global_control_points = self.get_global_control_points()
 
-        weights = self.get_weight_of_control_points(
+        weights = get_weight_of_control_points(
             global_control_points, environment_without_me
         )
 
         # plt.arrow(self.position[0], self.position[1], initial_velocity[0],
         #       initial_velocity[1], head_width=0.1, head_length=0.2, color='g')
-        d = LA.norm(self.position - self._goal_pose.position)
+        d = LA.norm(self._reference_pose.position - self._goal_pose.position)
 
         if version == "v2":
             initial_velocity = linear_velocity_old.copy()
             # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
             # compute goal orientation wheights
-            w1, w2 = self.compute_ang_weights(mini_drag, d)
-            drag_angle = self.compute_drag_angle(initial_velocity)
-            goal_angle = self.compute_goal_angle()
+            w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag)
+            drag_angle = compute_drag_angle(initial_velocity, self._reference_pose.orientation)
+            goal_angle = compute_goal_angle(
+                self._goal_pose.orientation, self._reference_pose.orientation
+            )
             # TODO Very clunky : Rather make a function out of it
             K = 3  # K proportionnal parameter for the speed
             # Initial angular_velocity is computedenv
-            desired_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
+            initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
             # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
             #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
             # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
             #           ii], head_width=0.1, head_length=0.2, color='m')
-            velocities = self.ctr_point_vel_from_agent_kinematics(
-                desired_angular_vel, initial_velocity
+            velocities = ctr_point_vel_from_agent_kinematics(
+                initial_angular_vel,
+                initial_velocity,
+                number_ctrpt=self._control_points.shape[0],
+                local_control_points=self._control_points,
+                global_control_points=self.get_global_control_points(),
+                actual_orientation=self._reference_pose.orientation,
+                environment_without_me=self.get_obstacles_without_me(),
+                priority=self.priority,
+                DSM=True
             )
 
         elif version == "v1":
-            velocities = self.compute_ctr_point_vel_from_obs_avoidance()
+            velocities = compute_ctr_point_vel_from_obs_avoidance(
+                number_ctrpt=self._control_points.shape[0],
+                goal_pos_ctr_pts=self.get_goal_control_points(),
+                actual_pos_ctr_pts=self.get_global_control_points(),
+                environment_without_me=self.get_obstacles_without_me(),
+                priority=self.priority,
+            )
 
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
@@ -203,7 +277,7 @@ class Furniture3D:
                 (
                     obs_idx[ii],
                     gamma_values[ii],
-                ) = self.get_gamma_product_crowd(  # TODO: Done elsewhere, for efficiency maybe will need to be delete
+                ) = get_gamma_product_crowd(
                     global_control_points[:, ii], environment_without_me
                 )
 
@@ -216,7 +290,12 @@ class Furniture3D:
                     return
 
             if safety_module:
-                self.compute_gamma_critic(d)
+                self.gamma_critic = compute_gamma_critic(
+                    d=d,
+                    d_critic=self.d_critic,
+                    gamma_critic_max=self.gamma_critic_max,
+                    gamma_critic_min=self.gamma_critic_min,
+                )
                 # Check if the gamma function is below gramma_critic
                 list_critic_gammas_indx = []
                 for ii in range(global_control_points.shape[1]):
@@ -224,13 +303,63 @@ class Furniture3D:
                         list_critic_gammas_indx.append(ii)
                         self.color = "k"  # np.array([221, 16, 16]) / 255.0
                 if len(list_critic_gammas_indx) > 0:
-                    velocities = self.evaluate_safety_repulsion(
+                    #calculate the real velocties of the control points after weighting before applying safety module
+                    linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
+                        velocities,
+                        weights,
+                        global_control_points=self.get_global_control_points(),
+                        ctrpt_number=self._control_points.shape[0],
+                        global_reference_position=self._reference_pose.position,
+                    )
+                    velocities = ctr_point_vel_from_agent_kinematics(
+                        angular_velocity,
+                        linear_velocity,
+                        number_ctrpt=self._control_points.shape[0],
+                        local_control_points=self._control_points,
+                        global_control_points=self.get_global_control_points(),
+                        actual_orientation=self._reference_pose.orientation,
+                        environment_without_me=self.get_obstacles_without_me(),
+                        priority=self.priority,
+                        DSM=False
+                    )
+                    velocities = evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,
                         environment_without_me=environment_without_me,
                         global_control_points=global_control_points,
                         obs_idx=obs_idx,
                         gamma_values=gamma_values,
                         velocities=velocities,
+                        gamma_critic=self.gamma_critic,
+                        local_control_points = self._control_points,
                     )
 
-        self.agent_kinematics_from_ctr_point_vel(velocities, weights)
+        linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
+            velocities,
+            weights,
+            global_control_points=self.get_global_control_points(),
+            ctrpt_number=self._control_points.shape[0],
+            global_reference_position=self._reference_pose.position,
+        )
+
+        linear_velocity, angular_velocity = apply_velocity_constraints(
+            linear_velocity,
+            angular_velocity,
+            maximum_linear_velocity=self.maximum_linear_velocity,
+            maximum_angular_velocity=self.maximum_angular_velocity,
+        )
+
+        (
+            linear_velocity,
+            angular_velocity,
+        ) = apply_linear_and_angular_acceleration_constraints(
+            linear_velocity_old,
+            angular_velocity_old,
+            linear_velocity,
+            angular_velocity,
+            maximum_linear_acceleration=self.maximum_linear_acceleration,
+            maximum_angular_acceleration=self.maximum_angular_acceleration,
+            time_step=time_step,
+        )
+
+        self.linear_velocity = linear_velocity
+        self.angular_velocity = angular_velocity
