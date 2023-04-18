@@ -225,7 +225,10 @@ class Furniture3D:
         d = LA.norm(self._reference_pose.position - self._goal_pose.position)
 
         if version == "v2":
-            initial_velocity = linear_velocity_old.copy()
+            if LA.norm(linear_velocity_old)<1e-6:
+                initial_velocity = self._goal_pose.position - self._reference_pose.position
+            else:
+                initial_velocity = linear_velocity_old.copy()
             # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
             # compute goal orientation wheights
             w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag)
@@ -241,9 +244,25 @@ class Furniture3D:
             #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
             # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
             #           ii], head_width=0.1, head_length=0.2, color='m')
+            velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
+                number_ctrpt=self._control_points.shape[0],
+                goal_pos_ctr_pts=self.get_goal_control_points(),
+                actual_pos_ctr_pts=self.get_global_control_points(),
+                environment_without_me=self.get_obstacles_without_me(),
+                priority=self.priority,
+            )
+            
+            linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
+            velocities_from_DSM,
+            weights,
+            global_control_points=self.get_global_control_points(),
+            ctrpt_number=self._control_points.shape[0],
+            global_reference_position=self._reference_pose.position,
+            )
+
             velocities = ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel,
-                initial_velocity,
+                linear_velocity,
                 number_ctrpt=self._control_points.shape[0],
                 local_control_points=self._control_points,
                 global_control_points=self.get_global_control_points(),
@@ -261,7 +280,10 @@ class Furniture3D:
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
             )
-
+            ctp = self.get_global_control_points()
+            for i in range(self._control_points.shape[0]):
+                plt.arrow(ctp[0,i], ctp[1,i], velocities[0, i],
+                       velocities[1, i], head_width=0.1, head_length=0.2, color='g')
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
             safety_module or emergency_stop

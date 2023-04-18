@@ -200,6 +200,7 @@ class DynamicalSystemAnimation3D(Animator):
                         obstacle_color=self.obstacle_colors[jj],
                         draw_reference=False,
                         set_axes=False,
+                        drawVelArrow=True
                     )
         else:
             plot_obstacles(

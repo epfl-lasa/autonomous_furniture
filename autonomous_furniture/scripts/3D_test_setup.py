@@ -37,20 +37,21 @@ def threeD_test(args=[]):
     table_legs = ObstacleContainer()
     for i in range(4):
         table_leg_shape = CuboidXd(
-            axes_length=[0.2, 0.2],
+            axes_length=[0.3, 0.3],
             center_position=table_reference_start.transform_position_from_relative(np.copy(table_legs_positions[i])),
-            margin_absolut=0.1,
+            margin_absolut=0.3,
             orientation=0,
             tail_effect=False,
         )
         table_legs.append(table_leg_shape)
 
-    goal2 = ObjectPose(position=np.array([2, 2.7]), orientation=np.pi / 2)
+    start2 = ObjectPose(position=np.array([4, 1.7]), orientation=np.pi / 2)
+    goal2 = ObjectPose(position=np.array([1, 3.7]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[1, 2],
-        center_position=goal2.position,
+        center_position=start2.position,
         margin_absolut=0.5,
-        orientation=goal2.orientation,
+        orientation=start2.orientation,
         tail_effect=False,
     )
 
@@ -69,9 +70,8 @@ def threeD_test(args=[]):
             shape_positions=np.array([[0.0, 0.0]]),
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, -0.5], [0, 0.5]]),
-            starting_pose=goal2,
+            starting_pose=start2,
             goal_pose=goal2,
-            static=True,
             name="static",
         ),
     ]
@@ -86,12 +86,13 @@ def threeD_test(args=[]):
     my_animation.setup(
         obstacle_environment,
         agent_list=layer_0,
-        x_lim=[-3, 8],
+        x_lim=[-3, 10],
         y_lim=[-2, 7],
         version="v1",
-        mini_drag="nodrag",
+        mini_drag="dragdist",
         safety_module=True,
         emergency_stop=True,
+        figsize=(10,7)
     )
 
     my_animation.run(save_animation=args.rec)
