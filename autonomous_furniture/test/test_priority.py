@@ -108,14 +108,14 @@ def test_uneven_priority(visualize=False):
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="dragdist",
-        version="v2",
-        safety_module=True,
+        version="v1",
+        safety_module=False,
         emergency_stop=True
     )
 
     if visualize:
         my_animation.run(save_animation=args.rec)
-        my_animation.logs(len(my_furniture))
+        # my_animation.logs(len(my_furniture))
 
     # Check Dynamic Agent
     my_furniture[2].update_velocity(
@@ -149,4 +149,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)

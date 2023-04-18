@@ -333,26 +333,21 @@ class Furniture(BaseAgent):
             self.angular_velocity = 0.0
         angular_velocity_old = self.angular_velocity
 
-        initial_velocity = np.zeros(2)
         environment_without_me = self.get_obstacles_without_me()
-        # TODO : Make it a method to be called outside the classw
+
         global_control_points = self.get_global_control_points()
 
         if not len(environment_without_me):
             while 1<2:
-                print("ERROR NO OBSTACLES FOUND!")
+                raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
             global_control_points, environment_without_me
         )
 
-        velocities = np.zeros((self.dimension, self._control_points.shape[0]))
-        init_velocities = np.zeros((self.dimension, self._control_points.shape[0]))
-
         ### Calculate initial linear and angular velocity of the agent
         # for soft decoupling ###
         # TODO : Do we want to enable rotation along other axis in the futur ?
-        angular_vel = np.zeros((1, self._control_points.shape[0]))
         # First we compute the initial velocity at the "center", ugly
         initial_velocity = self._dynamics.evaluate(self.position)
 

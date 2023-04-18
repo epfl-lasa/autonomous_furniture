@@ -57,11 +57,11 @@ class Furniture3D:
     def __init__(
         self,
         shape_container: ObstacleContainer,
-        shape_positions: Optional[np.ndarray],
         obstacle_environment: ObstacleContainer,
-        starting_pose: ObjectPose,
         control_points: Optional[np.ndarray],
+        shape_positions: Optional[np.ndarray] = None,
         priority_value: float = 1.0,
+        starting_pose: ObjectPose = None,
         parking_pose: ObjectPose = None,
         goal_pose: ObjectPose = None,
         name: str = "no_name",
@@ -88,16 +88,26 @@ class Furniture3D:
         self.color = np.array([176, 124, 124]) / 255.0
 
         self.priority = priority_value
-        # self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
-        self.virtual_drag = 1
+        if len(shape_container) == 1:
+            self.virtual_drag = max(self._shape_container[0].axes_length) / min(self._shape_container[0].axes_length)
+        else:
+            self.virtual_drag = 1
         # TODO maybe append the shape directly in bos env,
         # and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
         self._parking_pose = parking_pose
-        self._shape_positions = shape_positions
         self._goal_pose = goal_pose
-        self._reference_pose = starting_pose
+        
+        if starting_pose==None:
+            if len(shape_container) == 1:
+                self._reference_pose = ObjectPose(position=shape_container[0].pose.position, orientation=shape_container[0].pose.orientation)
+                self._shape_positions = np.array([[0.0, 0.0]])
+            else:
+                raise Exception("Please define a starting pose if agent has more than one shape!") 
+        else:
+            self._reference_pose = starting_pose
+            self._shape_positions = shape_positions
 
         # Adding the current shape of the agent to the list of
         # obstacle_env so as to be visible to other agents
@@ -137,7 +147,7 @@ class Furniture3D:
         self.angular_velocity = 0.0
 
     def get_obstacles_without_me(self):
-        obs_env_without_me = ObstacleContainer()
+        obs_env_without_me = []
         for i in range(len(self._obstacle_environment)):
             obs = self._obstacle_environment[i]
             save_obs=True
@@ -210,11 +220,10 @@ class Furniture3D:
 
         environment_without_me = self.get_obstacles_without_me()
         
-        if not len(environment_without_me):
-            while 1<2:
-                print("ERROR NO OBSTACLES FOUND!")
-            
         global_control_points = self.get_global_control_points()
+
+        if not len(environment_without_me):
+                raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
             global_control_points, environment_without_me
@@ -280,10 +289,10 @@ class Furniture3D:
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
             )
-            ctp = self.get_global_control_points()
-            for i in range(self._control_points.shape[0]):
-                plt.arrow(ctp[0,i], ctp[1,i], velocities[0, i],
-                       velocities[1, i], head_width=0.1, head_length=0.2, color='g')
+            # ctp = self.get_global_control_points()
+            # for i in range(self._control_points.shape[0]):
+            #     plt.arrow(ctp[0,i], ctp[1,i], velocities[0, i],
+            #            velocities[1, i], head_width=0.1, head_length=0.2, color='g')
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
             safety_module or emergency_stop

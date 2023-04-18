@@ -13,8 +13,8 @@ from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
-from autonomous_furniture.agent import Furniture, Person
-from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
+from autonomous_furniture.agent3D import Furniture3D
+from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
 parser = argparse.ArgumentParser()
 
@@ -38,13 +38,13 @@ def test_uneven_priority(visualize=False):
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    goal = ObjectPose(position=np.array([6, 3]), orientation=np.pi / 2)
-
+    start1 = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
+    goal1 = ObjectPose(position=np.array([6, 3]), orientation=np.pi / 2)
     table_shape = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
-        center_position=np.array([-1, 3]),
+        center_position=start1.position,
         margin_absolut=1,
-        orientation=np.pi / 2,
+        orientation=start1.orientation,
         tail_effect=False,
     )
 
@@ -67,8 +67,8 @@ def test_uneven_priority(visualize=False):
     )
 
     my_furniture = [
-        Furniture(
-            shape=table_shape2,
+        Furniture3D(
+            shape_container=ObstacleContainer(obs_list=[table_shape2]),
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal2,
@@ -76,8 +76,8 @@ def test_uneven_priority(visualize=False):
             static=True,
             name="static",
         ),
-        Furniture(
-            shape=table_shape3,
+        Furniture3D(
+            shape_container=ObstacleContainer(obs_list=[table_shape3]),
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal3,
@@ -85,18 +85,18 @@ def test_uneven_priority(visualize=False):
             static=True,
             name="static",
         ),
-        Furniture(
-            shape=table_shape,
+        Furniture3D(
+            shape_container=ObstacleContainer(obs_list=[table_shape]),
             obstacle_environment=obstacle_environment,
             control_points=control_points,
-            goal_pose=goal,
+            goal_pose=goal1,
             priority_value=1,
             name="fur",
         ),
     ]
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
-    my_animation = DynamicalSystemAnimation(
+    my_animation = DynamicalSystemAnimation3D(
         it_max=200,
         dt_simulation=0.05,
         dt_sleep=0.05,
@@ -104,18 +104,18 @@ def test_uneven_priority(visualize=False):
     )
     my_animation.setup(
         obstacle_environment,
-        agent=my_furniture,
+        agent_list=my_furniture,
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="dragdist",
-        version="v2",
-        safety_module=True,
+        version="v1",
+        safety_module=False,
         emergency_stop=True
     )
 
     if visualize:
         my_animation.run(save_animation=args.rec)
-        my_animation.logs(len(my_furniture))
+        # my_animation.logs(len(my_furniture))
 
     # Check Dynamic Agent
     my_furniture[2].update_velocity(
@@ -149,4 +149,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)
