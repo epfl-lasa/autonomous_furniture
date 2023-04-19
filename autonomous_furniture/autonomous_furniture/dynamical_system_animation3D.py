@@ -32,7 +32,7 @@ class DynamicalSystemAnimation3D(Animator):
     def setup(
         self,
         obstacle_environment,
-        agent_list: list[Furniture3D],
+        layer_list: list[list[Furniture3D]],
         x_lim=None,
         y_lim=None,
         anim: bool = True,
@@ -51,8 +51,9 @@ class DynamicalSystemAnimation3D(Animator):
         self.check_convergence = check_convergence
 
         dim = 2
-        self.number_agent = len(agent_list)
-
+        self.number_agent = len(layer_list[0])
+        self.number_layer = len(layer_list)
+        
         if y_lim is None:
             y_lim = [0.0, 10]
         if x_lim is None:
@@ -60,8 +61,8 @@ class DynamicalSystemAnimation3D(Animator):
 
         self.position_list = np.zeros((dim, self.it_max))
         self.time_list = np.zeros((self.it_max))
-        self.position_list = [agent_list[ii]._reference_pose.position for ii in range(self.number_agent)]
-        self.agent_list = agent_list
+        # self.position_list = [agent_list[ii]._reference_pose.position for ii in range(self.number_agent)]
+        self.layer_list = layer_list
         self.x_lim = x_lim
         self.y_lim = y_lim
 
@@ -69,7 +70,12 @@ class DynamicalSystemAnimation3D(Animator):
         for i in range(self.number_agent):
             self.agent_pos_saver.append([])
         for i in range(self.number_agent):
-            self.agent_pos_saver[i].append(self.agent_list[i]._reference_pose.position)
+            saved = False
+            for k in range(self.number_layer):
+                if not self.layer_list[k] == None:
+                    if not saved: #make sure the positions are only saved once when an agent is present in multiple layers
+                        self.agent_pos_saver[i].append(self.layer_list[k][i]._reference_pose.position)
+                        saved = True
 
         self.obstacle_environment = obstacle_environment
         # for i in range(len(obstacle_environment)):
@@ -82,18 +88,36 @@ class DynamicalSystemAnimation3D(Animator):
         self.converged: bool = False  # IF all the agent has converged
 
     def update_step(self, ii, anim: bool = True):
+        for k in range(self.number_layer):
+            #calculate the agents velocity in each layer
+            for jj in range(self.number_agent):
+                if not self.layer_list[k][jj] == None:
+                    self.layer_list[k][jj].update_velocity(
+                        mini_drag=self.mini_drag,
+                        version=self.version,
+                        emergency_stop=self.emergency_stop,
+                        safety_module=self.safety_module,
+                        time_step=self.dt_simulation
+                    )
+                # self.agent_list[jj].compute_metrics(self.dt_simulation)
         for jj in range(self.number_agent):
-            self.agent_list[jj].update_velocity(
-                mini_drag=self.mini_drag,
-                version=self.version,
-                emergency_stop=self.emergency_stop,
-                safety_module=self.safety_module,
-                time_step=self.dt_simulation
-            )
-            # self.agent_list[jj].compute_metrics(self.dt_simulation)
-            self.agent_list[jj].do_velocity_step(self.dt_simulation)
-
-            self.agent_pos_saver[jj].append(self.agent_list[jj]._reference_pose.position)
+            #collect the velocities of each layer for each agent
+            agent_linear_velocities = np.zeros((2,self.number_layer))
+            agent_angular_velocities = np.zeros((self.number_layer))
+            for k in range(self.number_layer):
+                agent_linear_velocities[:,k] = self.layer_list[k][jj].linear_velocity
+                agent_angular_velocities[k] = self.layer_list[k][jj].angular_velocity
+            #weight each layer for this specific agent
+            weights = 1/self.number_layer*np.ones((self.number_layer)) ####     NEEDS TO BE CHANGED!!!!  ######
+            #calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
+            linear_velocity = np.sum(agent_linear_velocities * np.tile(weights, (2, 1)), axis=1)
+            angular_velocity = np.sum(agent_angular_velocities*np.tile(weights, (1, 1)))
+            #update each layers positions and orientations
+            for k in range(self.number_layer):
+                self.layer_list[k][jj].linear_velocity = linear_velocity
+                self.layer_list[k][jj].angular_velocity = angular_velocity
+                self.layer_list[k][jj].do_velocity_step(self.dt_simulation)
+            self.agent_pos_saver[jj].append(self.layer_list[0][jj]._reference_pose.position)
 
         if not anim:
             return
@@ -103,7 +127,7 @@ class DynamicalSystemAnimation3D(Animator):
         self.ax.clear()
 
         for jj in range(self.number_agent):
-            goal_control_points = self.agent_list[
+            goal_control_points = self.layer_list[0][
                 jj
             ].get_goal_control_points()  ##plot agent center position
 
@@ -112,7 +136,7 @@ class DynamicalSystemAnimation3D(Animator):
             else:
                 color = "black"
 
-            global_control_points = self.agent_list[jj].get_global_control_points()
+            global_control_points = self.layer_list[0][jj].get_global_control_points()
             self.ax.plot(
                 global_control_points[0, :],
                 global_control_points[1, :],
@@ -130,15 +154,15 @@ class DynamicalSystemAnimation3D(Animator):
             )
 
             self.ax.plot(
-                self.agent_list[jj]._goal_pose.position[0],
-                self.agent_list[jj]._goal_pose.position[1],
+                self.layer_list[0][jj]._goal_pose.position[0],
+                self.layer_list[0][jj]._goal_pose.position[1],
                 color=color,
                 marker="*",
             )
 
             self.ax.plot(
-                self.agent_list[jj]._reference_pose.position[0],
-                self.agent_list[jj]._reference_pose.position[1],
+                self.layer_list[0][jj]._reference_pose.position[0],
+                self.layer_list[0][jj]._reference_pose.position[1],
                 color="black",
                 marker="*",
             )
@@ -190,10 +214,10 @@ class DynamicalSystemAnimation3D(Animator):
 
         if len(self.obstacle_colors):
             for jj in range(self.number_agent):
-                for i in range(len(self.agent_list[jj]._shape_list)):
+                for i in range(len(self.layer_list[0][jj]._shape_list)):
                     plot_obstacles(
                         ax=self.ax,
-                        obstacle_container=[self.agent_list[jj]._shape_list[i]],
+                        obstacle_container=[self.layer_list[0][jj]._shape_list[i]],
                         x_lim=self.x_lim,
                         y_lim=self.y_lim,
                         showLabel=False,
@@ -228,18 +252,18 @@ class DynamicalSystemAnimation3D(Animator):
 
         rtol_pos = 1e-3
         rtol_ang = 4e-1
-        for ii in range(len(self.agent_list)):
-            if not self.agent_list[ii].converged:
+        for ii in range(len(self.layer_list[0])):
+            if not self.layer_list[0][ii].converged:
                 if np.allclose(
-                    self.agent_list[ii]._goal_pose.position,
-                    self.agent_list[ii]._reference_pose.position,
+                    self.layer_list[0][ii]._goal_pose.position,
+                    self.layer_list[0][ii]._reference_pose.position,
                     rtol=rtol_pos,
                 ) and np.allclose(
-                    self.agent_list[ii]._goal_pose.orientation % np.pi,
-                    self.agent_list[ii]._reference_pose.position % np.pi,
+                    self.layer_list[0][ii]._goal_pose.orientation % np.pi,
+                    self.layer_list[0][ii]._reference_pose.position % np.pi,
                     rtol=rtol_ang,
                 ):
-                    self.agent_list[ii].converged = True
+                    self.layer_list[0][ii].converged = True
                 else:
                     return False
 

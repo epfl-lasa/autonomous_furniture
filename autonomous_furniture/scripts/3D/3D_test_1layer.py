@@ -86,7 +86,7 @@ def threeD_test(args=[]):
 
     my_animation.setup(
         obstacle_environment,
-        agent_list=layer_0,
+        layer_list=[layer_0],
         x_lim=[-3, 10],
         y_lim=[-2, 7],
         version="v1",
