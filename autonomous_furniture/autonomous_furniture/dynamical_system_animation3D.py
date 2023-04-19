@@ -125,7 +125,7 @@ class DynamicalSystemAnimation3D(Animator):
                 goal_control_points[0, :],
                 goal_control_points[1, :],
                 color=color,
-                marker="o",
+                marker=".",
                 linestyle=""
             )
 
@@ -190,10 +190,10 @@ class DynamicalSystemAnimation3D(Animator):
 
         if len(self.obstacle_colors):
             for jj in range(self.number_agent):
-                for i in range(len(self.agent_list[jj]._shape_container)):
+                for i in range(len(self.agent_list[jj]._shape_list)):
                     plot_obstacles(
                         ax=self.ax,
-                        obstacle_container=[self.agent_list[jj]._shape_container[i]],
+                        obstacle_container=[self.agent_list[jj]._shape_list[i]],
                         x_lim=self.x_lim,
                         y_lim=self.y_lim,
                         showLabel=False,

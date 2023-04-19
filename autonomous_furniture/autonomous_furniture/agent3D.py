@@ -56,7 +56,7 @@ class ObjectType(Enum):
 class Furniture3D:
     def __init__(
         self,
-        shape_container: ObstacleContainer,
+        shape_list: list[Obstacle],
         obstacle_environment: ObstacleContainer,
         control_points: Optional[np.ndarray],
         shape_positions: Optional[np.ndarray] = None,
@@ -74,7 +74,7 @@ class Furniture3D:
         gamma_critic_min: float = 1.2,
         gamma_stop: float = 1.1,
     ) -> None:
-        self._shape_container = shape_container
+        self._shape_list = shape_list
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
         self.maximum_angular_velocity = 1.0  # rad/s
@@ -88,8 +88,11 @@ class Furniture3D:
         self.color = np.array([176, 124, 124]) / 255.0
 
         self.priority = priority_value
-        if len(shape_container) == 1:
-            self.virtual_drag = max(self._shape_container[0].axes_length) / min(self._shape_container[0].axes_length)
+        for i in range(len(shape_list)):
+            self._shape_list[i].reactivity=self.priority
+            
+        if len(shape_list) == 1:
+            self.virtual_drag = max(self._shape_list[0].axes_length) / min(self._shape_list[0].axes_length)
         else:
             self.virtual_drag = 1
         # TODO maybe append the shape directly in bos env,
@@ -100,8 +103,8 @@ class Furniture3D:
         self._goal_pose = goal_pose
         
         if starting_pose==None:
-            if len(shape_container) == 1:
-                self._reference_pose = ObjectPose(position=shape_container[0].pose.position, orientation=shape_container[0].pose.orientation)
+            if len(shape_list) == 1:
+                self._reference_pose = ObjectPose(position=shape_list[0].pose.position, orientation=shape_list[0].pose.orientation)
                 self._shape_positions = np.array([[0.0, 0.0]])
             else:
                 raise Exception("Please define a starting pose if agent has more than one shape!") 
@@ -111,8 +114,8 @@ class Furniture3D:
 
         # Adding the current shape of the agent to the list of
         # obstacle_env so as to be visible to other agents
-        for i in range(len(self._shape_container)):
-            self._obstacle_environment.append(self._shape_container[i])
+        for i in range(len(self._shape_list)):
+            self._obstacle_environment.append(self._shape_list[i])
 
         self._static = static
         self.name = name
@@ -151,8 +154,8 @@ class Furniture3D:
         for i in range(len(self._obstacle_environment)):
             obs = self._obstacle_environment[i]
             save_obs=True
-            for j in range(len(self._shape_container)):
-                shape=self._shape_container[j]
+            for j in range(len(self._shape_list)):
+                shape=self._shape_list[j]
                 if obs==shape:
                     save_obs = False
             if save_obs:
@@ -178,22 +181,23 @@ class Furniture3D:
 
     def update_shape_kinematics(self):
         #set the shape's linear and angular velocity, maybe not the right place do define it once we try multiple layers?
-        for i in range(len(self._shape_container)):
+        for i in range(len(self._shape_list)):
             if self._static:
-                self._shape_container[i].twist.angular=0.0
-                self._shape_container[i].twist.linear=np.zeros(2)
+                self._shape_list[i].twist.angular=0.0
+                self._shape_list[i].twist.linear=np.zeros(2)
             else:
                 #angular velocity in rigid bodies is always the same in each point
-                self._shape_container[i].twist.angular = self.angular_velocity
+                self._shape_list[i].twist.angular = self.angular_velocity
                 #linear velocity follows the gemeral rigid body equation
                 shape_position_global = self._reference_pose.transform_position_from_relative(self._shape_positions[i].copy())
                 shape_position_global_wrt_ref = shape_position_global-self._reference_pose.position
-                self._shape_container[i].twist.linear[0] = self.linear_velocity[0]-self.angular_velocity*shape_position_global_wrt_ref[1]
-                self._shape_container[i].twist.linear[1] = self.linear_velocity[1]+self.angular_velocity*shape_position_global_wrt_ref[0]
+                self._shape_list[i].twist.linear[0] = self.linear_velocity[0]-self.angular_velocity*shape_position_global_wrt_ref[1]
+                self._shape_list[i].twist.linear[1] = self.linear_velocity[1]+self.angular_velocity*shape_position_global_wrt_ref[0]
 
     def do_velocity_step(self, dt):
         self.update_shape_kinematics()
-        self._shape_container.do_velocity_step(dt)
+        for i in range(len(self._shape_list)):
+            self._shape_list[i].do_velocity_step(dt)
         self._reference_pose.update(dt, ObjectTwist(linear=self.linear_velocity, angular=self.angular_velocity))
         
 
@@ -236,6 +240,7 @@ class Furniture3D:
         if version == "v2":
             if LA.norm(linear_velocity_old)<1e-6:
                 initial_velocity = self._goal_pose.position - self._reference_pose.position
+                initial_velocity = initial_velocity/LA.norm(initial_velocity)*self.maximum_linear_velocity
             else:
                 initial_velocity = linear_velocity_old.copy()
             # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
@@ -289,10 +294,10 @@ class Furniture3D:
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
             )
-            # ctp = self.get_global_control_points()
-            # for i in range(self._control_points.shape[0]):
-            #     plt.arrow(ctp[0,i], ctp[1,i], velocities[0, i],
-            #            velocities[1, i], head_width=0.1, head_length=0.2, color='g')
+        ctp = self.get_global_control_points()
+        for i in range(self._control_points.shape[0]):
+            plt.arrow(ctp[0,i], ctp[1,i], velocities[0, i],
+                    velocities[1, i], head_width=0.1, head_length=0.2, color='g')
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
             safety_module or emergency_stop

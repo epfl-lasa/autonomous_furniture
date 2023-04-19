@@ -419,7 +419,7 @@ def get_weight_from_gamma(
     return weights
 
 def get_weight_of_control_points(control_points, environment_without_me):
-    cutoff_gamma = 10  # TODO : This value has to be big and not small
+    cutoff_gamma = 5  # TODO : This value has to be big and not small
     # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])

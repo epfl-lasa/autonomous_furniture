@@ -13,8 +13,8 @@ from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
-from autonomous_furniture.agent import Furniture, Person
-from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
+from autonomous_furniture.agent3D import Furniture3D
+from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
 parser = argparse.ArgumentParser()
 
@@ -40,7 +40,6 @@ def test_uneven_priority(visualize=False):
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
     goal = ObjectPose(position=np.array([6, 3]), orientation=0)
-
     table_shape_with_decoupling = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([1, 3]),
@@ -76,15 +75,15 @@ def test_uneven_priority(visualize=False):
     )
 
     my_furniture_with_decoupling = [
-        Furniture(
-            shape=table_shape_with_decoupling,
+        Furniture3D(
+            shape_list=[table_shape_with_decoupling],
             obstacle_environment=obstacle_environment_with_decoupling,
             control_points=control_points,
             goal_pose=goal,
             name="fur",
         ),
-        Furniture(
-            shape=table_shape2_with_decoupling,
+        Furniture3D(
+            shape_list=[table_shape2_with_decoupling],
             obstacle_environment=obstacle_environment_with_decoupling,
             control_points=control_points,
             goal_pose=goal2_with_decoupling,
@@ -94,15 +93,15 @@ def test_uneven_priority(visualize=False):
     ]
     
     my_furniture_no_decoupling = [
-        Furniture(
-            shape=table_shape_no_decoupling,
+        Furniture3D(
+            shape_list=[table_shape_no_decoupling],
             obstacle_environment=obstacle_environment_no_decoupling,
             control_points=control_points,
             goal_pose=goal,
             name="fur",
         ),
-        Furniture(
-            shape=table_shape2_no_decoupling,
+        Furniture3D(
+            shape_list=[table_shape2_no_decoupling],
             obstacle_environment=obstacle_environment_no_decoupling,
             control_points=control_points,
             goal_pose=goal2_no_decoupling,
@@ -114,7 +113,7 @@ def test_uneven_priority(visualize=False):
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
 
-    my_animation_with_decoupling = DynamicalSystemAnimation(
+    my_animation_with_decoupling = DynamicalSystemAnimation3D(
         it_max=200,
         dt_simulation=0.05,
         dt_sleep=0.05,
@@ -122,7 +121,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_with_decoupling.setup(
         obstacle_environment_with_decoupling,
-        agent=my_furniture_with_decoupling,
+        agent_list=my_furniture_with_decoupling,
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="nodrag",
@@ -132,7 +131,7 @@ def test_uneven_priority(visualize=False):
     )
 
 
-    my_animation_no_decoupling = DynamicalSystemAnimation(
+    my_animation_no_decoupling = DynamicalSystemAnimation3D(
         it_max=200,
         dt_simulation=0.05,
         dt_sleep=0.05,
@@ -140,7 +139,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_no_decoupling.setup(
         obstacle_environment_no_decoupling,
-        agent=my_furniture_no_decoupling,
+        agent_list=my_furniture_no_decoupling,
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="nodrag",

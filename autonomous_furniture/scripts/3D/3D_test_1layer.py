@@ -34,7 +34,7 @@ def threeD_test(args=[]):
     table_reference_goal = ObjectPose(position=np.array([6, 2.75]), orientation=0)
     table_reference_start = ObjectPose(position=np.array([0, 2.75]), orientation=0)
 
-    table_legs = ObstacleContainer()
+    table_legs = []
     for i in range(4):
         table_leg_shape = CuboidXd(
             axes_length=[0.3, 0.3],
@@ -45,7 +45,7 @@ def threeD_test(args=[]):
         )
         table_legs.append(table_leg_shape)
 
-    start2 = ObjectPose(position=np.array([4, 1.7]), orientation=np.pi / 2)
+    start2 = ObjectPose(position=np.array([5, -10.7]), orientation=np.pi / 2)
     goal2 = ObjectPose(position=np.array([1, 3.7]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[1, 2],
@@ -57,7 +57,7 @@ def threeD_test(args=[]):
 
     layer_0 = [
         Furniture3D(
-            shape_container=table_legs,
+            shape_list=table_legs,
             shape_positions=table_legs_positions,
             obstacle_environment=obstacle_environment,
             control_points=table_legs_control_points,
@@ -66,20 +66,21 @@ def threeD_test(args=[]):
             name="table_legs",
         ),
         Furniture3D(
-            shape_container=ObstacleContainer(obs_list=[table_shape2]),
+            shape_list=[table_shape2],
             shape_positions=np.array([[0.0, 0.0]]),
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, -0.5], [0, 0.5]]),
             starting_pose=start2,
             goal_pose=goal2,
+            static=True,
             name="static",
         ),
     ]
 
     my_animation = DynamicalSystemAnimation3D(
         it_max=1000,
-        dt_simulation=0.04,
-        dt_sleep=0.04,
+        dt_simulation=0.02,
+        dt_sleep=0.02,
         animation_name=args.name,
     )
 
@@ -89,7 +90,7 @@ def threeD_test(args=[]):
         x_lim=[-3, 10],
         y_lim=[-2, 7],
         version="v1",
-        mini_drag="dragdist",
+        mini_drag="nodrag",
         safety_module=True,
         emergency_stop=True,
         figsize=(10,7)

@@ -68,7 +68,7 @@ def test_uneven_priority(visualize=False):
 
     my_furniture = [
         Furniture3D(
-            shape_container=ObstacleContainer(obs_list=[table_shape2]),
+            shape_list=[table_shape2],
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal2,
@@ -77,7 +77,7 @@ def test_uneven_priority(visualize=False):
             name="static",
         ),
         Furniture3D(
-            shape_container=ObstacleContainer(obs_list=[table_shape3]),
+            shape_list=[table_shape3],
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal3,
@@ -86,7 +86,7 @@ def test_uneven_priority(visualize=False):
             name="static",
         ),
         Furniture3D(
-            shape_container=ObstacleContainer(obs_list=[table_shape]),
+            shape_list=[table_shape],
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal1,
