@@ -10,8 +10,18 @@ from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
+from dynamic_obstacle_avoidance.visualization.plot_obstacle_dynamics import (
+    plot_obstacle_dynamics,
+)
 
 from nonlinear_avoidance.avoidance import RotationalAvoider
+from nonlinear_avoidance.dynamics.segmented_dynamics import create_segment_from_points
+from nonlinear_avoidance.dynamics.projected_rotation_dynamics import (
+    ProjectedRotationDynamics,
+)
+from nonlinear_avoidance.nonlinear_rotation_avoider import (
+    SingularityConvergenceDynamics,
+)
 
 # from autonomous_furniture.rviz_animator import RvizSimulator
 import rclpy
@@ -36,14 +46,21 @@ class GrassPublisher(Node):
 
         self.publisher_ = self.create_publisher(MarkerArray, "environment", 3)
         self.markers_array.markers.append(self.create_ground())
+
         self.markers_array.markers.append(
-            self.create_grass(x_pos=0.0, y_pos=4.0, ns="grass0")
+            self.create_grass(x_pos=0.0, y_pos=-8.0, delta_x=20, delta_y=4, ns="grass0")
         )
         self.markers_array.markers.append(
-            self.create_grass(x_pos=0.0, y_pos=-4.0, ns="grass1")
+            self.create_grass(x_pos=0.0, y_pos=8.0, delta_x=20, delta_y=4, ns="grass1")
+        )
+        self.markers_array.markers.append(
+            self.create_grass(x_pos=-6, y_pos=4, delta_x=8, delta_y=12, ns="grass2")
+        )
+        self.markers_array.markers.append(
+            self.create_grass(x_pos=6, y_pos=-4, delta_x=8, delta_y=12, ns="grass3")
         )
 
-        self.place_lines(n_lines=5)
+        # self.place_lines(n_lines=5)
         # Line
         self.publisher_.publish(self.markers_array)
 
@@ -75,8 +92,8 @@ class GrassPublisher(Node):
         marker.pose.orientation.y = 0.0
         marker.pose.orientation.z = 0.0
         marker.pose.orientation.w = 1.0
-        marker.scale.x = 10.0
-        marker.scale.y = 10.0
+        marker.scale.x = 20.0
+        marker.scale.y = 20.0
         marker.scale.z = 0.01
         # 255, 87, 51.
         marker.color.a = 1.0
@@ -85,7 +102,9 @@ class GrassPublisher(Node):
         marker.color.b = 211 / 256.0
         return marker
 
-    def create_grass(self, x_pos=0.0, y_pos=-4.0, ns="grass"):
+    def create_grass(
+        self, x_pos=0.0, y_pos=-4.0, delta_x=10.0, delta_y=3.0, ns="grass"
+    ):
         # def publish_cube(self):
         marker = Marker()
         marker.header.frame_id = "world"
@@ -94,15 +113,15 @@ class GrassPublisher(Node):
         marker.id = 0
         marker.type = 1  # is cube
         # marker.action = visualization_msgs::Marker::ADD
-        marker.pose.position.x = x_pos
-        marker.pose.position.y = y_pos
+        marker.pose.position.x = float(x_pos)
+        marker.pose.position.y = float(y_pos)
         marker.pose.position.z = 0.0
         marker.pose.orientation.x = 0.0
         marker.pose.orientation.y = 0.0
         marker.pose.orientation.z = 0.0
         marker.pose.orientation.w = 1.0
-        marker.scale.x = 10.0
-        marker.scale.y = 3.0
+        marker.scale.x = float(delta_x)
+        marker.scale.y = float(delta_y)
         marker.scale.z = 0.2
         # 255, 87, 51.
         marker.color.a = 1.0
@@ -149,42 +168,66 @@ class RvizQoloAnimator(Animator):
         self.x_lim = x_lim
         self.y_lim = y_lim
 
-        start_position = np.array([-4.4, 1.5])
-        start_orientation = 0
-        self.robot = RvizQolo(
-            pose=Pose(position=start_position, orientation=start_orientation)
+        self.initial_dynamics = create_segment_from_points(
+            [[-7.0, -4.0], [0.0, -4.0], [0.0, 4.0], [7.5, 4.0]]
         )
 
-        attractor = np.array([4.5, 0])
-
-        initial_dynamics = LinearSystem(
-            attractor_position=attractor, maximum_velocity=1.0
-        )
-        convergence_dynamics = LinearSystem(
-            attractor_position=initial_dynamics.attractor_position
+        start_pose = Pose(
+            position=self.initial_dynamics.segments[0].start, orientation=0.0
         )
 
+        # convergence_dynamics = LinearSystem(
+        #     attractor_position=initial_dynamics.segments[-1].end
+        # )
+
+        self.robot = RvizQolo(pose=start_pose)
         self.agent_container = AgentContainer()
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-2.5, 1], orientation=-0.1 * np.pi))
+            RvizTable(pose=Pose(position=[-3.4, -2.5], orientation=-0.1 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-2.0, -1.5], orientation=np.pi / 2))
+            RvizTable(pose=Pose(position=[4.0, 3.6], orientation=np.pi / 2))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[0.6, -1.5], orientation=0.2 * np.pi))
+            RvizTable(pose=Pose(position=[1.2, 0.5], orientation=-0.2 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[2.5, -0.3], orientation=0.4 * np.pi))
+            RvizTable(pose=Pose(position=[-0.4, 1.3], orientation=0.4 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[0.3, 1.3], orientation=-0.3 * np.pi))
+            RvizTable(pose=Pose(position=[-0.2, -3.9], orientation=-0.3 * np.pi))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[-0.3, 4.0], orientation=-0.9 * np.pi))
         )
 
-        self.avoider = RotationalAvoider(
-            initial_dynamics=initial_dynamics,
-            convergence_system=convergence_dynamics,
+        # self.avoider = RotationalAvoider(
+        #     initial_dynamics=initial_dynamics,
+        #     convergence_system=convergence_dynamics,
+        # )
+
+        rotation_projector = ProjectedRotationDynamics(
+            attractor_position=self.initial_dynamics.segments[-1].end,
+            initial_dynamics=self.initial_dynamics,
+            # reference_velocity=lambda x: x - center_velocity.center_position,
         )
+
+        self.avoider = SingularityConvergenceDynamics(
+            initial_dynamics=self.initial_dynamics,
+            # convergence_system=convergence_dynamics,
+            obstacle_environment=self.agent_container.get_obstacles(
+                desired_margin=self.robot.required_margin
+            ),
+            obstacle_convergence=rotation_projector,
+        )
+        # attractor = np.array([4.5, 0])
+
+        # initial_dynamics = LinearSystem(
+        #     attractor_position=attractor, maximum_velocity=1.0
+        # )
+        # convergence_dynamics = LinearSystem(
+        #     attractor_position=initial_dynamics.attractor_position
+        # )
 
         self.broadcaster = broadcaster
 
@@ -201,12 +244,16 @@ class RvizQoloAnimator(Animator):
 
     def update_step(self, ii):
         print("ii", ii)
-        self.robot.twist.linear = self.avoider.avoid(
-            position=self.robot.pose.position,
-            obstacle_list=self.agent_container.get_obstacles(
-                desired_margin=self.robot.required_margin
-            ),
+        # self.robot.twist.linear = self.avoider.avoid(
+        #     position=self.robot.pose.position,
+        #     obstacle_list=self.agent_container.get_obstacles(
+        #         desired_margin=self.robot.required_margin
+        #     ),
+        # )
+        self.robot.twist.linear = self.avoider.evaluate(
+            position=self.robot.pose.position
         )
+
         self.robot.update_step(dt=self.dt_simulation)
         update_shapes_of_agent(self.robot)
         if self.broadcaster is not None:
@@ -217,7 +264,7 @@ class RvizQoloAnimator(Animator):
             return
 
         self.ax.clear()
-        plot_obstacles(ax=self.ax, obstacle_container=self.robot.shapes, noTicks=True)
+        plot_obstacles(ax=self.ax, obstacle_container=self.robot.shapes, noTicks=False)
         plot_obstacles(
             ax=self.ax,
             obstacle_container=self.agent_container.get_obstacles(
@@ -225,8 +272,15 @@ class RvizQoloAnimator(Animator):
             ),
             x_lim=self.x_lim,
             y_lim=self.y_lim,
-            noTicks=True,
+            noTicks=False,
         )
+
+        for segment in self.initial_dynamics.segments:
+            self.ax.plot(
+                [segment.start[0], segment.end[0]],
+                [segment.start[1], segment.end[1]],
+                marker="o",
+            )
 
 
 class RosAnimatorNode(Node):
@@ -263,7 +317,10 @@ def main_wavy(
         dt_sleep=delta_time,
     )
     animator.setup(
-        broadcaster=broadcaster, do_plotting=do_plotting, x_lim=[-5, 5], y_lim=[-5, 5]
+        broadcaster=broadcaster,
+        do_plotting=do_plotting,
+        x_lim=[-10, 10],
+        y_lim=[-10, 10],
     )
 
     # Create launch rviz
@@ -282,7 +339,46 @@ def main_wavy(
     print("End of script")
 
 
-if (__name__) == "__main__":
+def plot_vectorfield():
+    # x_lim = [-10, 10.0]
+    # y_lim = [-10.0, 10.5]
+    x_lim = [-2.0, -0.5]
+    y_lim = [-4.5, -3.0]
+    n_grid = 20
+
+    animator = RvizQoloAnimator()
+    animator.setup(x_lim=[-10, 10], y_lim=[-10, 10])
+
+    pos0 = np.array([-1.446, -3.709])
+    velocity0 = animator.avoider.evaluate(pos0)
+    pos1 = np.array([-1.531, -3.702])
+    velocity1 = animator.avoider.evaluate(pos1)
+    breakpoint()
+
+    plt.close("all")
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    plot_obstacle_dynamics(
+        obstacle_container=animator.agent_container.get_obstacles(),
+        dynamics=animator.avoider.evaluate,
+        x_lim=x_lim,
+        y_lim=y_lim,
+        n_grid=n_grid,
+        ax=ax,
+        # attractor_position=dynamic.attractor_position,
+        do_quiver=True,
+        # show_ticks=False,
+    )
+    plot_obstacles(
+        ax=ax,
+        obstacle_container=animator.agent_container.get_obstacles(),
+        x_lim=x_lim,
+        y_lim=y_lim,
+    )
+    breakpoint()
+
+
+def main():
     logging.basicConfig(level=logging.INFO)
 
     logging.info("Simulation started.")
@@ -295,3 +391,8 @@ if (__name__) == "__main__":
     rclpy.shutdown()
 
     logging.info("Simulation ended.")
+
+
+if (__name__) == "__main__":
+    # main()
+    plot_vectorfield()
