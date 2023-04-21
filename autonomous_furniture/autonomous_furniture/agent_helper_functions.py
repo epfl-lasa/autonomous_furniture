@@ -109,6 +109,7 @@ def compute_drag_angle(initial_velocity, actual_orientation):
             drag_angle = -1 * (2 * np.pi - drag_angle)
     return drag_angle
 
+
 def compute_goal_angle(goal_orientation, actual_orientation):
     # compute orientation difference to reach goal
     goal_angle = goal_orientation - actual_orientation
@@ -288,7 +289,7 @@ def evaluate_safety_repulsion(
         if np.dot(velocities[:, ctrpt_indx], normals_for_ang_vel[i]) < 0:
             b = 1 / ((gamma_critic - 1) * (gamma_list_colliding[i] - 1))
             velocities[:, ctrpt_indx] += b * normals_for_ang_vel[i]
-            
+
     return velocities
 
 
@@ -374,12 +375,15 @@ def collect_infos_for_crit_ctr_points(
 
 def get_veloctity_in_global_frame(orientation, velocity) -> np.ndarray:
     """Returns the transform of the velocity from relative to global frame."""
-    R = np.array([
-        [np.cos(orientation), (-1)*np.sin(orientation)],
-        [np.sin(orientation), np.cos(orientation)],
-    ])
-    velocity = np.dot(R,velocity)
+    R = np.array(
+        [
+            [np.cos(orientation), (-1) * np.sin(orientation)],
+            [np.sin(orientation), np.cos(orientation)],
+        ]
+    )
+    velocity = np.dot(R, velocity)
     return velocity
+
 
 def get_gamma_product_crowd(position, env):
     if not len(env):
@@ -408,6 +412,7 @@ def get_gamma_product_crowd(position, env):
         breakpoint()
     return index, gamma
 
+
 def get_weight_from_gamma(
     gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
 ):
@@ -418,8 +423,9 @@ def get_weight_from_gamma(
     weights = weights / n_points
     return weights
 
+
 def get_weight_of_control_points(control_points, environment_without_me):
-    cutoff_gamma = 5  # TODO : This value has to be big and not small
+    cutoff_gamma = 3  # TODO : This value has to be big and not small
     # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])

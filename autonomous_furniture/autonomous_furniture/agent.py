@@ -40,7 +40,7 @@ from autonomous_furniture.agent_helper_functions import (
     apply_linear_and_angular_acceleration_constraints,
     evaluate_safety_repulsion,
     get_gamma_product_crowd,
-    get_weight_of_control_points
+    get_weight_of_control_points,
 )
 
 # from vartools.states
@@ -289,6 +289,7 @@ class BaseAgent(ABC):
     def get_obstacles_without_me(self):
         return [obs for obs in self._obstacle_environment if not obs == self._shape]
 
+
 class Furniture(BaseAgent):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -338,7 +339,7 @@ class Furniture(BaseAgent):
         global_control_points = self.get_global_control_points()
 
         if not len(environment_without_me):
-            while 1<2:
+            while 1 < 2:
                 raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
@@ -387,7 +388,7 @@ class Furniture(BaseAgent):
                 actual_orientation=self.orientation,
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
-                DSM=True
+                DSM=True,
             )
 
         elif version == "v1":
@@ -441,9 +442,19 @@ class Furniture(BaseAgent):
                         self.color = "k"  # np.array([221, 16, 16]) / 255.0
                 if len(list_critic_gammas_indx) > 0:
                     for i in range(self._control_points.shape[0]):
-                        plt.arrow(self._control_points[i][0], self._control_points[i][1], velocities[i,0],
-                                velocities[i,1], head_width=0.01, head_length=0.01, color='red')
-                    linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
+                        plt.arrow(
+                            self._control_points[i][0],
+                            self._control_points[i][1],
+                            velocities[i, 0],
+                            velocities[i, 1],
+                            head_width=0.01,
+                            head_length=0.01,
+                            color="red",
+                        )
+                    (
+                        linear_velocity,
+                        angular_velocity,
+                    ) = agent_kinematics_from_ctr_point_vel(
                         velocities,
                         weights,
                         global_control_points=self.get_global_control_points(),
@@ -459,7 +470,7 @@ class Furniture(BaseAgent):
                         actual_orientation=self.orientation,
                         environment_without_me=self.get_obstacles_without_me(),
                         priority=self.priority,
-                        DSM=False
+                        DSM=False,
                     )
                     velocities = evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,
@@ -469,7 +480,7 @@ class Furniture(BaseAgent):
                         gamma_values=gamma_values,
                         velocities=velocities,
                         gamma_critic=self.gamma_critic,
-                        local_control_points = self._control_points,
+                        local_control_points=self._control_points,
                     )
 
         linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
