@@ -45,7 +45,7 @@ def threeD_test(args=[]):
         )
         table_legs.append(table_leg_shape)
 
-    start2 = ObjectPose(position=np.array([5, -10.7]), orientation=np.pi / 2)
+    start2 = ObjectPose(position=np.array([5, 1.7]), orientation=np.pi / 2)
     goal2 = ObjectPose(position=np.array([1, 3.7]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[1, 2],
@@ -72,7 +72,7 @@ def threeD_test(args=[]):
             control_points=np.array([[0, -0.5], [0, 0.5]]),
             starting_pose=start2,
             goal_pose=goal2,
-            static=True,
+            static=False,
             name="static",
         ),
     ]
