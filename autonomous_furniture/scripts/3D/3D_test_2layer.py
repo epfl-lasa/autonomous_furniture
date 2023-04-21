@@ -52,8 +52,8 @@ def threeD_test(args=[]):
         name="table_legs",
     )
     # upper layer
-    table_surface_control_points = np.array([[0.0, 0.0]])
-    table_surface_positions = np.copy(table_surface_control_points)
+    table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
+    table_surface_positions = np.array([[0.0, 0.0]])
     table_surface_shape = CuboidXd(
         axes_length=[2.2, 2.2],
         center_position=table_reference_start.transform_position_from_relative(np.copy(table_surface_positions[0])),

@@ -216,17 +216,41 @@ class Furniture3D:
                 )
 
     def do_velocity_step(self, dt):
-        if self._control_points.shape[0]==1:
-            w=1
         self.update_shape_kinematics()
         for i in range(len(self._shape_list)):
             self._shape_list[i].do_velocity_step(dt)
         self._reference_pose.update(
             dt, ObjectTwist(linear=self.linear_velocity, angular=self.angular_velocity)
         )
-        if self._control_points.shape[0]==1:
-            w=1
-            
+        
+    def apply_kinematic_constraints(self):
+        
+        linear_velocity = np.copy(self.linear_velocity)
+        angular_velocity = self.angular_velocity
+        
+        linear_velocity, angular_velocity = apply_velocity_constraints(
+            linear_velocity,
+            angular_velocity,
+            maximum_linear_velocity=self.maximum_linear_velocity,
+            maximum_angular_velocity=self.maximum_angular_velocity,
+        )
+
+        (
+            linear_velocity,
+            angular_velocity,
+        ) = apply_linear_and_angular_acceleration_constraints(
+            self.linear_velocity_old,
+            self.angular_velocity_old,
+            linear_velocity,
+            angular_velocity,
+            maximum_linear_acceleration=self.maximum_linear_acceleration,
+            maximum_angular_acceleration=self.maximum_angular_acceleration,
+            time_step=self.time_step,
+        )
+        self.linear_velocity = linear_velocity
+        self.angular_velocity = angular_velocity
+
+
     def update_velocity(
         self,
         mini_drag: str = "nodrag",
@@ -240,12 +264,12 @@ class Furniture3D:
             self.linear_velocity = np.array([0.0, 0.0])
             self.angular_velocity = 0.0
             return
-
+        self.time_step = time_step
         # save the past commands to be able to check kinematic constraints
-        linear_velocity_old = self.linear_velocity
+        self.linear_velocity_old = self.linear_velocity
         if self.angular_velocity == None:
             self.angular_velocity = 0.0
-        angular_velocity_old = self.angular_velocity
+        self.angular_velocity_old = self.angular_velocity
 
         environment_without_me = self.get_obstacles_without_me()
 
@@ -263,7 +287,7 @@ class Furniture3D:
         d = LA.norm(self._reference_pose.position - self._goal_pose.position)
 
         if version == "v2":
-            if LA.norm(linear_velocity_old) < 1e-6:
+            if LA.norm(self.linear_velocity_old) < 1e-6:
                 initial_velocity = (
                     self._goal_pose.position - self._reference_pose.position
                 )
@@ -273,7 +297,7 @@ class Furniture3D:
                     * self.maximum_linear_velocity
                 )
             else:
-                initial_velocity = linear_velocity_old.copy()
+                initial_velocity = self.linear_velocity_old.copy()
             # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
             # compute goal orientation wheights
             w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag)
@@ -363,6 +387,7 @@ class Furniture3D:
                     # print("EMERGENCY STOP")
                     self.angular_velocity = 0
                     self.linear_velocity = np.array([0.0, 0.0])
+                    self.stop = True
                     return
 
             if safety_module:
@@ -418,26 +443,6 @@ class Furniture3D:
             global_control_points=self.get_global_control_points(),
             ctrpt_number=self._control_points.shape[0],
             global_reference_position=self._reference_pose.position,
-        )
-
-        linear_velocity, angular_velocity = apply_velocity_constraints(
-            linear_velocity,
-            angular_velocity,
-            maximum_linear_velocity=self.maximum_linear_velocity,
-            maximum_angular_velocity=self.maximum_angular_velocity,
-        )
-
-        (
-            linear_velocity,
-            angular_velocity,
-        ) = apply_linear_and_angular_acceleration_constraints(
-            linear_velocity_old,
-            angular_velocity_old,
-            linear_velocity,
-            angular_velocity,
-            maximum_linear_acceleration=self.maximum_linear_acceleration,
-            maximum_angular_acceleration=self.maximum_angular_acceleration,
-            time_step=time_step,
         )
 
         self.linear_velocity = linear_velocity

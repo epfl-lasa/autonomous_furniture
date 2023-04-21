@@ -105,31 +105,42 @@ class DynamicalSystemAnimation3D(Animator):
                         time_step=self.dt_simulation,
                     )
         for jj in range(self.number_agent):
-            # collect the velocities of each layer for each agent
-            agent_linear_velocities = np.zeros((2, self.number_layer))
-            agent_angular_velocities = np.zeros((self.number_layer))
+            #in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
+            stop_triggerred = False
             for k in range(self.number_layer):
-                agent_linear_velocities[:, k] = np.copy(self.layer_list[k][jj].linear_velocity)
-                agent_angular_velocities[k] = np.copy(self.layer_list[k][jj].angular_velocity)
-            # weight each layer for this specific agent
-            weights = (
-                1 / self.number_layer * np.ones((self.number_layer))
-            )  ####     NEEDS TO BE CHANGED!!!!  ######
-            # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
-            linear_velocity = np.sum(
-                agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
-            )
-            angular_velocity = np.sum(
-                agent_angular_velocities * np.tile(weights, (1, 1))
-            )
-            # update each layers positions and orientations
-            for k in range(self.number_layer):
-                self.layer_list[k][jj].linear_velocity = linear_velocity
-                self.layer_list[k][jj].angular_velocity = angular_velocity
-                self.layer_list[k][jj].do_velocity_step(self.dt_simulation)
-                self.agent_pos_saver[jj].append(
-                    self.layer_list[k][jj]._reference_pose.position
+                if self.layer_list[k][jj].stop:
+                    linear_velocity=0.0
+                    angular_velocity=0.0
+                    stop_triggerred = True
+                    break
+            if not stop_triggerred:
+                # collect the velocities of each layer for each agent
+                agent_linear_velocities = np.zeros((2, self.number_layer))
+                agent_angular_velocities = np.zeros((self.number_layer))
+                for k in range(self.number_layer):
+                    agent_linear_velocities[:, k] = np.copy(self.layer_list[k][jj].linear_velocity)
+                    agent_angular_velocities[k] = np.copy(self.layer_list[k][jj].angular_velocity)
+                # weight each layer for this specific agent
+                weights = (
+                    1 / self.number_layer * np.ones((self.number_layer))
+                )  ####     NEEDS TO BE CHANGED!!!!  ######
+                # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
+                linear_velocity = np.sum(
+                    agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
                 )
+                angular_velocity = np.sum(
+                    agent_angular_velocities * np.tile(weights, (1, 1))
+                )
+                
+                # update each layers positions and orientations
+                for k in range(self.number_layer):
+                    self.layer_list[k][jj].linear_velocity = linear_velocity
+                    self.layer_list[k][jj].angular_velocity = angular_velocity
+                    self.layer_list[k][jj].apply_kinematic_constraints()
+                    self.layer_list[k][jj].do_velocity_step(self.dt_simulation)
+                    self.agent_pos_saver[jj].append(
+                        self.layer_list[k][jj]._reference_pose.position
+                    )
 
         if not anim:
             return
