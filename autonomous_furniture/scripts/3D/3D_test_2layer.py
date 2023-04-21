@@ -37,7 +37,7 @@ def threeD_test(args=[]):
         table_leg_shape = CuboidXd(
             axes_length=[0.2, 0.2],
             center_position=table_reference_start.transform_position_from_relative(np.copy(table_legs_positions[i])),
-            margin_absolut=0.3,
+            margin_absolut=0.5,
             orientation=table_reference_start.orientation,
             tail_effect=False,
         )
@@ -57,7 +57,7 @@ def threeD_test(args=[]):
     table_surface_shape = CuboidXd(
         axes_length=[2.2, 2.2],
         center_position=table_reference_start.transform_position_from_relative(np.copy(table_surface_positions[0])),
-        margin_absolut=0.3,
+        margin_absolut=0.5,
         orientation=table_reference_start.orientation,
     )
     table_surface_agent = Furniture3D(
@@ -73,12 +73,12 @@ def threeD_test(args=[]):
     chair_reference_start = ObjectPose(position=np.array([5, 1.7]), orientation=0)
     chair_reference_goal = ObjectPose(position=np.array([1, 3.7]), orientation=0)
     # lower layer
-    chair_surface_control_points = np.array([[0.0, 0.0]])
-    chair_surface_positions = np.copy(chair_surface_control_points)
+    chair_surface_control_points = np.array([[0.15, 0.15], [-0.15, 0.15], [0.15, -0.15], [-0.15, -0.15]])
+    chair_surface_positions = np.array([[0.0, 0.0]])
     chair_surface_shape = CuboidXd(
         axes_length=[0.5, 0.5],
         center_position=chair_reference_start.transform_position_from_relative(np.copy(chair_surface_positions[0])),
-        margin_absolut=0.3,
+        margin_absolut=0.5,
         orientation=chair_reference_start.orientation,
     )
     chair_surface_agent = Furniture3D(
@@ -96,7 +96,7 @@ def threeD_test(args=[]):
     chair_back_shape = CuboidXd(
         axes_length=[0.1,0.5],
         center_position=chair_reference_start.transform_position_from_relative(np.copy(chair_back_positions[0])),
-        margin_absolut=0.3,
+        margin_absolut=0.5,
         orientation=chair_reference_start.orientation,
     )
     chair_back_agent = Furniture3D(

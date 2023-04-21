@@ -9,7 +9,7 @@ from vartools.animator import Animator
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent3D import Furniture3D
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
-
+from autonomous_furniture.agent_helper_functions import get_weight_from_gamma
 
 class DynamicalSystemAnimation3D(Animator):
     def __init__(
@@ -111,6 +111,9 @@ class DynamicalSystemAnimation3D(Animator):
                 if self.layer_list[k][jj].stop:
                     linear_velocity=0.0
                     angular_velocity=0.0
+                    for l in range(self.number_layer):
+                        self.layer_list[l][jj].linear_velocity = linear_velocity
+                        self.layer_list[l][jj].angular_velocity = angular_velocity
                     stop_triggerred = True
                     break
             if not stop_triggerred:
@@ -121,9 +124,7 @@ class DynamicalSystemAnimation3D(Animator):
                     agent_linear_velocities[:, k] = np.copy(self.layer_list[k][jj].linear_velocity)
                     agent_angular_velocities[k] = np.copy(self.layer_list[k][jj].angular_velocity)
                 # weight each layer for this specific agent
-                weights = (
-                    1 / self.number_layer * np.ones((self.number_layer))
-                )  ####     NEEDS TO BE CHANGED!!!!  ######
+                weights = self.compute_layer_weights(agent_number=jj)  ####     NEEDS TO BE CHANGED!!!!  ######
                 # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
                 linear_velocity = np.sum(
                     agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
@@ -379,3 +380,11 @@ class DynamicalSystemAnimation3D(Animator):
                 break
 
             self.it_count += 1
+
+    def compute_layer_weights(self, agent_number):
+        gamma_list = np.zeros(self.number_layer)
+        for k in range(self.number_layer):
+            gamma_list[k] = self.layer_list[k][agent_number].min_gamma
+        weights = get_weight_from_gamma(gammas=gamma_list, cutoff_gamma=10 ,n_points=self.number_layer)
+        weights = weights/np.sum(weights)
+        return weights

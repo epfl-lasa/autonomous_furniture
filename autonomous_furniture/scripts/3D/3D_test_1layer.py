@@ -39,7 +39,7 @@ def threeD_test(args=[]):
         table_leg_shape = CuboidXd(
             axes_length=[0.3, 0.3],
             center_position=table_reference_start.transform_position_from_relative(np.copy(table_legs_positions[i])),
-            margin_absolut=0.3,
+            margin_absolut=0.5,
             orientation=0,
             tail_effect=False,
         )

@@ -74,6 +74,7 @@ class Furniture3D:
         gamma_critic_min: float = 1.2,
         gamma_stop: float = 1.1,
     ) -> None:
+        
         self._shape_list = shape_list
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
@@ -362,25 +363,28 @@ class Furniture3D:
                 head_length=0.2,
                 color="g",
             )
+        
+        ### gett gamma values and save the smallest one
+        gamma_values = np.zeros(
+            global_control_points.shape[1]
+        )  # Store the min Gamma of each control point
+        obs_idx = [None] * global_control_points.shape[
+            1
+        ]  # Idx of the obstacle in the environment where the Gamma is calculated from
+
+        for ii in range(global_control_points.shape[1]):
+            (
+                obs_idx[ii],
+                gamma_values[ii],
+            ) = get_gamma_product_crowd(
+                global_control_points[:, ii], environment_without_me
+            )
+        self.min_gamma = np.amin(gamma_values)
+        
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
             safety_module or emergency_stop
         ):  # collect the gamma values of all the control points
-            gamma_values = np.zeros(
-                global_control_points.shape[1]
-            )  # Store the min Gamma of each control point
-            obs_idx = [None] * global_control_points.shape[
-                1
-            ]  # Idx of the obstacle in the environment where the Gamma is calculated from
-
-            for ii in range(global_control_points.shape[1]):
-                (
-                    obs_idx[ii],
-                    gamma_values[ii],
-                ) = get_gamma_product_crowd(
-                    global_control_points[:, ii], environment_without_me
-                )
-
             if emergency_stop:
                 # if any gamma values are lower od equal gamma_stop
                 if any(x <= self.gamma_stop for x in gamma_values):
@@ -388,7 +392,10 @@ class Furniture3D:
                     self.angular_velocity = 0
                     self.linear_velocity = np.array([0.0, 0.0])
                     self.stop = True
+                    self.stopped = True
                     return
+                else:
+                    self.stop = False
 
             if safety_module:
                 self.gamma_critic = compute_gamma_critic(
