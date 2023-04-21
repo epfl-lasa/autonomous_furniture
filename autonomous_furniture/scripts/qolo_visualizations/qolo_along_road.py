@@ -338,12 +338,7 @@ class RvizQoloAnimator(Animator):
         )
 
         attractor = np.array([4.5, 0])
-        # initial_dynamics = QuadraticAxisConvergence(
-        #     stretching_factor=10,
-        #     maximum_velocity=1.0,
-        #     dimension=2,
-        #     attractor_position=attractor,
-        # )
+
         initial_dynamics = LinearSystem(
             attractor_position=attractor, maximum_velocity=1.0
         )
@@ -431,7 +426,7 @@ class RosAnimatorNode(Node):
         self.it += 1
 
 
-def main(
+def main_wavy(
     it_max: int = 1000,
     delta_time: float = 0.1,
     do_ros: bool = True,
@@ -475,7 +470,7 @@ if (__name__) == "__main__":
     logging.info("Simulation started.")
     rclpy.init()
     try:
-        main()
+        main_wavy()
     except KeyboardInterrupt:
         pass
 
