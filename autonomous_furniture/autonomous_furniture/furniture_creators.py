@@ -336,8 +336,8 @@ def create_standard_3D_chair_surface_back(
         name="chair_surface",
     )
     # upper layer
-    chair_back_control_points = np.array([[0.25, 0.125], [0.25, -0.125]])
-    chair_back_positions = np.array([[0.25, 0.0]])
+    chair_back_control_points = np.array([[0.2, 0.125], [0.2, -0.125]])
+    chair_back_positions = np.array([[0.2, 0.0]])
     chair_back_shape = Cuboid(
         axes_length=[0.1, 0.5],
         center_position=chair_reference_start.transform_position_from_relative(
