@@ -38,7 +38,7 @@ def priority_demo(args=[]):
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([-1, 3]),
         margin_absolut=1,
-        orientation=np.pi/2,
+        orientation=np.pi / 2,
         tail_effect=False,
     )
 

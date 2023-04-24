@@ -43,7 +43,7 @@ def create_environment(do_walls=True, do_person=True, n_agents: int = 10):
     )
     # create goal poses
     goal_poses = []
-    k=0
+    k = 0
     for i in range(n_agents):
         goal_orientation_i = np.pi / 2
         if (i % 2) == 0:  # divide agents in 2 rows

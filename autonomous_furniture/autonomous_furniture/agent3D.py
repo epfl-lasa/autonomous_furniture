@@ -74,7 +74,6 @@ class Furniture3D:
         gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.1,
     ) -> None:
-        
         self._shape_list = shape_list
         self.object_type = object_type
         self.maximum_linear_velocity = 1.0  # m/s
@@ -158,7 +157,7 @@ class Furniture3D:
 
         self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
-        
+
         # self.linear_velocity_old = np.array([0.0, 0.0])
         # self.angular_velocity_old = 0.0
         # self.time_step = 0.0
@@ -229,12 +228,11 @@ class Furniture3D:
         self._reference_pose.update(
             dt, ObjectTwist(linear=self.linear_velocity, angular=self.angular_velocity)
         )
-        
+
     def apply_kinematic_constraints(self):
-        
         linear_velocity = np.copy(self.linear_velocity)
         angular_velocity = self.angular_velocity
-        
+
         linear_velocity, angular_velocity = apply_velocity_constraints(
             linear_velocity,
             angular_velocity,
@@ -256,7 +254,6 @@ class Furniture3D:
         )
         self.linear_velocity = linear_velocity
         self.angular_velocity = angular_velocity
-
 
     def update_velocity(
         self,
@@ -370,7 +367,7 @@ class Furniture3D:
                 head_length=0.2,
                 color="g",
             )
-        
+
         ### gett gamma values and save the smallest one
         gamma_values = np.zeros(
             global_control_points.shape[1]
@@ -387,7 +384,7 @@ class Furniture3D:
                 global_control_points[:, ii], environment_without_me
             )
         self.min_gamma = np.amin(gamma_values)
-        
+
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
             safety_module or emergency_stop
@@ -429,13 +426,13 @@ class Furniture3D:
                         ctrpt_number=self._control_points.shape[0],
                         global_reference_position=self._reference_pose.position,
                     )
-                    
+
                     self.linear_velocity = linear_velocity
                     self.angular_velocity = angular_velocity
                     self.apply_kinematic_constraints()
                     linear_velocity = np.copy(self.linear_velocity)
                     angular_velocity = self.angular_velocity
-                    
+
                     velocities = ctr_point_vel_from_agent_kinematics(
                         angular_velocity,
                         linear_velocity,

@@ -92,7 +92,7 @@ def test_uneven_priority(visualize=False):
             static=True,
         ),
     ]
-    
+
     my_furniture_no_drag = [
         Furniture(
             shape=table_shape_nodrag,
@@ -111,7 +111,6 @@ def test_uneven_priority(visualize=False):
         ),
     ]
 
-
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
 
     my_animation_with_drag = DynamicalSystemAnimation(
@@ -128,9 +127,8 @@ def test_uneven_priority(visualize=False):
         mini_drag="dragdist",
         version="v2",
         safety_module=True,
-        emergency_stop=True
+        emergency_stop=True,
     )
-
 
     my_animation_nodrag = DynamicalSystemAnimation(
         it_max=200,
@@ -146,17 +144,15 @@ def test_uneven_priority(visualize=False):
         mini_drag="nodrag",
         version="v2",
         safety_module=True,
-        emergency_stop=True
+        emergency_stop=True,
     )
 
     if visualize:
         my_animation_with_drag.run(save_animation=args.rec)
         my_animation_nodrag.run(save_animation=args.rec)
 
-
     # Check Dynamic Agent
-    
-        
+
     my_furniture_with_drag[0].update_velocity(
         mini_drag=my_animation_with_drag.mini_drag,
         version=my_animation_with_drag.version,
@@ -174,7 +170,10 @@ def test_uneven_priority(visualize=False):
     )
 
     assert my_furniture_with_drag[0].angular_velocity < 0, "Expected rotate negatively"
-    assert np.linalg.norm(my_furniture_with_drag[0].angular_velocity) > np.linalg.norm(my_furniture_no_drag[0].angular_velocity), "Expected min drag rotates faster than no drag"
+    assert np.linalg.norm(my_furniture_with_drag[0].angular_velocity) > np.linalg.norm(
+        my_furniture_no_drag[0].angular_velocity
+    ), "Expected min drag rotates faster than no drag"
+
 
 if __name__ == "__main__":
     plt.close("all")

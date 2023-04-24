@@ -110,7 +110,7 @@ def test_uneven_priority(visualize=False):
         mini_drag="dragdist",
         version="v1",
         safety_module=False,
-        emergency_stop=True
+        emergency_stop=True,
     )
 
     if visualize:

@@ -48,7 +48,9 @@ def test_uneven_priority(visualize=False):
         tail_effect=False,
     )
 
-    goal2_with_decoupling = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
+    goal2_with_decoupling = ObjectPose(
+        position=np.array([-1, 3]), orientation=np.pi / 2
+    )
     table_shape2_with_decoupling = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=goal2_with_decoupling.position,
@@ -91,7 +93,7 @@ def test_uneven_priority(visualize=False):
             static=True,
         ),
     ]
-    
+
     my_furniture_no_decoupling = [
         Furniture3D(
             shape_list=[table_shape_no_decoupling],
@@ -110,7 +112,6 @@ def test_uneven_priority(visualize=False):
         ),
     ]
 
-
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
 
     my_animation_with_decoupling = DynamicalSystemAnimation3D(
@@ -127,9 +128,8 @@ def test_uneven_priority(visualize=False):
         mini_drag="nodrag",
         version="v2",
         safety_module=True,
-        emergency_stop=True
+        emergency_stop=True,
     )
-
 
     my_animation_no_decoupling = DynamicalSystemAnimation3D(
         it_max=200,
@@ -145,17 +145,15 @@ def test_uneven_priority(visualize=False):
         mini_drag="nodrag",
         version="v1",
         safety_module=True,
-        emergency_stop=True
+        emergency_stop=True,
     )
 
     if visualize:
         my_animation_with_decoupling.run(save_animation=args.rec)
         my_animation_no_decoupling.run(save_animation=args.rec)
 
-
     # Check Dynamic Agent
-    
-        
+
     my_furniture_with_decoupling[0].update_velocity(
         mini_drag=my_animation_with_decoupling.mini_drag,
         version=my_animation_with_decoupling.version,
@@ -172,8 +170,15 @@ def test_uneven_priority(visualize=False):
         time_step=my_animation_no_decoupling.dt_simulation,
     )
 
-    assert my_furniture_with_decoupling[0].angular_velocity < 0, "Expected rotate negatively"
-    assert np.linalg.norm(my_furniture_with_decoupling[0].angular_velocity) > np.linalg.norm(my_furniture_no_decoupling[0].angular_velocity), "Expected soft decoupling rotates faster than no drag"
+    assert (
+        my_furniture_with_decoupling[0].angular_velocity < 0
+    ), "Expected rotate negatively"
+    assert np.linalg.norm(
+        my_furniture_with_decoupling[0].angular_velocity
+    ) > np.linalg.norm(
+        my_furniture_no_decoupling[0].angular_velocity
+    ), "Expected soft decoupling rotates faster than no drag"
+
 
 if __name__ == "__main__":
     plt.close("all")

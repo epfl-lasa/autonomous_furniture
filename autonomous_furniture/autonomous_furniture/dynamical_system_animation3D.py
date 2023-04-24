@@ -11,6 +11,7 @@ from autonomous_furniture.agent3D import Furniture3D
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from autonomous_furniture.agent_helper_functions import get_weight_from_gamma
 
+
 class DynamicalSystemAnimation3D(Animator):
     def __init__(
         self,
@@ -98,19 +99,19 @@ class DynamicalSystemAnimation3D(Animator):
             for jj in range(self.number_agent):
                 if not self.layer_list[k][jj] == None:
                     self.layer_list[k][jj].update_velocity(
-                       mini_drag=self.mini_drag,
+                        mini_drag=self.mini_drag,
                         version=self.version,
                         emergency_stop=self.emergency_stop,
                         safety_module=self.safety_module,
                         time_step=self.dt_simulation,
                     )
         for jj in range(self.number_agent):
-            #in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
+            # in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
             stop_triggerred = False
             for k in range(self.number_layer):
                 if self.layer_list[k][jj].stop:
-                    linear_velocity=0.0
-                    angular_velocity=0.0
+                    linear_velocity = 0.0
+                    angular_velocity = 0.0
                     for l in range(self.number_layer):
                         self.layer_list[l][jj].linear_velocity = linear_velocity
                         self.layer_list[l][jj].angular_velocity = angular_velocity
@@ -121,10 +122,16 @@ class DynamicalSystemAnimation3D(Animator):
                 agent_linear_velocities = np.zeros((2, self.number_layer))
                 agent_angular_velocities = np.zeros((self.number_layer))
                 for k in range(self.number_layer):
-                    agent_linear_velocities[:, k] = np.copy(self.layer_list[k][jj].linear_velocity)
-                    agent_angular_velocities[k] = np.copy(self.layer_list[k][jj].angular_velocity)
+                    agent_linear_velocities[:, k] = np.copy(
+                        self.layer_list[k][jj].linear_velocity
+                    )
+                    agent_angular_velocities[k] = np.copy(
+                        self.layer_list[k][jj].angular_velocity
+                    )
                 # weight each layer for this specific agent
-                weights = self.compute_layer_weights(agent_number=jj)  ####     NEEDS TO BE CHANGED!!!!  ######
+                weights = self.compute_layer_weights(
+                    agent_number=jj
+                )  ####     NEEDS TO BE CHANGED!!!!  ######
                 # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
                 linear_velocity = np.sum(
                     agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
@@ -132,7 +139,7 @@ class DynamicalSystemAnimation3D(Animator):
                 angular_velocity = np.sum(
                     agent_angular_velocities * np.tile(weights, (1, 1))
                 )
-                
+
                 # update each layers positions and orientations
                 for k in range(self.number_layer):
                     self.layer_list[k][jj].linear_velocity = linear_velocity
@@ -241,9 +248,7 @@ class DynamicalSystemAnimation3D(Animator):
                     for i in range(len(self.layer_list[k][jj]._shape_list)):
                         plot_obstacles(
                             ax=self.ax,
-                            obstacle_container=[
-                                self.layer_list[k][jj]._shape_list[i]
-                            ],
+                            obstacle_container=[self.layer_list[k][jj]._shape_list[i]],
                             x_lim=self.x_lim,
                             y_lim=self.y_lim,
                             showLabel=False,
@@ -385,6 +390,8 @@ class DynamicalSystemAnimation3D(Animator):
         gamma_list = np.zeros(self.number_layer)
         for k in range(self.number_layer):
             gamma_list[k] = self.layer_list[k][agent_number].min_gamma
-        weights = get_weight_from_gamma(gammas=gamma_list, cutoff_gamma=10 ,n_points=self.number_layer)
-        weights = weights/np.sum(weights)
+        weights = get_weight_from_gamma(
+            gammas=gamma_list, cutoff_gamma=10, n_points=self.number_layer
+        )
+        weights = weights / np.sum(weights)
         return weights

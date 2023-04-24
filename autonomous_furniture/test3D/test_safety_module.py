@@ -90,7 +90,7 @@ def test_uneven_priority(visualize=False):
         mini_drag="dragdist",
         version="v2",
         safety_module=True,
-        emergency_stop=True
+        emergency_stop=True,
     )
 
     if visualize:
@@ -117,6 +117,7 @@ def test_uneven_priority(visualize=False):
     assert (
         my_furniture[1].linear_velocity[0] > 0
     ), "Expected to move away from high priority"
+
 
 if __name__ == "__main__":
     plt.close("all")

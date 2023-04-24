@@ -38,29 +38,40 @@ def threeD_test(args=[]):
         obstacle_environment_upper,
         table_reference_start,
         table_reference_goal,
-        margins = 0.1,
+        margins=0.1,
     )
 
-    chair_down_reference_start = ObjectPose(position=np.array([4, 0]), orientation=-np.pi/2)
-    chair_down_reference_goal = ObjectPose(position=np.array([4, 1.7]), orientation=-np.pi/2)
+    chair_down_reference_start = ObjectPose(
+        position=np.array([4, 0]), orientation=-np.pi / 2
+    )
+    chair_down_reference_goal = ObjectPose(
+        position=np.array([4, 1.7]), orientation=-np.pi / 2
+    )
 
-    chair_down_surface_agent, chair_down_back_agent = create_standard_3D_chair_surface_back(
+    (
+        chair_down_surface_agent,
+        chair_down_back_agent,
+    ) = create_standard_3D_chair_surface_back(
         obstacle_environment_lower,
         obstacle_environment_upper,
         chair_down_reference_start,
         chair_down_reference_goal,
-        margins = 0.1,
+        margins=0.1,
     )
-    
-    chair_up_reference_start = ObjectPose(position=np.array([4, 6]), orientation=np.pi/2)
-    chair_up_reference_goal = ObjectPose(position=np.array([4, 3.7]), orientation=np.pi/2)
+
+    chair_up_reference_start = ObjectPose(
+        position=np.array([4, 6]), orientation=np.pi / 2
+    )
+    chair_up_reference_goal = ObjectPose(
+        position=np.array([4, 3.7]), orientation=np.pi / 2
+    )
 
     chair_up_surface_agent, chair_up_back_agent = create_standard_3D_chair_surface_back(
         obstacle_environment_lower,
         obstacle_environment_upper,
         chair_up_reference_start,
         chair_up_reference_goal,
-        margins = 0.1,
+        margins=0.1,
     )
 
     # chair_surface_agent.priority = 1e3
