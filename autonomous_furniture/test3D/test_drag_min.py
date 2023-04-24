@@ -77,14 +77,14 @@ def test_uneven_priority(visualize=False):
 
     my_furniture_with_drag = [
         Furniture3D(
-            shape_list=ObstacleContainer(obs_list=[table_shape_with_drag]),
+            shape_list=[table_shape_with_drag],
             obstacle_environment=obstacle_environment_with_drag,
             control_points=control_points,
             goal_pose=goal1,
             name="fur",
         ),
         Furniture3D(
-            shape_list=ObstacleContainer(obs_list=[table_shape2_with_drag]),
+            shape_list=[table_shape2_with_drag],
             obstacle_environment=obstacle_environment_with_drag,
             control_points=control_points,
             goal_pose=goal2,
@@ -95,14 +95,14 @@ def test_uneven_priority(visualize=False):
     
     my_furniture_no_drag = [
         Furniture3D(
-            shape_list=ObstacleContainer(obs_list=[table_shape_nodrag]),
+            shape_list=[table_shape_nodrag],
             obstacle_environment=obstacle_environment_nodrag,
             control_points=control_points,
             goal_pose=goal1,
             name="fur",
         ),
         Furniture3D(
-            shape_list=ObstacleContainer(obs_list=[table_shape2_nodrag]),
+            shape_list=[table_shape2_nodrag],
             obstacle_environment=obstacle_environment_nodrag,
             control_points=control_points,
             goal_pose=goal2,
@@ -122,7 +122,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_with_drag.setup(
         obstacle_environment_with_drag,
-        agent_list=my_furniture_with_drag,
+        layer_list=[my_furniture_with_drag],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="dragdist",
@@ -140,7 +140,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_nodrag.setup(
         obstacle_environment_nodrag,
-        agent_list=my_furniture_no_drag,
+        layer_list=[my_furniture_no_drag],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="nodrag",

@@ -121,7 +121,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_with_decoupling.setup(
         obstacle_environment_with_decoupling,
-        agent_list=my_furniture_with_decoupling,
+        layer_list=[my_furniture_with_decoupling],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="nodrag",
@@ -139,7 +139,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation_no_decoupling.setup(
         obstacle_environment_no_decoupling,
-        agent_list=my_furniture_no_decoupling,
+        layer_list=[my_furniture_no_decoupling],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="nodrag",

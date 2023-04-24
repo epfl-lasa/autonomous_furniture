@@ -92,7 +92,7 @@ class DynamicalSystemAnimation3D(Animator):
 
         self.converged: bool = False  # IF all the agent has converged
 
-    def update_step(self, ii, anim: bool = True):
+    def update_step(self, anim: bool = True):
         for k in range(self.number_layer):
             # calculate the agents velocity in each layer
             for jj in range(self.number_agent):

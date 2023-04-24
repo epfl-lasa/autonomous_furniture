@@ -21,6 +21,9 @@ from autonomous_furniture.agent import Furniture
 from autonomous_furniture.agent import ObjectType
 from autonomous_furniture.obstacle_container import GlobalObstacleContainer
 
+from autonomous_furniture.agent3D import Furniture3D
+from vartools.states import ObjectPose
+
 
 def create_chair(
     start_pose: ObjectPose,
@@ -291,3 +294,93 @@ def set_goals_to_arrange_on_the_left(
         agent.set_goal_pose(ObjectPose(goal_position, orientation))
 
         it_table += 1
+
+def create_standard_3D_chair_surface_back(obstacle_environment_lower, obstacle_environment_upper, start_pose: ObjectPose, goal_pose: ObjectPose, margins):
+    ### CREATE CHAIR SECTIONS FOR ALL THE LAYERS
+    chair_reference_start = ObjectPose(position=start_pose.position, orientation=start_pose.orientation)
+    chair_reference_goal = ObjectPose(position=goal_pose.position, orientation=goal_pose.orientation)
+    # lower layer
+    chair_surface_control_points = np.array([[0.15, 0.15], [-0.15, 0.15], [0.15, -0.15], [-0.15, -0.15]])
+    chair_surface_positions = np.array([[0.0, 0.0]])
+    chair_surface_shape = Cuboid(
+        axes_length=[0.5, 0.5],
+        center_position=chair_reference_start.transform_position_from_relative(np.copy(chair_surface_positions[0])),
+        margin_absolut=margins,
+        orientation=chair_reference_start.orientation,
+    )
+    chair_surface_agent = Furniture3D(
+        shape_list=[chair_surface_shape],
+        shape_positions=chair_surface_positions,
+        obstacle_environment=obstacle_environment_lower,
+        control_points=chair_surface_control_points,
+        starting_pose = ObjectPose(position=chair_reference_start.position, orientation=chair_reference_start.orientation),
+        goal_pose=chair_reference_goal,
+        name="chair_surface",
+    )
+    # upper layer
+    chair_back_control_points = np.array([[0.25, 0.125], [0.25, -0.125]])
+    chair_back_positions = np.array([[0.25, 0.0]])
+    chair_back_shape = Cuboid(
+        axes_length=[0.1,0.5],
+        center_position=chair_reference_start.transform_position_from_relative(np.copy(chair_back_positions[0])),
+        margin_absolut=margins,
+        orientation=chair_reference_start.orientation,
+    )
+    chair_back_agent = Furniture3D(
+        shape_list=[chair_back_shape],
+        shape_positions=chair_back_positions,
+        obstacle_environment=obstacle_environment_upper,
+        control_points=chair_back_control_points,
+        starting_pose = ObjectPose(position=chair_reference_start.position, orientation=chair_reference_start.orientation),
+        goal_pose=chair_reference_goal,
+        name="chair_back",
+    )
+    
+    return chair_surface_agent, chair_back_agent
+
+def create_standard_table_3D_surface_legs(obstacle_environment_lower, obstacle_environment_upper, start_pose: ObjectPose, goal_pose: ObjectPose, margins):
+    ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
+    table_reference_goal = ObjectPose(position=goal_pose.position, orientation=goal_pose.orientation)
+    table_reference_start = ObjectPose(position=start_pose.position, orientation=start_pose.orientation)
+    
+    # lower layer
+    table_legs_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1]])
+    table_legs_positions = np.copy(table_legs_control_points)
+    table_legs_shapes = []
+    for i in range(4):
+        table_leg_shape = Cuboid(
+            axes_length=[0.2, 0.2],
+            center_position=table_reference_start.transform_position_from_relative(np.copy(table_legs_positions[i])),
+            margin_absolut=margins,
+            orientation=table_reference_start.orientation,
+            tail_effect=False,
+        )
+        table_legs_shapes.append(table_leg_shape)
+    table_legs_agent = Furniture3D(
+        shape_list=table_legs_shapes,
+        shape_positions=table_legs_positions,
+        obstacle_environment=obstacle_environment_lower,
+        control_points=table_legs_control_points,
+        starting_pose = ObjectPose(position=table_reference_start.position, orientation=table_reference_start.orientation),
+        goal_pose=table_reference_goal,
+        name="table_legs",
+    )
+    # upper layer
+    table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
+    table_surface_positions = np.array([[0.0, 0.0]])
+    table_surface_shape = Cuboid(
+        axes_length=[2.2, 2.2],
+        center_position=table_reference_start.transform_position_from_relative(np.copy(table_surface_positions[0])),
+        margin_absolut=margins,
+        orientation=table_reference_start.orientation,
+    )
+    table_surface_agent = Furniture3D(
+        shape_list=[table_surface_shape],
+        shape_positions=table_surface_positions,
+        obstacle_environment=obstacle_environment_upper,
+        control_points=table_surface_control_points,
+        starting_pose = ObjectPose(position=table_reference_start.position, orientation=table_reference_start.orientation),
+        goal_pose=table_reference_goal,
+        name="table_surface",
+    )
+    return table_legs_agent, table_surface_agent

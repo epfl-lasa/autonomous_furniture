@@ -69,9 +69,9 @@ class Furniture3D:
         object_type: ObjectType = ObjectType.OTHER,
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
-        d_critic: float = 1.0,
-        gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.2,
+        d_critic: float = 2.0,
+        gamma_critic_max: float = 1.3,
+        gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.1,
     ) -> None:
         
@@ -158,6 +158,12 @@ class Furniture3D:
 
         self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
+        
+        # self.linear_velocity_old = np.array([0.0, 0.0])
+        # self.angular_velocity_old = 0.0
+        # self.time_step = 0.0
+
+        # self.min_gamma = 0.0
 
     def get_obstacles_without_me(self):
         obs_env_without_me = []
@@ -264,6 +270,7 @@ class Furniture3D:
         if self._static:
             self.linear_velocity = np.array([0.0, 0.0])
             self.angular_velocity = 0.0
+            self.stop = True
             return
         self.time_step = time_step
         # save the past commands to be able to check kinematic constraints
@@ -422,6 +429,13 @@ class Furniture3D:
                         ctrpt_number=self._control_points.shape[0],
                         global_reference_position=self._reference_pose.position,
                     )
+                    
+                    self.linear_velocity = linear_velocity
+                    self.angular_velocity = angular_velocity
+                    self.apply_kinematic_constraints()
+                    linear_velocity = np.copy(self.linear_velocity)
+                    angular_velocity = self.angular_velocity
+                    
                     velocities = ctr_point_vel_from_agent_kinematics(
                         angular_velocity,
                         linear_velocity,

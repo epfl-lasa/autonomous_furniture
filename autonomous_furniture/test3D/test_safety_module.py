@@ -84,7 +84,7 @@ def test_uneven_priority(visualize=False):
     )
     my_animation.setup(
         obstacle_environment,
-        agent_list=my_furniture,
+        layer_list=[my_furniture],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
         mini_drag="dragdist",
@@ -122,4 +122,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)

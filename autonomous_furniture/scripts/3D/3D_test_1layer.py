@@ -20,7 +20,6 @@ import argparse
 
 
 def threeD_test(args=[]):
-
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
 
@@ -38,7 +37,9 @@ def threeD_test(args=[]):
     for i in range(4):
         table_leg_shape = CuboidXd(
             axes_length=[0.3, 0.3],
-            center_position=table_reference_start.transform_position_from_relative(np.copy(table_legs_positions[i])),
+            center_position=table_reference_start.transform_position_from_relative(
+                np.copy(table_legs_positions[i])
+            ),
             margin_absolut=0.5,
             orientation=0,
             tail_effect=False,
@@ -61,7 +62,7 @@ def threeD_test(args=[]):
             shape_positions=table_legs_positions,
             obstacle_environment=obstacle_environment,
             control_points=table_legs_control_points,
-            starting_pose = table_reference_start,
+            starting_pose=table_reference_start,
             goal_pose=table_reference_goal,
             name="table_legs",
         ),
@@ -93,7 +94,7 @@ def threeD_test(args=[]):
         mini_drag="nodrag",
         safety_module=True,
         emergency_stop=True,
-        figsize=(10,7)
+        figsize=(10, 7),
     )
 
     my_animation.run(save_animation=args.rec)

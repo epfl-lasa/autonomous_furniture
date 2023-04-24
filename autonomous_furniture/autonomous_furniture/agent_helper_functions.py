@@ -421,11 +421,17 @@ def get_weight_from_gamma(
     weights = 1.0 / weights
     weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
     weights = weights / n_points
+    #in case there are some critical gammas, ignore the rest
+    # critic_indx = np.where(gammas<1.3)[0]
+    # if np.any(critic_indx):
+    #     for i in range(len(weights)):
+    #         if not np.any(np.where(critic_indx==i)[0]):
+    #             weights[i] = 1e-3
     return weights
 
 
 def get_weight_of_control_points(control_points, environment_without_me):
-    cutoff_gamma = 3  # TODO : This value has to be big and not small
+    cutoff_gamma = 10  # TODO : This value has to be big and not small
     # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
