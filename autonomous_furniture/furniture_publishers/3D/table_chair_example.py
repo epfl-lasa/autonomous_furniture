@@ -74,8 +74,8 @@ def threeD_test(args=[]):
         margins=0.1,
     )
 
-    # chair_surface_agent.priority = 1e3
-    # chair_back_agent.priority = 1e3
+    chair_down_surface_agent.priority = 1e-3
+    chair_down_back_agent.priority = 1e-3
 
     layer_lower = [table_legs_agent, chair_down_surface_agent]
     layer_upper = [table_surface_agent, chair_down_back_agent]

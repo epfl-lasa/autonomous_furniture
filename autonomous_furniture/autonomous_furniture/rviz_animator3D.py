@@ -49,6 +49,7 @@ from autonomous_furniture.furniture_creators import (
 
 from autonomous_furniture.attractor_dynamics import AttractorDynamics
 from autonomous_furniture.message_generation import euler_to_quaternion
+from autonomous_furniture.agent_helper_functions import update_multi_layer_simulation
 
 
 class RvizSimulator3D(Node):
@@ -120,13 +121,21 @@ class RvizSimulator3D(Node):
     def setup(
         self,
         obstacle_environment: ObstacleContainer,
-        layers: list[Furniture3D],
+        layer_list: list[Furniture3D],
+        mini_drag: str,
+        version: str,
+        emergency_stop: bool,
+        safety_module: bool,
     ):
         self.dim = 2
-        self.number_layers = len(layers)
-        self.number_agents = len(layers[0])
-        self.layers = layers
+        self.number_layer = len(layer_list)
+        self.number_agent = len(layer_list[0])
+        self.layer_list = layer_list
 
+        self.mini_drag = mini_drag
+        self.version = version
+        self.emergency_stop = emergency_stop
+        self.safety_module = safety_module
         # self.position_list = np.zeros((dim, self.it_max))
         # self.time_list = np.zeros((self.it_max))
         # self.position_list = [agent[ii].position for ii in range(self.number_agent)]
@@ -145,18 +154,19 @@ class RvizSimulator3D(Node):
         if not (self.ii % 20):
             print(f"Iteration {self.ii}.")
 
-        for jj in range(self.number_agent):
-            self.agent[jj].update_velocity(
-                # mini_drag="nodrag",
-                mini_drag="dragdist",
-                version="v2",
-                emergency_stop=True,
-                time_step=self.dt_simulation,
-            )
-            # self.agent[jj].compute_metrics(self.dt_simulation)
-            self.agent[jj].do_velocity_step(self.dt_simulation)
+        self.layer_list, self.agent_pos_saver = update_multi_layer_simulation(
+            number_layer=self.number_layer,
+            number_agent=self.number_agent,
+            layer_list=self.layer_list,
+            mini_drag=self.mini_drag,
+            version=self.version,
+            emergency_stop=self.emergency_stop,
+            safety_module=self.safety_module,
+            dt_simulation=self.dt_simulation,
+            agent_pos_saver=self.agent_pos_saver,
+        )
 
-        for ii, agent in enumerate(self.agent):
+        for ii, agent in enumerate(self.layer_list[0]):
             if agent.object_type == ObjectType.QOLO:
                 # u_obs_vel = agent.linear_velocity / np.linalg.norm(agent.linear_velocity)
                 # x_vec = np.array([1, 0])
@@ -168,21 +178,17 @@ class RvizSimulator3D(Node):
                     agent.pose.orientation = qolo_dir
 
             self.update_state_publisher(
-                pose=agent.pose,
+                pose=agent._reference_pose,
                 frame_prefix=agent.name,
                 object_type=agent.object_type,
             )
 
         self.publish_furniture_type(publish_type=ObjectType.CHAIR, base_name="chair")
         self.publish_furniture_type(publish_type=ObjectType.TABLE, base_name="table")
-        self.publish_furniture_type(
-            publish_type=ObjectType.HOSPITAL_BED, base_name="hospital_bed"
-        )
-        self.publish_furniture_type(publish_type=ObjectType.QOLO, base_name="qolo")
 
     def publish_furniture_type(self, publish_type: ObjectType, base_name: str):
         it_obj = 0
-        for ii, agent in enumerate(self.agent):
+        for ii, agent in enumerate(self.layer_list[0]):
             if agent.object_type != publish_type:
                 continue
 

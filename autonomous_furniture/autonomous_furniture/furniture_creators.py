@@ -368,6 +368,9 @@ def create_standard_table_3D_surface_legs(
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
     margins,
+    axes_table=[1.6, 0.7],
+    axes_legs=[0.2, 0.2],
+    ctr_points_number=[3, 1],
 ):
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
     table_reference_goal = ObjectPose(
@@ -378,12 +381,20 @@ def create_standard_table_3D_surface_legs(
     )
 
     # lower layer
-    table_legs_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1]])
+    table_legs_control_points = np.array(
+        [
+            [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
+            [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
+            [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
+            [-((axes_table[0] - axes_legs[0]) / 2), -((axes_table[1] - axes_legs[1]) / 2)],
+        ]
+    )
+
     table_legs_positions = np.copy(table_legs_control_points)
     table_legs_shapes = []
     for i in range(4):
         table_leg_shape = Cuboid(
-            axes_length=[0.2, 0.2],
+            axes_length=axes_legs,
             center_position=table_reference_start.transform_position_from_relative(
                 np.copy(table_legs_positions[i])
             ),
@@ -405,30 +416,33 @@ def create_standard_table_3D_surface_legs(
         name="table_legs",
     )
     # upper layer
-    table_surface_control_points = np.array(
-        [
-            [1, 1],
-            [1, -1],
-            [-1, 1],
-            [-1, -1],
-            [1, 0],
-            [-1, 0],
-            [0, 1],
-            [0, -1],
-            [0.5, 1],
-            [0.5, -1],
-            [-0.5, 1],
-            [-0.5, -1],
-            [1, 0.5],
-            [-1, 0.5],
-            [1, -0.5],
-            [-1, -0.5],
-        ]
+    n_points = np.sum(ctr_points_number) * 2 + 4
+    table_surface_control_points = np.zeros((n_points, 2))
+    x_array = np.linspace(
+        -((axes_table[0] - axes_legs[0]) / 2),
+        (axes_table[0] - axes_legs[0]) / 2,
+        num=ctr_points_number[0] + 2,
     )
+    y_array = np.linspace(
+        -((axes_table[1] - axes_legs[1]) / 2),
+        (axes_table[1] - axes_legs[1]) / 2,
+        num=ctr_points_number[1] + 2,
+    )
+    k = 0
+    for i in range(len(x_array)):
+        table_surface_control_points[k] = [x_array[i], y_array[0]]
+        k += 1
+        table_surface_control_points[k] = [x_array[i], y_array[-1]]
+        k += 1
+    for j in range(1, len(y_array) - 1):
+        table_surface_control_points[k] = [x_array[0], y_array[j]]
+        k += 1
+        table_surface_control_points[k] = [x_array[-1], y_array[j]]
+        k += 1
     # table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
     table_surface_positions = np.array([[0.0, 0.0]])
     table_surface_shape = Cuboid(
-        axes_length=[2.2, 2.2],
+        axes_length=axes_table,
         center_position=table_reference_start.transform_position_from_relative(
             np.copy(table_surface_positions[0])
         ),

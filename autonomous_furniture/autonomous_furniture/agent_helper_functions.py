@@ -421,7 +421,7 @@ def get_weight_from_gamma(
     weights = 1.0 / weights
     weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
     weights = weights / n_points
-    #in case there are some critical gammas, ignore the rest
+    # in case there are some critical gammas, ignore the rest
     # critic_indx = np.where(gammas<1.3)[0]
     # if np.any(critic_indx):
     #     for i in range(len(weights)):
@@ -459,3 +459,84 @@ def get_weight_of_control_points(control_points, environment_without_me):
         ctl_point_weight[-1] += 1 - ctl_point_weight_sum
 
     return ctl_point_weight
+
+
+def update_multi_layer_simulation(
+    number_layer,
+    number_agent,
+    layer_list,
+    mini_drag,
+    version,
+    emergency_stop,
+    safety_module,
+    dt_simulation,
+    agent_pos_saver,
+):
+    for k in range(number_layer):
+        # calculate the agents velocity in each layer
+        for jj in range(number_agent):
+            if not layer_list[k][jj] == None:
+                layer_list[k][jj].update_velocity(
+                    mini_drag=mini_drag,
+                    version=version,
+                    emergency_stop=emergency_stop,
+                    safety_module=safety_module,
+                    time_step=dt_simulation,
+                )
+    for jj in range(number_agent):
+        # in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
+        stop_triggerred = False
+        for k in range(number_layer):
+            if layer_list[k][jj].stop:
+                linear_velocity = 0.0
+                angular_velocity = 0.0
+                for l in range(number_layer):
+                    layer_list[l][jj].linear_velocity = linear_velocity
+                    layer_list[l][jj].angular_velocity = angular_velocity
+                stop_triggerred = True
+                break
+        if not stop_triggerred:
+            # collect the velocities of each layer for each agent
+            agent_linear_velocities = np.zeros((2, number_layer))
+            agent_angular_velocities = np.zeros((number_layer))
+            for k in range(number_layer):
+                agent_linear_velocities[:, k] = np.copy(
+                    layer_list[k][jj].linear_velocity
+                )
+                agent_angular_velocities[k] = np.copy(
+                    layer_list[k][jj].angular_velocity
+                )
+            # weight each layer for this specific agent
+            weights = compute_layer_weights(
+                jj,
+                number_layer,
+                layer_list,
+            )  ####     NEEDS TO BE CHANGED!!!!  ######
+            # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
+            linear_velocity = np.sum(
+                agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
+            )
+            angular_velocity = np.sum(
+                agent_angular_velocities * np.tile(weights, (1, 1))
+            )
+
+            # update each layers positions and orientations
+            for k in range(number_layer):
+                layer_list[k][jj].linear_velocity = linear_velocity
+                layer_list[k][jj].angular_velocity = angular_velocity
+                layer_list[k][jj].apply_kinematic_constraints()
+                layer_list[k][jj].do_velocity_step(dt_simulation)
+                agent_pos_saver[jj].append(layer_list[k][jj]._reference_pose.position)
+
+    return layer_list, agent_pos_saver
+
+
+def compute_layer_weights(agent_number, number_layer, layer_list):
+    gamma_list = np.zeros(number_layer)
+    for k in range(number_layer):
+        gamma_list[k] = layer_list[k][agent_number].min_gamma
+    weights = get_weight_from_gamma(
+        gammas=gamma_list, cutoff_gamma=10, n_points=number_layer
+    )
+    weights = weights / np.sum(weights)
+    return weights

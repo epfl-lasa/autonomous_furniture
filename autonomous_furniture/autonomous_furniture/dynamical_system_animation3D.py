@@ -9,7 +9,7 @@ from vartools.animator import Animator
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent3D import Furniture3D
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
-from autonomous_furniture.agent_helper_functions import get_weight_from_gamma
+from autonomous_furniture.agent_helper_functions import update_multi_layer_simulation
 
 
 class DynamicalSystemAnimation3D(Animator):
@@ -94,61 +94,17 @@ class DynamicalSystemAnimation3D(Animator):
         self.converged: bool = False  # IF all the agent has converged
 
     def update_step(self, anim: bool = True):
-        for k in range(self.number_layer):
-            # calculate the agents velocity in each layer
-            for jj in range(self.number_agent):
-                if not self.layer_list[k][jj] == None:
-                    self.layer_list[k][jj].update_velocity(
-                        mini_drag=self.mini_drag,
-                        version=self.version,
-                        emergency_stop=self.emergency_stop,
-                        safety_module=self.safety_module,
-                        time_step=self.dt_simulation,
-                    )
-        for jj in range(self.number_agent):
-            # in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
-            stop_triggerred = False
-            for k in range(self.number_layer):
-                if self.layer_list[k][jj].stop:
-                    linear_velocity = 0.0
-                    angular_velocity = 0.0
-                    for l in range(self.number_layer):
-                        self.layer_list[l][jj].linear_velocity = linear_velocity
-                        self.layer_list[l][jj].angular_velocity = angular_velocity
-                    stop_triggerred = True
-                    break
-            if not stop_triggerred:
-                # collect the velocities of each layer for each agent
-                agent_linear_velocities = np.zeros((2, self.number_layer))
-                agent_angular_velocities = np.zeros((self.number_layer))
-                for k in range(self.number_layer):
-                    agent_linear_velocities[:, k] = np.copy(
-                        self.layer_list[k][jj].linear_velocity
-                    )
-                    agent_angular_velocities[k] = np.copy(
-                        self.layer_list[k][jj].angular_velocity
-                    )
-                # weight each layer for this specific agent
-                weights = self.compute_layer_weights(
-                    agent_number=jj
-                )  ####     NEEDS TO BE CHANGED!!!!  ######
-                # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
-                linear_velocity = np.sum(
-                    agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
-                )
-                angular_velocity = np.sum(
-                    agent_angular_velocities * np.tile(weights, (1, 1))
-                )
-
-                # update each layers positions and orientations
-                for k in range(self.number_layer):
-                    self.layer_list[k][jj].linear_velocity = linear_velocity
-                    self.layer_list[k][jj].angular_velocity = angular_velocity
-                    self.layer_list[k][jj].apply_kinematic_constraints()
-                    self.layer_list[k][jj].do_velocity_step(self.dt_simulation)
-                    self.agent_pos_saver[jj].append(
-                        self.layer_list[k][jj]._reference_pose.position
-                    )
+        self.layer_list, self.agent_pos_saver = update_multi_layer_simulation(
+            number_layer=self.number_layer,
+            number_agent=self.number_agent,
+            layer_list=self.layer_list,
+            mini_drag=self.mini_drag,
+            version=self.version,
+            emergency_stop=self.emergency_stop,
+            safety_module=self.safety_module,
+            dt_simulation=self.dt_simulation,
+            agent_pos_saver=self.agent_pos_saver,
+        )
 
         if not anim:
             return
@@ -385,13 +341,3 @@ class DynamicalSystemAnimation3D(Animator):
                 break
 
             self.it_count += 1
-
-    def compute_layer_weights(self, agent_number):
-        gamma_list = np.zeros(self.number_layer)
-        for k in range(self.number_layer):
-            gamma_list[k] = self.layer_list[k][agent_number].min_gamma
-        weights = get_weight_from_gamma(
-            gammas=gamma_list, cutoff_gamma=10, n_points=self.number_layer
-        )
-        weights = weights / np.sum(weights)
-        return weights

@@ -69,17 +69,21 @@ class Furniture3D:
         object_type: ObjectType = ObjectType.OTHER,
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
-        d_critic: float = 2.0,
-        gamma_critic_max: float = 1.3,
+        d_critic: float = 1.0,
+        gamma_critic_max: float = 1.4,
         gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.1,
+        maximum_linear_velocity: float = 1.0,  # m/s
+        maximum_angular_velocity: float = 1.0,  # rad/s
+        maximum_linear_acceleration: float = 4.0,  # m/s^2
+        maximum_angular_acceleration: float = 10.0,  # rad/s^2
     ) -> None:
         self._shape_list = shape_list
         self.object_type = object_type
-        self.maximum_linear_velocity = 1.0  # m/s
-        self.maximum_angular_velocity = 1.0  # rad/s
-        self.maximum_linear_acceleration = 4.0  # m/s^2
-        self.maximum_angular_acceleration = 10.0  # rad/s^2
+        self.maximum_linear_velocity = maximum_linear_velocity
+        self.maximum_angular_velocity = maximum_angular_velocity
+        self.maximum_linear_acceleration = maximum_linear_acceleration
+        self.maximum_angular_acceleration = maximum_angular_acceleration
 
         self.symmetry = symmetry
 
