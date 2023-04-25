@@ -51,7 +51,7 @@ def generate_launch_description(n_tables: int = 8):
         name="rviz2",
         arguments=[
             "-d",
-            os.path.join(rviz_base_path, "config", "chair_under_table.rviz")
+            os.path.join(rviz_base_path, "config", "chair_table_crossing.rviz")
             # PathJoinSubstitution(
             #     [
             #         FindPackageShare("autonomous_furniture"),

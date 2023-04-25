@@ -30,19 +30,19 @@ def matplotlib_simulation(args=[]):
 
     my_animation = DynamicalSystemAnimation3D(
         it_max=1000,
-        dt_simulation=0.02,
-        dt_sleep=0.02,
+        dt_simulation=0.03,
+        dt_sleep=0.03,
         animation_name=args.name,
     )
 
     my_animation.setup(
         layer_list=create_layer_list(),
-        x_lim=[-3, 3],
-        y_lim=[-3, 3],
-        version="v2",
+        x_lim=[-2, 3],
+        y_lim=[-2, 3],
+        version="v1",
         mini_drag="nodrag",
-        safety_module=True,
-        emergency_stop=True,
+        safety_module=False,
+        emergency_stop=False,
         figsize=(10, 7),
     )
 
@@ -64,7 +64,7 @@ def rviz_simulation():
         layer_list=create_layer_list(),
         version="v1",
         mini_drag="nodrag",
-        safety_module=True,
+        safety_module=False,
         emergency_stop=False,
     )
 
@@ -75,14 +75,13 @@ def rviz_simulation():
     except:
         breakpoint()
         
-        
 def create_layer_list():
     # List of environment shared by all the furniture/agent in the same layer
     obstacle_environment_lower = ObstacleContainer()
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_reference_start = ObjectPose(position=np.array([-2, 1]), orientation=0)
+    table_reference_start = ObjectPose(position=np.array([-1, 1]), orientation=-np.pi / 2)
     table_reference_goal = ObjectPose(position=np.array([1, 1]), orientation=0)
 
     table_legs_agent, table_surface_agent = create_standard_table_3D_surface_legs(
@@ -91,14 +90,14 @@ def create_layer_list():
         table_reference_start,
         table_reference_goal,
         margins=0.1,
-        static=True
+        static=False
     )
 
     chair_down_reference_start = ObjectPose(
         position=np.array([1, -1]), orientation=np.pi / 2
     )
     chair_down_reference_goal = ObjectPose(
-        position=np.array([1, 0.6]), orientation=0
+        position=np.array([1, 0.7]), orientation=np.pi / 2
     )
 
     (
@@ -112,26 +111,31 @@ def create_layer_list():
         margins=0.1,
     )
 
-    # chair_up_reference_start = ObjectPose(
-    #     position=np.array([4, 6]), orientation=np.pi / 2
-    # )
-    # chair_up_reference_goal = ObjectPose(
-    #     position=np.array([4, 3.7]), orientation=np.pi / 2
-    # )
+    chair_up_reference_start = ObjectPose(
+        position=np.array([3, 2]), orientation=-np.pi / 2
+    )
+    chair_up_reference_goal = ObjectPose(
+        position=np.array([1, 1.3]), orientation=-np.pi / 2
+    )
 
-    # chair_up_surface_agent, chair_up_back_agent = create_standard_3D_chair_surface_back(
-    #     obstacle_environment_lower,
-    #     obstacle_environment_upper,
-    #     chair_up_reference_start,
-    #     chair_up_reference_goal,
-    #     margins=0.1,
-    # )
+    chair_up_surface_agent, chair_up_back_agent = create_standard_3D_chair_surface_back(
+        obstacle_environment_lower,
+        obstacle_environment_upper,
+        chair_up_reference_start,
+        chair_up_reference_goal,
+        margins=0.1,
+    )
 
-    chair_down_surface_agent.priority = 1e-3
-    chair_down_back_agent.priority = 1e-3
+    chair_down_surface_agent.name = "chair_down"
+    chair_up_surface_agent.name = "chair_up"
+    chair_down_back_agent.name = "chair_down"
+    chair_up_back_agent.name = "chair_up"
+    
+    # table_surface_agent.priority = 1e6
+    # table_legs_agent.priority = 1e6
 
-    layer_lower = [table_legs_agent, chair_down_surface_agent]
-    layer_upper = [table_surface_agent, chair_down_back_agent]
+    layer_lower = [table_legs_agent, chair_down_surface_agent, chair_up_surface_agent]
+    layer_upper = [table_surface_agent, chair_down_back_agent, chair_up_back_agent]
     
     return [layer_lower, layer_upper]
 
@@ -148,4 +152,4 @@ if __name__ == "__main__":
     plt.ion()
 
     matplotlib_simulation(args)
-    # rviz_simulation()
+    rviz_simulation()

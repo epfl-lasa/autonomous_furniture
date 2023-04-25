@@ -70,12 +70,12 @@ class Furniture3D:
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
-        gamma_critic_max: float = 1.4,
-        gamma_critic_min: float = 1.1,
+        gamma_critic_max: float = 1.3,
+        gamma_critic_min: float = 1.0,
         gamma_stop: float = 1.1,
-        maximum_linear_velocity: float = 1.0,  # m/s
-        maximum_angular_velocity: float = 1.0,  # rad/s
-        maximum_linear_acceleration: float = 4.0,  # m/s^2
+        maximum_linear_velocity: float = 0.4,  # m/s
+        maximum_angular_velocity: float = 1.57,  # rad/s
+        maximum_linear_acceleration: float = 10.0,  # m/s^2
         maximum_angular_acceleration: float = 10.0,  # rad/s^2
     ) -> None:
         self._shape_list = shape_list

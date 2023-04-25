@@ -103,8 +103,8 @@ class RvizSimulator3D(Node):
                 0, 0, pose.orientation
             )
 
-        # if object_type is ObjectType.TABLE:
-        #     self.odom_transformer.transform.translation.x = pose.position[0] + 0.2
+        if object_type is ObjectType.TABLE:
+            self.odom_transformer.transform.translation.y = pose.position[1] - 0.2
 
         # elif object_type is ObjectType.QOLO:
         #     self.odom_transformer.transform.translation.z = 0.2
@@ -163,8 +163,8 @@ class RvizSimulator3D(Node):
             dt_simulation=self.dt_simulation,
         )
 
-        # print("table position :\n", self.layer_list[0][0]._reference_pose.position)
-        # print("chair position :\n", self.layer_list[0][1]._reference_pose.position)
+        print("table position :\n", self.layer_list[0][0]._reference_pose.position)
+        print("chair position :\n", self.layer_list[0][1]._reference_pose.position)
 
         for ii, agent in enumerate(self.layer_list[0]):
             if agent.object_type == ObjectType.QOLO:
