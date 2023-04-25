@@ -103,14 +103,14 @@ class RvizSimulator3D(Node):
                 0, 0, pose.orientation
             )
 
-        if object_type is ObjectType.TABLE:
-            self.odom_transformer.transform.translation.x = pose.position[0] + 0.2
+        # if object_type is ObjectType.TABLE:
+        #     self.odom_transformer.transform.translation.x = pose.position[0] + 0.2
 
-        elif object_type is ObjectType.QOLO:
-            self.odom_transformer.transform.translation.z = 0.2
-            self.odom_transformer.transform.rotation = euler_to_quaternion(
-                0, 0, pose.orientation
-            )  # rpy
+        # elif object_type is ObjectType.QOLO:
+        #     self.odom_transformer.transform.translation.z = 0.2
+        #     self.odom_transformer.transform.rotation = euler_to_quaternion(
+        #         0, 0, pose.orientation
+        #     )  # rpy
 
         # send the joint state and transform
         self.broadcaster.sendTransform(self.odom_transformer)
@@ -120,7 +120,6 @@ class RvizSimulator3D(Node):
 
     def setup(
         self,
-        obstacle_environment: ObstacleContainer,
         layer_list: list[Furniture3D],
         mini_drag: str,
         version: str,
@@ -146,7 +145,6 @@ class RvizSimulator3D(Node):
         # for i in range(self.number_agent):
         #     self.agent_pos_saver[i].append(self.agent[i].position)
 
-        self.obstacle_environment = obstacle_environment
         self.converged: bool = False  # If all the agent has converged
 
     def update_step(self) -> None:
@@ -154,7 +152,7 @@ class RvizSimulator3D(Node):
         if not (self.ii % 20):
             print(f"Iteration {self.ii}.")
 
-        self.layer_list, self.agent_pos_saver = update_multi_layer_simulation(
+        self.layer_list = update_multi_layer_simulation(
             number_layer=self.number_layer,
             number_agent=self.number_agent,
             layer_list=self.layer_list,
@@ -163,8 +161,10 @@ class RvizSimulator3D(Node):
             emergency_stop=self.emergency_stop,
             safety_module=self.safety_module,
             dt_simulation=self.dt_simulation,
-            agent_pos_saver=self.agent_pos_saver,
         )
+
+        # print("table position :\n", self.layer_list[0][0]._reference_pose.position)
+        # print("chair position :\n", self.layer_list[0][1]._reference_pose.position)
 
         for ii, agent in enumerate(self.layer_list[0]):
             if agent.object_type == ObjectType.QOLO:
@@ -193,7 +193,9 @@ class RvizSimulator3D(Node):
                 continue
 
             name = base_name + str(it_obj)
-            self.update_state_publisher(agent.pose, name, object_type=publish_type)
+            self.update_state_publisher(
+                agent._reference_pose, name, object_type=publish_type
+            )
             it_obj += 1
             print(f"publish {publish_type}")
 

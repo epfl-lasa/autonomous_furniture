@@ -33,7 +33,6 @@ class DynamicalSystemAnimation3D(Animator):
 
     def setup(
         self,
-        obstacle_environment_list: list[ObstacleContainer],
         layer_list: list[list[Furniture3D]],
         x_lim=None,
         y_lim=None,
@@ -83,7 +82,6 @@ class DynamicalSystemAnimation3D(Animator):
                         )
                         saved = True
 
-        self.obstacle_environment_list = obstacle_environment_list
         # for i in range(len(obstacle_environment)):
         #     self.obstacle_colors.append(np.array(np.random.choice(range(255),size=3))/254)
         self.obstacle_colors = obstacle_colors

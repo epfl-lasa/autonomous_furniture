@@ -360,17 +360,17 @@ class Furniture3D:
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
             )
-        ctp = self.get_global_control_points()
-        for i in range(self._control_points.shape[0]):
-            plt.arrow(
-                ctp[0, i],
-                ctp[1, i],
-                velocities[0, i],
-                velocities[1, i],
-                head_width=0.1,
-                head_length=0.2,
-                color="g",
-            )
+        # ctp = self.get_global_control_points()
+        # for i in range(self._control_points.shape[0]):
+        #     plt.arrow(
+        #         ctp[0, i],
+        #         ctp[1, i],
+        #         velocities[0, i],
+        #         velocities[1, i],
+        #         head_width=0.1,
+        #         head_length=0.2,
+        #         color="g",
+        #     )
 
         ### gett gamma values and save the smallest one
         gamma_values = np.zeros(

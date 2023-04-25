@@ -316,7 +316,7 @@ def create_standard_3D_chair_surface_back(
     )
     chair_surface_positions = np.array([[0.0, 0.0]])
     chair_surface_shape = Cuboid(
-        axes_length=[0.5, 0.5],
+        axes_length=[0.4, 0.5],
         center_position=chair_reference_start.transform_position_from_relative(
             np.copy(chair_surface_positions[0])
         ),
@@ -333,13 +333,14 @@ def create_standard_3D_chair_surface_back(
             orientation=chair_reference_start.orientation,
         ),
         goal_pose=chair_reference_goal,
-        name="chair_surface",
+        name="chair",
+        object_type=ObjectType.CHAIR,
     )
     # upper layer
-    chair_back_control_points = np.array([[0.2, 0.125], [0.2, -0.125]])
-    chair_back_positions = np.array([[0.2, 0.0]])
+    chair_back_control_points = np.array([[-0.2, 0.125], [-0.2, -0.125]])
+    chair_back_positions = np.array([[-0.2, 0.0]])
     chair_back_shape = Cuboid(
-        axes_length=[0.1, 0.5],
+        axes_length=[0.05, 0.5],
         center_position=chair_reference_start.transform_position_from_relative(
             np.copy(chair_back_positions[0])
         ),
@@ -356,7 +357,8 @@ def create_standard_3D_chair_surface_back(
             orientation=chair_reference_start.orientation,
         ),
         goal_pose=chair_reference_goal,
-        name="chair_back",
+        name="chair",
+        object_type=ObjectType.CHAIR,
     )
 
     return chair_surface_agent, chair_back_agent
@@ -371,6 +373,7 @@ def create_standard_table_3D_surface_legs(
     axes_table=[1.6, 0.7],
     axes_legs=[0.2, 0.2],
     ctr_points_number=[3, 1],
+    static = False,
 ):
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
     table_reference_goal = ObjectPose(
@@ -386,7 +389,10 @@ def create_standard_table_3D_surface_legs(
             [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
             [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
             [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
-            [-((axes_table[0] - axes_legs[0]) / 2), -((axes_table[1] - axes_legs[1]) / 2)],
+            [
+                -((axes_table[0] - axes_legs[0]) / 2),
+                -((axes_table[1] - axes_legs[1]) / 2),
+            ],
         ]
     )
 
@@ -413,7 +419,9 @@ def create_standard_table_3D_surface_legs(
             orientation=table_reference_start.orientation,
         ),
         goal_pose=table_reference_goal,
-        name="table_legs",
+        name="table",
+        object_type=ObjectType.TABLE,
+        static=static,
     )
     # upper layer
     n_points = np.sum(ctr_points_number) * 2 + 4
@@ -459,6 +467,8 @@ def create_standard_table_3D_surface_legs(
             orientation=table_reference_start.orientation,
         ),
         goal_pose=table_reference_goal,
-        name="table_surface",
+        name="table",
+        object_type=ObjectType.TABLE,
+        static=static
     )
     return table_legs_agent, table_surface_agent

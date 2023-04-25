@@ -30,8 +30,8 @@ def threeD_test(args=[]):
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_reference_goal = ObjectPose(position=np.array([4, 2.75]), orientation=0)
-    table_reference_start = ObjectPose(position=np.array([0, 2.75]), orientation=0)
+    table_reference_goal = ObjectPose(position=np.array([4, 1.75]), orientation=0)
+    table_reference_start = ObjectPose(position=np.array([0, 1.75]), orientation=0)
 
     table_legs_agent, table_surface_agent = create_standard_table_3D_surface_legs(
         obstacle_environment_lower,
@@ -39,13 +39,14 @@ def threeD_test(args=[]):
         table_reference_start,
         table_reference_goal,
         margins=0.1,
+        static=True
     )
 
     chair_down_reference_start = ObjectPose(
-        position=np.array([4, 0]), orientation=-np.pi / 2
+        position=np.array([4, 0]), orientation=np.pi / 2
     )
     chair_down_reference_goal = ObjectPose(
-        position=np.array([4, 1.7]), orientation=-np.pi / 2
+        position=np.array([4, 1.6]), orientation=np.pi / 2
     )
 
     (

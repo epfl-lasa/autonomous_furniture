@@ -470,7 +470,7 @@ def update_multi_layer_simulation(
     emergency_stop,
     safety_module,
     dt_simulation,
-    agent_pos_saver,
+    agent_pos_saver=None,
 ):
     for k in range(number_layer):
         # calculate the agents velocity in each layer
@@ -526,9 +526,15 @@ def update_multi_layer_simulation(
                 layer_list[k][jj].angular_velocity = angular_velocity
                 layer_list[k][jj].apply_kinematic_constraints()
                 layer_list[k][jj].do_velocity_step(dt_simulation)
-                agent_pos_saver[jj].append(layer_list[k][jj]._reference_pose.position)
+                if not agent_pos_saver == None:
+                    agent_pos_saver[jj].append(
+                        layer_list[k][jj]._reference_pose.position
+                    )
 
-    return layer_list, agent_pos_saver
+    if not agent_pos_saver == None:
+        return layer_list, agent_pos_saver
+    else:
+        return layer_list
 
 
 def compute_layer_weights(agent_number, number_layer, layer_list):
