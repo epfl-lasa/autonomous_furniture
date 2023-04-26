@@ -40,8 +40,8 @@ def matplotlib_simulation(args=[]):
         y_lim=[-2, 3],
         version="v1",
         mini_drag="nodrag",
-        safety_module=False,
-        emergency_stop=False,
+        safety_module=True,
+        emergency_stop=True,
         figsize=(10, 7),
     )
 
@@ -62,8 +62,8 @@ def rviz_simulation():
         layer_list=create_layer_list(),
         version="v1",
         mini_drag="nodrag",
-        safety_module=False,
-        emergency_stop=False,
+        safety_module=True,
+        emergency_stop=True,
     )
 
     rclpy.spin(my_animation)
@@ -80,10 +80,8 @@ def create_layer_list():
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_reference_start = ObjectPose(
-        position=np.array([-1, 1]), orientation=-np.pi / 2
-    )
-    table_reference_goal = ObjectPose(position=np.array([1, 1]), orientation=0)
+    table_reference_start = ObjectPose(position=np.array([0.0, 1.0]), orientation=0)
+    table_reference_goal = ObjectPose(position=np.array([1.0, 1.0]), orientation=0)
 
     table_legs_agent, table_surface_agent = create_standard_table_3D_surface_legs(
         obstacle_environment_lower,
@@ -91,54 +89,69 @@ def create_layer_list():
         table_reference_start,
         table_reference_goal,
         margins=0.1,
-        static=False,
+        axes_legs=[0.05, 0.2],
+        static=True,
     )
 
-    chair_down_reference_start = ObjectPose(
-        position=np.array([1, -1]), orientation=np.pi / 2
+    chair_moving_reference_start = ObjectPose(
+        position=np.array([0.8, 0]), orientation=np.pi / 2
     )
-    chair_down_reference_goal = ObjectPose(
-        position=np.array([1, 0.7]), orientation=np.pi / 2
+    chair_moving_reference_goal = ObjectPose(
+        position=np.array([-1.5, 1.0]), orientation=np.pi / 2
     )
 
     (
-        chair_down_surface_agent,
-        chair_down_back_agent,
+        chair_moving_surface_agent,
+        chair_moving_back_agent,
     ) = create_standard_3D_chair_surface_back(
         obstacle_environment_lower,
         obstacle_environment_upper,
-        chair_down_reference_start,
-        chair_down_reference_goal,
-        margins=0.1,
+        chair_moving_reference_start,
+        chair_moving_reference_goal,
+        margins=0.05,
     )
 
-    chair_up_reference_start = ObjectPose(
-        position=np.array([3, 2]), orientation=-np.pi / 2
+    chair_static_reference_start = ObjectPose(
+        position=np.array([0.0, -0.1]), orientation=np.pi / 2
     )
-    chair_up_reference_goal = ObjectPose(
-        position=np.array([1, 1.3]), orientation=-np.pi / 2
+    chair_static_reference_goal = ObjectPose(
+        position=np.array([0.0, 1.0]), orientation=np.pi / 2
     )
 
-    chair_up_surface_agent, chair_up_back_agent = create_standard_3D_chair_surface_back(
+    (
+        chair_static_surface_agent,
+        chair_static_back_agent,
+    ) = create_standard_3D_chair_surface_back(
         obstacle_environment_lower,
         obstacle_environment_upper,
-        chair_up_reference_start,
-        chair_up_reference_goal,
-        margins=0.1,
+        chair_static_reference_start,
+        chair_static_reference_goal,
+        margins=0.05,
+        static=True,
     )
 
-    chair_down_surface_agent.name = "chair_down"
-    chair_up_surface_agent.name = "chair_up"
-    chair_down_back_agent.name = "chair_down"
-    chair_up_back_agent.name = "chair_up"
+    chair_moving_surface_agent.name = "chair_moving"
+    chair_static_surface_agent.name = "chair_static"
+    chair_moving_back_agent.name = "chair_moving"
+    chair_static_back_agent.name = "chair_static"
 
     # table_surface_agent.priority = 1e6
     # table_legs_agent.priority = 1e6
 
-    layer_lower = [table_legs_agent, chair_down_surface_agent, chair_up_surface_agent]
-    layer_upper = [table_surface_agent, chair_down_back_agent, chair_up_back_agent]
+    # layer_lower = [table_legs_agent, chair_static_surface_agent, chair_moving_surface_agent]
+    # layer_upper = [table_surface_agent, chair_static_back_agent, chair_moving_back_agent]
+    # return [layer_lower, layer_upper]
 
-    return [layer_lower, layer_upper]
+    chair_moving_surface_agent._obstacle_environment.append(
+        table_surface_agent._shape_list[0]
+    )
+
+    layer = [
+        table_surface_agent,
+        chair_static_surface_agent,
+        chair_moving_surface_agent,
+    ]
+    return [layer]
 
 
 if __name__ == "__main__":

@@ -224,6 +224,7 @@ def evaluate_safety_repulsion(
     velocities,
     gamma_critic,
     local_control_points,
+    safety_damping,
 ) -> None:
     (
         gamma_list_colliding,  # list with critical gamma value
@@ -288,7 +289,7 @@ def evaluate_safety_repulsion(
         ctrpt_indx = np.where(gamma_values == gamma_list_colliding[i])[0][0]
         if np.dot(velocities[:, ctrpt_indx], normals_for_ang_vel[i]) < 0:
             b = 1 / ((gamma_critic - 1) * (gamma_list_colliding[i] - 1))
-            velocities[:, ctrpt_indx] += b * normals_for_ang_vel[i]
+            velocities[:, ctrpt_indx] += safety_damping * b * normals_for_ang_vel[i]
 
     return velocities
 

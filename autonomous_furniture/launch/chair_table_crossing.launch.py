@@ -22,14 +22,14 @@ def generate_launch_description(n_tables: int = 8):
     furnite_nodes = []
     furnite_nodes.append(
         node_creator(
-            furniture_name="chair_down",
+            furniture_name="chair_moving",
             urdf_file_name="chair.urdf.xacro",
             topicspace="furniture",
         )
     )
     furnite_nodes.append(
         node_creator(
-            furniture_name="chair_up",
+            furniture_name="chair_static",
             urdf_file_name="chair.urdf.xacro",
             topicspace="furniture",
         )

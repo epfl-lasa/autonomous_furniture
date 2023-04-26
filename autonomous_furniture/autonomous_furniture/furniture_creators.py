@@ -302,6 +302,7 @@ def create_standard_3D_chair_surface_back(
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
     margins,
+    static=False,
 ):
     ### CREATE CHAIR SECTIONS FOR ALL THE LAYERS
     chair_reference_start = ObjectPose(
@@ -310,9 +311,22 @@ def create_standard_3D_chair_surface_back(
     chair_reference_goal = ObjectPose(
         position=goal_pose.position, orientation=goal_pose.orientation
     )
+    if static:
+        chair_reference_goal = ObjectPose(
+            position=start_pose.position, orientation=start_pose.orientation
+        )
     # lower layer
     chair_surface_control_points = np.array(
-        [[0.15, 0.15], [-0.15, 0.15], [0.15, -0.15], [-0.15, -0.15]]
+        [
+            [0.15, 0.15],
+            [-0.15, 0.15],
+            [0.15, -0.15],
+            [-0.15, -0.15],
+            [0.0, 0.15],
+            [-0.15, 0.0],
+            [0.15, 0.0],
+            [-0.0, -0.15],
+        ]
     )
     chair_surface_positions = np.array([[0.0, 0.0]])
     chair_surface_shape = Cuboid(
@@ -335,6 +349,7 @@ def create_standard_3D_chair_surface_back(
         goal_pose=chair_reference_goal,
         name="chair",
         object_type=ObjectType.CHAIR,
+        static=static,
     )
     # upper layer
     chair_back_control_points = np.array([[-0.2, 0.125], [-0.2, -0.125]])
@@ -359,6 +374,7 @@ def create_standard_3D_chair_surface_back(
         goal_pose=chair_reference_goal,
         name="chair",
         object_type=ObjectType.CHAIR,
+        static=static,
     )
 
     return chair_surface_agent, chair_back_agent
@@ -373,7 +389,7 @@ def create_standard_table_3D_surface_legs(
     axes_table=[1.6, 0.7],
     axes_legs=[0.2, 0.2],
     ctr_points_number=[3, 1],
-    static = False,
+    static=False,
 ):
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
     table_reference_goal = ObjectPose(
@@ -382,6 +398,10 @@ def create_standard_table_3D_surface_legs(
     table_reference_start = ObjectPose(
         position=start_pose.position, orientation=start_pose.orientation
     )
+    if static:
+        table_reference_goal = ObjectPose(
+            position=start_pose.position, orientation=start_pose.orientation
+        )
 
     # lower layer
     table_legs_control_points = np.array(
@@ -469,6 +489,6 @@ def create_standard_table_3D_surface_legs(
         goal_pose=table_reference_goal,
         name="table",
         object_type=ObjectType.TABLE,
-        static=static
+        static=static,
     )
     return table_legs_agent, table_surface_agent

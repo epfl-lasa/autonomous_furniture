@@ -39,7 +39,7 @@ def threeD_test(args=[]):
         table_reference_start,
         table_reference_goal,
         margins=0.1,
-        static=True
+        static=True,
     )
 
     chair_down_reference_start = ObjectPose(
