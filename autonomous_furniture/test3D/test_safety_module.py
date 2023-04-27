@@ -25,7 +25,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def test_uneven_priority(visualize=False):
+def test(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
@@ -65,6 +65,8 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
+            safety_damping=1,
+            gamma_critic_max=2,
         ),
         Furniture3D(
             shape_list=[table_shape2],
@@ -72,6 +74,8 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal2,
             name="fur",
+            safety_damping=1,
+            gamma_critic_max=2,
         ),
     ]
 
@@ -83,7 +87,6 @@ def test_uneven_priority(visualize=False):
         animation_name=args.name,
     )
     my_animation.setup(
-        obstacle_environment,
         layer_list=[my_furniture],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
@@ -123,4 +126,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test(visualize=True)

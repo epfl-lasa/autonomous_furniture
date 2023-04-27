@@ -104,6 +104,14 @@ class DynamicalSystemAnimation3D(Animator):
             agent_pos_saver=self.agent_pos_saver,
         )
 
+        # assert self.layer_list[0][0].linear_velocity[0] > 0, "Expected to move towards attractor"
+        # assert (
+        #     np.linalg.norm(self.layer_list[0][0].linear_velocity[1]) < 1e-6
+        # ), "Expected to move perfectly vertical"
+        # assert (
+        #     np.linalg.norm(self.layer_list[0][0].angular_velocity) < 1e-6
+        # ), "Expected to move perfectly vertical"
+        
         if not anim:
             return
 

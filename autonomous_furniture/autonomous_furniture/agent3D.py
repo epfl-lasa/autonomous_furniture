@@ -287,8 +287,8 @@ class Furniture3D:
 
         global_control_points = self.get_global_control_points()
 
-        if not len(environment_without_me):
-            raise Exception("NO OBSTACLES FOUND!")
+        # if not len(environment_without_me):
+        #     raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
             global_control_points, environment_without_me
@@ -390,6 +390,7 @@ class Furniture3D:
             ) = get_gamma_product_crowd(
                 global_control_points[:, ii], environment_without_me
             )
+        # print("gamma_values:\n", gamma_values)
         self.min_gamma = np.amin(gamma_values)
 
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###

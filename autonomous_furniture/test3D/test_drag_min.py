@@ -25,7 +25,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def test_uneven_priority(visualize=False):
+def test(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
@@ -120,7 +120,6 @@ def test_uneven_priority(visualize=False):
         animation_name=args.name,
     )
     my_animation_with_drag.setup(
-        obstacle_environment_with_drag,
         layer_list=[my_furniture_with_drag],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
@@ -137,7 +136,6 @@ def test_uneven_priority(visualize=False):
         animation_name=args.name,
     )
     my_animation_nodrag.setup(
-        obstacle_environment_nodrag,
         layer_list=[my_furniture_no_drag],
         x_lim=[-3, 8],
         y_lim=[-2, 8],
@@ -179,4 +177,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test(visualize=False)

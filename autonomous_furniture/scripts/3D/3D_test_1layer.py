@@ -50,9 +50,9 @@ def threeD_test(args=[]):
     goal2 = ObjectPose(position=np.array([1, 3.7]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[1, 2],
-        center_position=start2.position,
+        center_position=table_reference_goal.position,
         margin_absolut=0.5,
-        orientation=start2.orientation,
+        orientation=table_reference_goal.orientation,
         tail_effect=False,
     )
 
@@ -73,7 +73,7 @@ def threeD_test(args=[]):
             control_points=np.array([[0, -0.5], [0, 0.5]]),
             starting_pose=start2,
             goal_pose=goal2,
-            static=False,
+            static=True,
             name="static",
         ),
     ]
@@ -86,14 +86,13 @@ def threeD_test(args=[]):
     )
 
     my_animation.setup(
-        obstacle_environment,
         layer_list=[layer_0],
         x_lim=[-3, 10],
         y_lim=[-2, 7],
         version="v1",
         mini_drag="nodrag",
-        safety_module=True,
-        emergency_stop=True,
+        safety_module=False,
+        emergency_stop=False,
         figsize=(10, 7),
     )
 

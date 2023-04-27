@@ -118,9 +118,9 @@ class BaseAgent(ABC):
         self._shape = shape
 
         self.object_type = object_type
-        self.maximum_linear_velocity = 1.0  # m/s
-        self.maximum_angular_velocity = 1.0  # rad/s
-        self.maximum_linear_acceleration = 4.0  # m/s^2
+        self.maximum_linear_velocity = 0.4  # m/s
+        self.maximum_angular_velocity = 1.57  # rad/s
+        self.maximum_linear_acceleration = 10.0  # m/s^2
         self.maximum_angular_acceleration = 10.0  # rad/s^2
 
         self.symmetry = symmetry
@@ -147,7 +147,8 @@ class BaseAgent(ABC):
         self.name = name
 
         self.converged: bool = False
-        # Emergency Stop
+        # Emergency Stop            while 1 < 2:
+
         self.stop: bool = False
 
         # metrics
@@ -339,7 +340,6 @@ class Furniture(BaseAgent):
         global_control_points = self.get_global_control_points()
 
         if not len(environment_without_me):
-            while 1 < 2:
                 raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
