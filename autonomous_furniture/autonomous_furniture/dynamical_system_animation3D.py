@@ -111,7 +111,7 @@ class DynamicalSystemAnimation3D(Animator):
         # assert (
         #     np.linalg.norm(self.layer_list[0][0].angular_velocity) < 1e-6
         # ), "Expected to move perfectly vertical"
-        
+
         if not anim:
             return
 

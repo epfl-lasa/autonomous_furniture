@@ -63,7 +63,12 @@ def compute_gamma_critic(d, d_critic, gamma_critic_max, gamma_critic_min):
 
 
 def compute_ctr_point_vel_from_obs_avoidance(
-    number_ctrpt, goal_pos_ctr_pts, actual_pos_ctr_pts, environment_without_me, priority
+    number_ctrpt,
+    goal_pos_ctr_pts,
+    actual_pos_ctr_pts,
+    environment_without_me,
+    priority,
+    cutoff_gamma_obs,
 ):
     velocities = np.zeros((2, number_ctrpt))
     for i in range(number_ctrpt):
@@ -75,14 +80,22 @@ def compute_ctr_point_vel_from_obs_avoidance(
             [goal_pos_ctr_pts[0][i], goal_pos_ctr_pts[1][i]]
         )  # extract i-th goal control points position
         initial_velocity = ctr_pt_i_goal - ctr_pt_i
-        # initial_velocity /= LA.norm(initial_velocity) #normalize vector
+        # if LA.norm(initial_velocity) > max_linear_velocity:
+        #     initial_velocity = initial_velocity/LA.norm(initial_velocity)*max_linear_velocity
+        environment_without_me_adapted = []
+        for k in range(len(environment_without_me)):
+            obs = environment_without_me[k]
+            gamma = obs.get_gamma(ctr_pt_i, in_global_frame=True)
+            if gamma < cutoff_gamma_obs:
+                environment_without_me_adapted.append(obs)
         velocities[:, i] = obs_avoidance_interpolation_moving(
             position=ctr_pt_i,
             initial_velocity=initial_velocity,
-            obs=environment_without_me,
+            obs=environment_without_me_adapted,
             self_priority=priority,
         )
-    return velocities
+
+    return attenuate_DSM_velocities(number_ctrpt, velocities)
 
 
 def compute_drag_angle(initial_velocity, actual_orientation):
@@ -161,6 +174,9 @@ def ctr_point_vel_from_agent_kinematics(
                 obs=environment_without_me,
                 self_priority=priority,
             )
+    if DSM:
+        velocities = attenuate_DSM_velocities(number_ctrpt, velocities)
+
     return velocities
 
 
@@ -170,19 +186,7 @@ def agent_kinematics_from_ctr_point_vel(
     ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
     # linear velocity
     linear_velocity = np.sum(velocities * np.tile(weights, (2, 1)), axis=1)
-    # if initial_magnitude == None:
-    #     # check whether velocity is greater than maximum speed
-    #     if LA.norm(self.linear_velocity) > self._dynamics.maximum_velocity:
-    #         self.linear_velocity = (
-    #             self._dynamics.maximum_velocity
-    #             * self.linear_velocity
-    #             / LA.norm(self.linear_velocity)
-    #         )
-    # else:
-    #     # normalization to the initial linear velocity
-    #     self.linear_velocity = (
-    #         initial_magnitude * self.linear_velocity / LA.norm(self.linear_velocity)
-    #     )
+
     # angular velocity
     angular_vel = np.zeros(ctrpt_number)
     for ii in range(ctrpt_number):
@@ -241,49 +245,6 @@ def evaluate_safety_repulsion(
         gamma_values,
         gamma_critic,
     )
-    # # CALCULATE THE OPTIMAL ESCAPE DIRECTION AND THE ANGULAR VELOCITY CORRECTION TERM
-    # normal_list_tot_combined = []
-    # weight_list_tot_combined = []
-    # ang_vel_weights = []
-    # ang_vel_corr = []
-    # for i in range(len(normal_list_tot)):
-    #     normal_list_tot_combined += normal_list_tot[i]
-    #     weight_list_tot_combined += weight_list_tot[i]
-    #     normal_in_local_frame = self.get_velocity_in_local_frame(
-    #         normals_for_ang_vel[i]
-    #     )
-    #     ang_vel_corr.append(normal_in_local_frame[1] * control_point_d_list[i])
-    #     ang_vel_weights.append(1 / gamma_list_colliding[i])
-
-    # weight_list_tot_combined = weight_list_tot_combined / np.sum(
-    #     weight_list_tot_combined
-    # )  # normalize weights
-    # normal_combined = np.sum(
-    #     normal_list_tot_combined
-    #     * np.tile(weight_list_tot_combined, (self.dimension, 1)).transpose(),
-    #     axis=0,
-    # )  # calculate the escape direction given all obstacles proximity
-
-    # ang_vel_weights = ang_vel_weights / np.sum(ang_vel_weights)  # normalize weights
-    # ang_vel_corr = np.sum(
-    #     ang_vel_corr * np.tile(ang_vel_weights, (1, 1)).transpose(), axis=0
-    # )
-
-    # if np.dot(self.linear_velocity, normal_combined) < 0:
-    #     # the is a colliding trajectory we need to correct!
-    #     b = 1 / (
-    #         (self.gamma_critic - 1) * (np.min(gamma_list_colliding) - 1)
-    #     )  # compute the correction parameter
-    #     self.linear_velocity += (
-    #         b * normal_combined
-    #     )  # correct linear velocity to deviate it away from collision trajectory
-
-    #     self.angular_velocity += (
-    #         ang_vel_corr * b
-    #     )  # correct angular velocity to rotate in a safer position
-    #     self.angular_velocity = self.angular_velocity[
-    #         0
-    #     ]  # make angular velocity a scalar instead of a 1x1 array
 
     for i in range(len(gamma_list_colliding)):
         ctrpt_indx = np.where(gamma_values == gamma_list_colliding[i])[0][0]
@@ -431,8 +392,7 @@ def get_weight_from_gamma(
     return weights
 
 
-def get_weight_of_control_points(control_points, environment_without_me):
-    cutoff_gamma = 10  # TODO : This value has to be big and not small
+def get_weight_of_control_points(control_points, environment_without_me, cutoff_gamma):
     # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
@@ -454,10 +414,7 @@ def get_weight_of_control_points(control_points, environment_without_me):
     )
 
     ctl_point_weight_sum = np.sum(ctl_point_weight)
-    if ctl_point_weight_sum > 1:
-        ctl_point_weight = ctl_point_weight / ctl_point_weight_sum
-    else:
-        ctl_point_weight[-1] += 1 - ctl_point_weight_sum
+    ctl_point_weight = ctl_point_weight / ctl_point_weight_sum
 
     return ctl_point_weight
 
@@ -547,3 +504,12 @@ def compute_layer_weights(agent_number, number_layer, layer_list):
     )
     weights = weights / np.sum(weights)
     return weights
+
+
+def attenuate_DSM_velocities(ctr_pt_number, velocities):
+    norms = LA.norm(velocities, axis=0)
+    avg_norm = np.average(norms)
+    for i in range(ctr_pt_number):
+        velocities[:, i] = velocities[:, i] / LA.norm(velocities[:, i]) * avg_norm
+
+    return velocities

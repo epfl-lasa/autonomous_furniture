@@ -43,7 +43,7 @@ def priority_demo():
     # , orientation = 1.6) Goal of the CuboidXd
     goal = ObjectPose(position=np.array([4, 1.5]), orientation=np.pi / 2)
     start = ObjectPose(position=np.array([0.5, 3.75]), orientation=0)
-    
+
     start2 = ObjectPose(position=np.array([-1, -4]), orientation=np.pi / 2)
     goal2 = ObjectPose(position=np.array([-1, -4]), orientation=np.pi / 2)
 

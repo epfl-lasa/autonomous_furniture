@@ -112,6 +112,9 @@ class BaseAgent(ABC):
         gamma_critic_max: float = 2.0,
         gamma_critic_min: float = 1.2,
         gamma_stop: float = 1.1,
+        cutoff_gamma_weights: float = 10.0,
+        cutoff_gamma_obs: float = 4.0,
+        safety_damping: float = 1.0,
     ) -> None:
         super().__init__()
 
@@ -123,8 +126,11 @@ class BaseAgent(ABC):
         self.maximum_linear_acceleration = 10.0  # m/s^2
         self.maximum_angular_acceleration = 10.0  # rad/s^2
 
-        self.symmetry = symmetry
+        self.cutoff_gamma_weights = cutoff_gamma_weights
+        self.cutoff_gamma_obs = cutoff_gamma_obs
 
+        self.symmetry = symmetry
+        self.safety_damping = safety_damping
         # Default values for new variables
         self.danger = False
         self.color = np.array([176, 124, 124]) / 255.0
@@ -340,10 +346,12 @@ class Furniture(BaseAgent):
         global_control_points = self.get_global_control_points()
 
         if not len(environment_without_me):
-                raise Exception("NO OBSTACLES FOUND!")
+            raise Exception("NO OBSTACLES FOUND!")
 
         weights = get_weight_of_control_points(
-            global_control_points, environment_without_me
+            global_control_points,
+            environment_without_me,
+            cutoff_gamma=self.cutoff_gamma_weights,
         )
 
         ### Calculate initial linear and angular velocity of the agent
@@ -481,6 +489,7 @@ class Furniture(BaseAgent):
                         velocities=velocities,
                         gamma_critic=self.gamma_critic,
                         local_control_points=self._control_points,
+                        safety_damping=self.safety_damping,
                     )
 
         linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(

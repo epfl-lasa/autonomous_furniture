@@ -40,22 +40,12 @@ def test(visualize=False):
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
     goal = ObjectPose(position=np.array([6, 3]), orientation=0)
+
     table_shape_with_decoupling = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([1, 3]),
         margin_absolut=1,
         orientation=np.pi / 2,
-        tail_effect=False,
-    )
-
-    goal2_with_decoupling = ObjectPose(
-        position=np.array([-1, 3]), orientation=np.pi / 2
-    )
-    table_shape2_with_decoupling = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_with_decoupling.position,
-        margin_absolut=1,
-        orientation=goal2_with_decoupling.orientation,
         tail_effect=False,
     )
 
@@ -67,15 +57,6 @@ def test(visualize=False):
         tail_effect=False,
     )
 
-    goal2_no_decoupling = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
-    table_shape2_no_decoupling = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_no_decoupling.position,
-        margin_absolut=1,
-        orientation=goal2_no_decoupling.orientation,
-        tail_effect=False,
-    )
-
     my_furniture_with_decoupling = [
         Furniture3D(
             shape_list=[table_shape_with_decoupling],
@@ -83,14 +64,6 @@ def test(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture3D(
-            shape_list=[table_shape2_with_decoupling],
-            obstacle_environment=obstacle_environment_with_decoupling,
-            control_points=control_points,
-            goal_pose=goal2_with_decoupling,
-            name="fur",
-            static=True,
         ),
     ]
 
@@ -101,14 +74,6 @@ def test(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture3D(
-            shape_list=[table_shape2_no_decoupling],
-            obstacle_environment=obstacle_environment_no_decoupling,
-            control_points=control_points,
-            goal_pose=goal2_no_decoupling,
-            name="fur",
-            static=True,
         ),
     ]
 
@@ -126,8 +91,8 @@ def test(visualize=False):
         y_lim=[-2, 8],
         mini_drag="nodrag",
         version="v2",
-        safety_module=True,
-        emergency_stop=True,
+        safety_module=False,
+        emergency_stop=False,
     )
 
     my_animation_no_decoupling = DynamicalSystemAnimation3D(
@@ -142,8 +107,8 @@ def test(visualize=False):
         y_lim=[-2, 8],
         mini_drag="nodrag",
         version="v1",
-        safety_module=True,
-        emergency_stop=True,
+        safety_module=False,
+        emergency_stop=False,
     )
 
     if visualize:

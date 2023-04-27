@@ -35,9 +35,7 @@ def test_straight(visualize=False):
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_reference_start = ObjectPose(
-        position=np.array([-1, 1]), orientation=0
-    )
+    table_reference_start = ObjectPose(position=np.array([-1, 1]), orientation=0)
     table_reference_goal = ObjectPose(position=np.array([1, 1]), orientation=0)
 
     table_legs_agent, table_surface_agent = create_standard_table_3D_surface_legs(
@@ -48,34 +46,44 @@ def test_straight(visualize=False):
         margins=0.1,
         static=False,
     )
-    
+
     obstacle_shape = CuboidXd(
-        center_position = table_reference_goal.position,
-        orientation = table_reference_goal.orientation,
-        axes_length=[1,1]
+        center_position=table_reference_goal.position,
+        orientation=table_reference_goal.orientation,
+        axes_length=[1, 1],
     )
     obstacle = Furniture3D(
         shape_list=[obstacle_shape],
-        starting_pose=ObjectPose(position=table_reference_goal.position, orientation=table_reference_goal.orientation),
-        goal_pose=ObjectPose(position=table_reference_goal.position, orientation=table_reference_goal.orientation),
+        starting_pose=ObjectPose(
+            position=table_reference_goal.position,
+            orientation=table_reference_goal.orientation,
+        ),
+        goal_pose=ObjectPose(
+            position=table_reference_goal.position,
+            orientation=table_reference_goal.orientation,
+        ),
         static=True,
         obstacle_environment=obstacle_environment_lower,
-        control_points=np.array([[0.0, 0.0]])
+        control_points=np.array([[0.0, 0.0]]),
     )
 
-    spectator_pose = ObjectPose(position=np.array([3.0,3.0]), orientation=0)
+    spectator_pose = ObjectPose(position=np.array([3.0, 3.0]), orientation=0)
     spectator_shape = CuboidXd(
-        center_position = spectator_pose.position,
-        orientation = spectator_pose.orientation,
-        axes_length=[1,1]
+        center_position=spectator_pose.position,
+        orientation=spectator_pose.orientation,
+        axes_length=[1, 1],
     )
     spectator = Furniture3D(
         shape_list=[spectator_shape],
-        starting_pose=ObjectPose(position=spectator_pose.position, orientation=spectator_pose.orientation),
-        goal_pose=ObjectPose(position=spectator_pose.position, orientation=spectator_pose.orientation),
+        starting_pose=ObjectPose(
+            position=spectator_pose.position, orientation=spectator_pose.orientation
+        ),
+        goal_pose=ObjectPose(
+            position=spectator_pose.position, orientation=spectator_pose.orientation
+        ),
         static=True,
         obstacle_environment=obstacle_environment_lower,
-        control_points=np.array([[0.0, 0.0]])
+        control_points=np.array([[0.0, 0.0]]),
     )
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
@@ -93,6 +101,7 @@ def test_straight(visualize=False):
         version="v1",
         safety_module=False,
         emergency_stop=False,
+        figsize=[10, 10],
     )
 
     if visualize:
@@ -109,7 +118,7 @@ def test_straight(visualize=False):
     )
 
     print("linear velocity:\n", table_legs_agent.linear_velocity)
-    print("angular velocity: ",table_legs_agent.angular_velocity)
+    print("angular velocity: ", table_legs_agent.angular_velocity)
     assert table_legs_agent.linear_velocity[0] > 0, "Expected to move towards attractor"
     assert (
         np.linalg.norm(table_legs_agent.linear_velocity[1]) < 1e-6

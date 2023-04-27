@@ -50,9 +50,9 @@ def threeD_test(args=[]):
     goal2 = ObjectPose(position=np.array([1, 3.7]), orientation=np.pi / 2)
     table_shape2 = CuboidXd(
         axes_length=[1, 2],
-        center_position=table_reference_goal.position,
+        center_position=start2.position,
         margin_absolut=0.5,
-        orientation=table_reference_goal.orientation,
+        orientation=start2.orientation,
         tail_effect=False,
     )
 
@@ -73,7 +73,7 @@ def threeD_test(args=[]):
             control_points=np.array([[0, -0.5], [0, 0.5]]),
             starting_pose=start2,
             goal_pose=goal2,
-            static=True,
+            static=False,
             name="static",
         ),
     ]

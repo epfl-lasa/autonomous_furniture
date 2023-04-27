@@ -187,5 +187,5 @@ def run_ten_bed_animation_rviz(it_max: int = 1000, go_to_center: bool = False):
 
 
 if (__name__) == "__main__":
-    # run_ten_bed_animation_matplotlib(it_max=1000)
-    run_ten_bed_animation_rviz(it_max=1000)
+    run_ten_bed_animation_matplotlib(it_max=1000)
+    # run_ten_bed_animation_rviz(it_max=1000)

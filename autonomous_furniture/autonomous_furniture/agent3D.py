@@ -70,10 +70,12 @@ class Furniture3D:
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
-        gamma_critic_max: float = 1.1,
+        gamma_critic_max: float = 1.3,
         gamma_critic_min: float = 1.1,
-        gamma_stop: float = 1.05,
-        safety_damping: float = 0.1,
+        gamma_stop: float = 1.1,
+        safety_damping: float = 1.0,
+        cutoff_gamma_weights: float = 10.0,
+        cutoff_gamma_obs: float = 4.0,
         maximum_linear_velocity: float = 0.4,  # m/s
         maximum_angular_velocity: float = 1.57,  # rad/s
         maximum_linear_acceleration: float = 4.0,  # m/s^2
@@ -108,6 +110,7 @@ class Furniture3D:
         # and then do a destructor to remove it from the list
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
+        self.ctr_pt_number = self._control_points.shape[0]
         self._parking_pose = parking_pose
         self._goal_pose = goal_pose
 
@@ -162,6 +165,9 @@ class Furniture3D:
         # agent should stop when a ctrpoint reaches a gamma value under this threshold
         self.gamma_stop = gamma_stop
 
+        self.cutoff_gamma_weights = cutoff_gamma_weights
+        self.cutoff_gamma_obs = cutoff_gamma_obs
+
         self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
 
@@ -169,7 +175,7 @@ class Furniture3D:
         # self.angular_velocity_old = 0.0
         # self.time_step = 0.0
 
-        # self.min_gamma = 0.0
+        self.min_gamma = 1e6
 
     def get_obstacles_without_me(self):
         obs_env_without_me = []
@@ -283,16 +289,21 @@ class Furniture3D:
             self.angular_velocity = 0.0
         self.angular_velocity_old = self.angular_velocity
 
-        environment_without_me = self.get_obstacles_without_me()
-
         global_control_points = self.get_global_control_points()
+
+        environment_without_me = self.get_obstacles_without_me()
 
         # if not len(environment_without_me):
         #     raise Exception("NO OBSTACLES FOUND!")
 
-        weights = get_weight_of_control_points(
-            global_control_points, environment_without_me
-        )
+        if bool(environment_without_me):  # if there are other objects to take care of
+            weights = get_weight_of_control_points(
+                global_control_points,
+                environment_without_me,
+                cutoff_gamma=self.cutoff_gamma_weights,
+            )
+        else:
+            weights = np.ones(self.ctr_pt_number) / self.ctr_pt_number
 
         # plt.arrow(self.position[0], self.position[1], initial_velocity[0],
         #       initial_velocity[1], head_width=0.1, head_length=0.2, color='g')
@@ -328,43 +339,63 @@ class Furniture3D:
             # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
             #           ii], head_width=0.1, head_length=0.2, color='m')
             velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
-                number_ctrpt=self._control_points.shape[0],
+                number_ctrpt=self.ctr_pt_number,
                 goal_pos_ctr_pts=self.get_goal_control_points(),
                 actual_pos_ctr_pts=self.get_global_control_points(),
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
+                cutoff_gamma_obs=self.cutoff_gamma_obs,
             )
 
             linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
                 velocities_from_DSM,
                 weights,
-                global_control_points=self.get_global_control_points(),
-                ctrpt_number=self._control_points.shape[0],
+                global_control_points=global_control_points,
+                ctrpt_number=self.ctr_pt_number,
                 global_reference_position=self._reference_pose.position,
             )
 
             velocities = ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel,
                 linear_velocity,
-                number_ctrpt=self._control_points.shape[0],
+                number_ctrpt=self.ctr_pt_number,
                 local_control_points=self._control_points,
-                global_control_points=self.get_global_control_points(),
+                global_control_points=global_control_points,
                 actual_orientation=self._reference_pose.orientation,
-                environment_without_me=self.get_obstacles_without_me(),
+                environment_without_me=environment_without_me,
                 priority=self.priority,
                 DSM=True,
             )
 
         elif version == "v1":
             velocities = compute_ctr_point_vel_from_obs_avoidance(
-                number_ctrpt=self._control_points.shape[0],
+                number_ctrpt=self.ctr_pt_number,
                 goal_pos_ctr_pts=self.get_goal_control_points(),
-                actual_pos_ctr_pts=self.get_global_control_points(),
-                environment_without_me=self.get_obstacles_without_me(),
+                actual_pos_ctr_pts=global_control_points,
+                environment_without_me=environment_without_me,
                 priority=self.priority,
+                cutoff_gamma_obs=self.cutoff_gamma_obs,
             )
+
+        if not bool(
+            environment_without_me
+        ):  # in case there are no significant obstacle no safety modulations are needed
+            (
+                linear_velocity,
+                angular_velocity,
+            ) = agent_kinematics_from_ctr_point_vel(
+                velocities,
+                weights,
+                global_control_points=global_control_points,
+                ctrpt_number=self.ctr_pt_number,
+                global_reference_position=self._reference_pose.position,
+            )
+            self.linear_velocity = linear_velocity
+            self.angular_velocity = angular_velocity
+            return
+
         # ctp = self.get_global_control_points()
-        # for i in range(self._control_points.shape[0]):
+        # for i in range(self.ctr_pt_number):
         #     plt.arrow(
         #         ctp[0, i],
         #         ctp[1, i],
@@ -377,13 +408,13 @@ class Furniture3D:
 
         ### gett gamma values and save the smallest one
         gamma_values = np.zeros(
-            global_control_points.shape[1]
+            self.ctr_pt_number
         )  # Store the min Gamma of each control point
         obs_idx = [None] * global_control_points.shape[
             1
         ]  # Idx of the obstacle in the environment where the Gamma is calculated from
 
-        for ii in range(global_control_points.shape[1]):
+        for ii in range(self.ctr_pt_number):
             (
                 obs_idx[ii],
                 gamma_values[ii],
@@ -418,7 +449,7 @@ class Furniture3D:
                 )
                 # Check if the gamma function is below gramma_critic
                 list_critic_gammas_indx = []
-                for ii in range(global_control_points.shape[1]):
+                for ii in range(self.ctr_pt_number):
                     if gamma_values[ii] < self.gamma_critic:
                         list_critic_gammas_indx.append(ii)
                         self.color = "k"  # np.array([221, 16, 16]) / 255.0
@@ -430,8 +461,8 @@ class Furniture3D:
                     ) = agent_kinematics_from_ctr_point_vel(
                         velocities,
                         weights,
-                        global_control_points=self.get_global_control_points(),
-                        ctrpt_number=self._control_points.shape[0],
+                        global_control_points=global_control_points,
+                        ctrpt_number=self.ctr_pt_number,
                         global_reference_position=self._reference_pose.position,
                     )
 
@@ -444,11 +475,11 @@ class Furniture3D:
                     velocities = ctr_point_vel_from_agent_kinematics(
                         angular_velocity,
                         linear_velocity,
-                        number_ctrpt=self._control_points.shape[0],
+                        number_ctrpt=self.ctr_pt_number,
                         local_control_points=self._control_points,
-                        global_control_points=self.get_global_control_points(),
+                        global_control_points=global_control_points,
                         actual_orientation=self._reference_pose.orientation,
-                        environment_without_me=self.get_obstacles_without_me(),
+                        environment_without_me=environment_without_me,
                         priority=self.priority,
                         DSM=False,
                     )
@@ -467,8 +498,8 @@ class Furniture3D:
         linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
             velocities,
             weights,
-            global_control_points=self.get_global_control_points(),
-            ctrpt_number=self._control_points.shape[0],
+            global_control_points=global_control_points,
+            ctrpt_number=self.ctr_pt_number,
             global_reference_position=self._reference_pose.position,
         )
 
