@@ -30,7 +30,9 @@ def threeD_test(args=[]):
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    table_reference_goal = ObjectPose(position=np.array([6, 2.75]), orientation=0)
+    table_reference_goal = ObjectPose(
+        position=np.array([6, 2.75]), orientation=np.pi / 2
+    )
     table_reference_start = ObjectPose(position=np.array([0, 2.75]), orientation=0)
 
     table_legs = []
@@ -66,16 +68,16 @@ def threeD_test(args=[]):
             goal_pose=table_reference_goal,
             name="table_legs",
         ),
-        Furniture3D(
-            shape_list=[table_shape2],
-            shape_positions=np.array([[0.0, 0.0]]),
-            obstacle_environment=obstacle_environment,
-            control_points=np.array([[0, -0.5], [0, 0.5]]),
-            starting_pose=start2,
-            goal_pose=goal2,
-            static=False,
-            name="static",
-        ),
+        # Furniture3D(
+        #     shape_list=[table_shape2],
+        #     shape_positions=np.array([[0.0, 0.0]]),
+        #     obstacle_environment=obstacle_environment,
+        #     control_points=np.array([[0, -0.5], [0, 0.5]]),
+        #     starting_pose=start2,
+        #     goal_pose=goal2,
+        #     static=False,
+        #     name="static",
+        # ),
     ]
 
     my_animation = DynamicalSystemAnimation3D(
@@ -89,8 +91,8 @@ def threeD_test(args=[]):
         layer_list=[layer_0],
         x_lim=[-3, 10],
         y_lim=[-2, 7],
-        version="v1",
-        mini_drag="nodrag",
+        version="v2",
+        mini_drag="dragdist",
         safety_module=False,
         emergency_stop=False,
         figsize=(10, 7),

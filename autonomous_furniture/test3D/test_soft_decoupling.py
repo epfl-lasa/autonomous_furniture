@@ -80,7 +80,7 @@ def test(visualize=False):
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
 
     my_animation_with_decoupling = DynamicalSystemAnimation3D(
-        it_max=200,
+        it_max=1000,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -96,7 +96,7 @@ def test(visualize=False):
     )
 
     my_animation_no_decoupling = DynamicalSystemAnimation3D(
-        it_max=200,
+        it_max=1000,
         dt_simulation=0.05,
         dt_sleep=0.05,
         animation_name=args.name,
@@ -147,4 +147,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test(visualize=False)
+    test(visualize=True)

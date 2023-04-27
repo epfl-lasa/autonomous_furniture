@@ -174,8 +174,6 @@ def ctr_point_vel_from_agent_kinematics(
                 obs=environment_without_me,
                 self_priority=priority,
             )
-    if DSM:
-        velocities = attenuate_DSM_velocities(number_ctrpt, velocities)
 
     return velocities
 

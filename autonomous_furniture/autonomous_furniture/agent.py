@@ -110,7 +110,7 @@ class BaseAgent(ABC):
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
-        gamma_critic_min: float = 1.2,
+        gamma_critic_min: float = 1.3,
         gamma_stop: float = 1.1,
         cutoff_gamma_weights: float = 10.0,
         cutoff_gamma_obs: float = 4.0,

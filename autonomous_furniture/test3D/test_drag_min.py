@@ -50,28 +50,11 @@ def test(visualize=False):
         tail_effect=False,
     )
 
-    goal2 = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
-    table_shape2_with_drag = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2.position,
-        margin_absolut=1,
-        orientation=goal2.orientation,
-        tail_effect=False,
-    )
-
     table_shape_nodrag = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=start1.position,
         margin_absolut=1,
         orientation=start1.orientation,
-        tail_effect=False,
-    )
-
-    table_shape2_nodrag = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2.position,
-        margin_absolut=1,
-        orientation=goal2.orientation,
         tail_effect=False,
     )
 
@@ -83,14 +66,6 @@ def test(visualize=False):
             goal_pose=goal1,
             name="fur",
         ),
-        Furniture3D(
-            shape_list=[table_shape2_with_drag],
-            obstacle_environment=obstacle_environment_with_drag,
-            control_points=control_points,
-            goal_pose=goal2,
-            name="fur",
-            static=True,
-        ),
     ]
 
     my_furniture_no_drag = [
@@ -100,14 +75,6 @@ def test(visualize=False):
             control_points=control_points,
             goal_pose=goal1,
             name="fur",
-        ),
-        Furniture3D(
-            shape_list=[table_shape2_nodrag],
-            obstacle_environment=obstacle_environment_nodrag,
-            control_points=control_points,
-            goal_pose=goal2,
-            name="fur",
-            static=True,
         ),
     ]
 

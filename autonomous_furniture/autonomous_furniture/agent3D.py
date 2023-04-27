@@ -105,9 +105,19 @@ class Furniture3D:
                 self._shape_list[0].axes_length
             )
         else:
-            self.virtual_drag = 1
-        # TODO maybe append the shape directly in bos env,
-        # and then do a destructor to remove it from the list
+            maxima_x = np.zeros((2, len(shape_list)))
+            maxima_y = np.zeros((2, len(shape_list)))
+            for i in range(len(shape_list)):
+                maxima_x[0, i] = shape_positions[i][0] + shape_list[i].semiaxes[0]
+                maxima_x[1, i] = shape_positions[i][0] - shape_list[i].semiaxes[0]
+                maxima_y[0, i] = shape_positions[i][1] + shape_list[i].semiaxes[1]
+                maxima_y[1, i] = shape_positions[i][1] - shape_list[i].semiaxes[1]
+
+            x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
+            y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
+            agent_stretches = np.array([x_stretch, y_stretch])
+            self.virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
+
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points
         self.ctr_pt_number = self._control_points.shape[0]
@@ -327,8 +337,10 @@ class Furniture3D:
             drag_angle = compute_drag_angle(
                 initial_velocity, self._reference_pose.orientation
             )
-            goal_angle = compute_goal_angle(
-                self._goal_pose.orientation, self._reference_pose.orientation
+            goal_angle = (
+                compute_goal_angle(  ##compute orientation difference to reach goal
+                    self._goal_pose.orientation, self._reference_pose.orientation
+                )
             )
             # TODO Very clunky : Rather make a function out of it
             K = 3  # K proportionnal parameter for the speed
