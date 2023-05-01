@@ -296,12 +296,16 @@ def set_goals_to_arrange_on_the_left(
         it_table += 1
 
 
-def create_standard_3D_chair_surface_back(
+def create_3D_chair(
     obstacle_environment_lower,
     obstacle_environment_upper,
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
     margins,
+    back_axis=None,
+    surface_axis=None,
+    leg_positions=None,
+    leg_axis=None,
     static=False,
 ):
     ### CREATE CHAIR SECTIONS FOR ALL THE LAYERS
@@ -380,7 +384,7 @@ def create_standard_3D_chair_surface_back(
     return chair_surface_agent, chair_back_agent
 
 
-def create_standard_table_3D_surface_legs(
+def create_3D_table_surface_legs(
     obstacle_environment_lower,
     obstacle_environment_upper,
     start_pose: ObjectPose,
@@ -444,39 +448,52 @@ def create_standard_table_3D_surface_legs(
         static=static,
     )
     # upper layer
-    n_points = np.sum(ctr_points_number) * 2 + 4
-    table_surface_control_points = np.zeros((n_points, 2))
-    x_array = np.linspace(
-        -((axes_table[0] - axes_legs[0]) / 2),
-        (axes_table[0] - axes_legs[0]) / 2,
-        num=ctr_points_number[0] + 2,
-    )
-    y_array = np.linspace(
-        -((axes_table[1] - axes_legs[1]) / 2),
-        (axes_table[1] - axes_legs[1]) / 2,
-        num=ctr_points_number[1] + 2,
-    )
-    k = 0
-    for i in range(len(x_array)):
-        table_surface_control_points[k] = [x_array[i], y_array[0]]
-        k += 1
-        table_surface_control_points[k] = [x_array[i], y_array[-1]]
-        k += 1
-    for j in range(1, len(y_array) - 1):
-        table_surface_control_points[k] = [x_array[0], y_array[j]]
-        k += 1
-        table_surface_control_points[k] = [x_array[-1], y_array[j]]
-        k += 1
-    # table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
     table_surface_positions = np.array([[0.0, 0.0]])
-    table_surface_shape = Cuboid(
-        axes_length=axes_table,
-        center_position=table_reference_start.transform_position_from_relative(
+    table_surface_pose = ObjectPose(
+        position=table_reference_start.transform_position_from_relative(
             np.copy(table_surface_positions[0])
         ),
-        margin_absolut=margins,
         orientation=table_reference_start.orientation,
     )
+    table_surface_shape, table_surface_control_points = create_cubic_surface(
+        axes=axes_table,
+        ctr_points_number=ctr_points_number,
+        margin_to_surface=0.0,
+        surface_pose=table_surface_pose,
+        margin_absolut=margins,
+    )
+    # n_points = np.sum(ctr_points_number) * 2 + 4
+    # table_surface_control_points = np.zeros((n_points, 2))
+    # x_array = np.linspace(
+    #     -((axes_table[0] - axes_legs[0]) / 2),
+    #     (axes_table[0] - axes_legs[0]) / 2,
+    #     num=ctr_points_number[0] + 2,
+    # )
+    # y_array = np.linspace(
+    #     -((axes_table[1] - axes_legs[1]) / 2),
+    #     (axes_table[1] - axes_legs[1]) / 2,
+    #     num=ctr_points_number[1] + 2,
+    # )
+    # k = 0
+    # for i in range(len(x_array)):
+    #     table_surface_control_points[k] = [x_array[i], y_array[0]]
+    #     k += 1
+    #     table_surface_control_points[k] = [x_array[i], y_array[-1]]
+    #     k += 1
+    # for j in range(1, len(y_array) - 1):
+    #     table_surface_control_points[k] = [x_array[0], y_array[j]]
+    #     k += 1
+    #     table_surface_control_points[k] = [x_array[-1], y_array[j]]
+    #     k += 1
+    # # table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
+    # table_surface_shape = Cuboid(
+    #     axes_length=axes_table,
+    #     center_position=table_reference_start.transform_position_from_relative(
+    #         np.copy(table_surface_positions[0])
+    #     ),
+    #     margin_absolut=margins,
+    #     orientation=table_reference_start.orientation,
+    # )
     table_surface_agent = Furniture3D(
         shape_list=[table_surface_shape],
         shape_positions=table_surface_positions,
@@ -492,3 +509,40 @@ def create_standard_table_3D_surface_legs(
         static=static,
     )
     return table_legs_agent, table_surface_agent
+
+
+def create_cubic_surface(
+    axes, ctr_points_number, margin_to_surface, surface_pose, margin_absolut
+):
+    n_points = np.sum(ctr_points_number) * 2
+    surface_control_points = np.zeros((n_points, 2))
+    x_array = np.linspace(
+        -((axes[0] / 2 - margin_to_surface)),
+        (axes[0] / 2 - margin_to_surface),
+        num=ctr_points_number[0],
+    )
+    y_array = np.linspace(
+        -((axes[1] / 2 - margin_to_surface)),
+        (axes[1] / 2 - margin_to_surface),
+        num=ctr_points_number[1],
+    )
+    k = 0
+    for i in range(len(x_array)):
+        surface_control_points[k] = [x_array[i], y_array[0]]
+        k += 1
+        surface_control_points[k] = [x_array[i], y_array[-1]]
+        k += 1
+    for j in range(1, len(y_array) - 1):
+        surface_control_points[k] = [x_array[0], y_array[j]]
+        k += 1
+        surface_control_points[k] = [x_array[-1], y_array[j]]
+        k += 1
+
+    surface_shape = Cuboid(
+        axes_length=axes,
+        center_position=surface_pose.position,
+        margin_absolut=margin_absolut,
+        orientation=surface_pose.orientation,
+    )
+
+    return surface_shape, surface_control_points

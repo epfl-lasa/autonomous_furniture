@@ -2,7 +2,6 @@ import numpy as np
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
-
 def apply_linear_and_angular_acceleration_constraints(
     linear_velocity_old,
     angular_velocity_old,
@@ -96,7 +95,7 @@ def compute_ctr_point_vel_from_obs_avoidance(
         )
 
     return attenuate_DSM_velocities(number_ctrpt, velocities)
-
+    # return velocities
 
 def compute_drag_angle(initial_velocity, actual_orientation):
     # Direction (angle), of the linear_velocity in the global frame
@@ -511,3 +510,32 @@ def attenuate_DSM_velocities(ctr_pt_number, velocities):
         velocities[:, i] = velocities[:, i] / LA.norm(velocities[:, i]) * avg_norm
 
     return velocities
+
+def calculate_agent_virtual_drag(agent_sections_list):
+    #collect all shapes in all layers of the agent
+    shapes = []
+    shape_positions = []
+    for i in range(len(agent_sections_list)):
+        for j in range(len(agent_sections_list[i]._shape_list)):
+            shapes.append(agent_sections_list[i]._shape_list[j])
+            shape_positions.append(agent_sections_list[i]._shape_positions[j])
+
+    if len(shapes) == 1:
+        virtual_drag = max(shapes[0].axes_length) / min(
+            shapes[0].axes_length
+        )
+    else:
+        maxima_x = np.zeros((2, len(shapes)))
+        maxima_y = np.zeros((2, len(shapes)))
+        for i in range(len(shapes)):
+            maxima_x[0, i] = shape_positions[i][0] + shapes[i].semiaxes[0]
+            maxima_x[1, i] = shape_positions[i][0] - shapes[i].semiaxes[0]
+            maxima_y[0, i] = shape_positions[i][1] + shapes[i].semiaxes[1]
+            maxima_y[1, i] = shape_positions[i][1] - shapes[i].semiaxes[1]
+
+        x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
+        y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
+        agent_stretches = np.array([x_stretch, y_stretch])
+        virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
+
+    return virtual_drag

@@ -38,7 +38,7 @@ def matplotlib_simulation(args=[]):
         layer_list=create_layer_list(),
         x_lim=[-2, 3],
         y_lim=[-2, 3],
-        version="v1",
+        version="v2",
         mini_drag="nodrag",
         safety_module=True,
         emergency_stop=True,
@@ -60,7 +60,7 @@ def rviz_simulation():
 
     my_animation.setup(
         layer_list=create_layer_list(),
-        version="v1",
+        version="v2",
         mini_drag="nodrag",
         safety_module=True,
         emergency_stop=True,
@@ -138,20 +138,20 @@ def create_layer_list():
     # table_surface_agent.priority = 1e6
     # table_legs_agent.priority = 1e6
 
-    # layer_lower = [table_legs_agent, chair_static_surface_agent, chair_moving_surface_agent]
-    # layer_upper = [table_surface_agent, chair_static_back_agent, chair_moving_back_agent]
-    # return [layer_lower, layer_upper]
+    layer_lower = [table_legs_agent, chair_static_surface_agent, chair_moving_surface_agent]
+    layer_upper = [table_surface_agent, chair_static_back_agent, chair_moving_back_agent]
+    return [layer_lower, layer_upper]
 
-    chair_moving_surface_agent._obstacle_environment.append(
-        table_surface_agent._shape_list[0]
-    )
+    # chair_moving_surface_agent._obstacle_environment.append(
+    #     table_surface_agent._shape_list[0]
+    # )
 
-    layer = [
-        table_surface_agent,
-        chair_static_surface_agent,
-        chair_moving_surface_agent,
-    ]
-    return [layer]
+    # layer = [
+    #     table_surface_agent,
+    #     chair_static_surface_agent,
+    #     chair_moving_surface_agent,
+    # ]
+    # return [layer]
 
 
 if __name__ == "__main__":
@@ -167,4 +167,4 @@ if __name__ == "__main__":
     plt.ion()
 
     matplotlib_simulation(args)
-    rviz_simulation()
+    # rviz_simulation()

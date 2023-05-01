@@ -70,9 +70,9 @@ class Furniture3D:
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
-        gamma_critic_max: float = 1.3,
+        gamma_critic_max: float = 1.1,
         gamma_critic_min: float = 1.1,
-        gamma_stop: float = 1.1,
+        gamma_stop: float = 1.05,
         safety_damping: float = 1.0,
         cutoff_gamma_weights: float = 10.0,
         cutoff_gamma_obs: float = 4.0,
@@ -87,7 +87,7 @@ class Furniture3D:
         self.maximum_angular_velocity = maximum_angular_velocity
         self.maximum_linear_acceleration = maximum_linear_acceleration
         self.maximum_angular_acceleration = maximum_angular_acceleration
-
+        
         self.symmetry = symmetry
 
         self.safety_damping = safety_damping

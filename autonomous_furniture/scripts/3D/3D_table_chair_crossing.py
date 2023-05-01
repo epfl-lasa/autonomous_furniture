@@ -88,10 +88,6 @@ def threeD_test(args=[]):
     )
 
     my_animation.setup(
-        obstacle_environment_list=[
-            obstacle_environment_lower,
-            obstacle_environment_upper,
-        ],
         layer_list=[layer_lower, layer_upper],
         x_lim=[-2, 6],
         y_lim=[-1, 5],
