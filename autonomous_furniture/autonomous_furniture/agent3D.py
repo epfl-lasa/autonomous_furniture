@@ -74,8 +74,8 @@ class Furniture3D:
         gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.05,
         safety_damping: float = 1.0,
-        cutoff_gamma_weights: float = 10.0,
-        cutoff_gamma_obs: float = 4.0,
+        cutoff_gamma_weights: float = 1.0,
+        cutoff_gamma_obs: float = 1.0,
         maximum_linear_velocity: float = 0.4,  # m/s
         maximum_angular_velocity: float = 1.57,  # rad/s
         maximum_linear_acceleration: float = 4.0,  # m/s^2
@@ -100,23 +100,23 @@ class Furniture3D:
         for i in range(len(shape_list)):
             self._shape_list[i].reactivity = self.priority
 
-        if len(shape_list) == 1:
-            self.virtual_drag = max(self._shape_list[0].axes_length) / min(
-                self._shape_list[0].axes_length
-            )
-        else:
-            maxima_x = np.zeros((2, len(shape_list)))
-            maxima_y = np.zeros((2, len(shape_list)))
-            for i in range(len(shape_list)):
-                maxima_x[0, i] = shape_positions[i][0] + shape_list[i].semiaxes[0]
-                maxima_x[1, i] = shape_positions[i][0] - shape_list[i].semiaxes[0]
-                maxima_y[0, i] = shape_positions[i][1] + shape_list[i].semiaxes[1]
-                maxima_y[1, i] = shape_positions[i][1] - shape_list[i].semiaxes[1]
+        # if len(shape_list) == 1:
+        #     self.virtual_drag = max(self._shape_list[0].axes_length) / min(
+        #         self._shape_list[0].axes_length
+        #     )
+        # else:
+        #     maxima_x = np.zeros((2, len(shape_list)))
+        #     maxima_y = np.zeros((2, len(shape_list)))
+        #     for i in range(len(shape_list)):
+        #         maxima_x[0, i] = shape_positions[i][0] + shape_list[i].semiaxes[0]
+        #         maxima_x[1, i] = shape_positions[i][0] - shape_list[i].semiaxes[0]
+        #         maxima_y[0, i] = shape_positions[i][1] + shape_list[i].semiaxes[1]
+        #         maxima_y[1, i] = shape_positions[i][1] - shape_list[i].semiaxes[1]
 
-            x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
-            y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
-            agent_stretches = np.array([x_stretch, y_stretch])
-            self.virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
+        #     x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
+        #     y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
+        #     agent_stretches = np.array([x_stretch, y_stretch])
+        #     self.virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
 
         self._obstacle_environment = obstacle_environment
         self._control_points = control_points

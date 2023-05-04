@@ -334,7 +334,7 @@ def create_3D_chair(
     )
     chair_surface_positions = np.array([[0.0, 0.0]])
     chair_surface_shape = Cuboid(
-        axes_length=[0.4, 0.5],
+        axes_length=[0.5, 0.4],
         center_position=chair_reference_start.transform_position_from_relative(
             np.copy(chair_surface_positions[0])
         ),
@@ -356,10 +356,10 @@ def create_3D_chair(
         static=static,
     )
     # upper layer
-    chair_back_control_points = np.array([[-0.2, 0.125], [-0.2, -0.125]])
-    chair_back_positions = np.array([[-0.2, 0.0]])
+    chair_back_control_points = np.array([[-0.125, 0.2], [0.125, 0.2]])
+    chair_back_positions = np.array([[0.0, 0.2]])
     chair_back_shape = Cuboid(
-        axes_length=[0.05, 0.5],
+        axes_length=[0.5, 0.05],
         center_position=chair_reference_start.transform_position_from_relative(
             np.copy(chair_back_positions[0])
         ),
@@ -381,7 +381,7 @@ def create_3D_chair(
         static=static,
     )
 
-    return chair_surface_agent, chair_back_agent
+    return assign_agent_virtual_drag([chair_surface_agent, chair_back_agent])
 
 
 def create_3D_table_surface_legs(
@@ -389,7 +389,8 @@ def create_3D_table_surface_legs(
     obstacle_environment_upper,
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
-    margins,
+    margin_shape,
+    margin_control_points,
     axes_table=[1.6, 0.7],
     axes_legs=[0.2, 0.2],
     ctr_points_number=[3, 1],
@@ -428,7 +429,7 @@ def create_3D_table_surface_legs(
             center_position=table_reference_start.transform_position_from_relative(
                 np.copy(table_legs_positions[i])
             ),
-            margin_absolut=margins,
+            margin_absolut=margin_shape,
             orientation=table_reference_start.orientation,
             tail_effect=False,
         )
@@ -458,9 +459,9 @@ def create_3D_table_surface_legs(
     table_surface_shape, table_surface_control_points = create_cubic_surface(
         axes=axes_table,
         ctr_points_number=ctr_points_number,
-        margin_to_surface=0.0,
+        margin_to_surface=margin_control_points,
         surface_pose=table_surface_pose,
-        margin_absolut=margins,
+        margin_absolut=margin_shape,
     )
     # n_points = np.sum(ctr_points_number) * 2 + 4
     # table_surface_control_points = np.zeros((n_points, 2))
@@ -508,7 +509,7 @@ def create_3D_table_surface_legs(
         object_type=ObjectType.TABLE,
         static=static,
     )
-    return table_legs_agent, table_surface_agent
+    return assign_agent_virtual_drag([table_legs_agent, table_surface_agent])
 
 
 def create_cubic_surface(
@@ -546,3 +547,35 @@ def create_cubic_surface(
     )
 
     return surface_shape, surface_control_points
+
+def assign_agent_virtual_drag(agent_sections_list):
+    #collect all shapes in all layers of the agent
+    shapes = []
+    shape_positions = []
+    for i in range(len(agent_sections_list)):
+        for j in range(len(agent_sections_list[i]._shape_list)):
+            shapes.append(agent_sections_list[i]._shape_list[j])
+            shape_positions.append(agent_sections_list[i]._shape_positions[j])
+
+    if len(shapes) == 1:
+        virtual_drag = max(shapes[0].axes_length) / min(
+            shapes[0].axes_length
+        )
+    else:
+        maxima_x = np.zeros((2, len(shapes)))
+        maxima_y = np.zeros((2, len(shapes)))
+        for i in range(len(shapes)):
+            maxima_x[0, i] = shape_positions[i][0] + shapes[i].semiaxes[0]
+            maxima_x[1, i] = shape_positions[i][0] - shapes[i].semiaxes[0]
+            maxima_y[0, i] = shape_positions[i][1] + shapes[i].semiaxes[1]
+            maxima_y[1, i] = shape_positions[i][1] - shapes[i].semiaxes[1]
+
+        x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
+        y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
+        agent_stretches = np.array([x_stretch, y_stretch])
+        virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
+
+    for i in range(len(agent_sections_list)):
+        agent_sections_list[i].virtual_drag = virtual_drag  
+    
+    return agent_sections_list
