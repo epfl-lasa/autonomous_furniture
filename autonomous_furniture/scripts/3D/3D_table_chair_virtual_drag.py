@@ -33,20 +33,20 @@ def threeD_test(args=[]):
     table_reference_goal = ObjectPose(position=np.array([4.0, 4.0]), orientation=np.pi/2)
     table_reference_start = ObjectPose(position=np.array([-1.0, 4.0]), orientation=np.pi/2)
 
-    [table_legs_agent, table_surface_agent] = create_3D_table_surface_legs(
-        obstacle_environment_lower,
-        obstacle_environment_upper,
-        table_reference_start,
-        table_reference_goal,
-        margin_shape=0.1,
-        margin_control_points=0.1,
-        axes_table=[1.6, 0.7],
-        axes_legs=[0.1, 0.1],
-        ctr_points_number=[6,4]
-    )
+    # [table_legs_agent, table_surface_agent] = create_3D_table_surface_legs(
+    #     obstacle_environment_lower,
+    #     obstacle_environment_upper,
+    #     table_reference_start,
+    #     table_reference_goal,
+    #     margin_shape=0.1,
+    #     margin_control_points=0.1,
+    #     axes_table=[1.6, 0.7],
+    #     axes_legs=[0.1, 0.1],
+    #     ctr_points_number=[6,4]
+    # )
     
     chair_down_reference_start = ObjectPose(
-        position=np.array([-1.0, 0.0]), orientation=np.pi/2
+        position=np.array([-1.0, 0.0]), orientation=0.0
     )
     chair_down_reference_goal = ObjectPose(
         position=np.array([4.0, 0.0]), orientation=np.pi/2
@@ -56,18 +56,25 @@ def threeD_test(args=[]):
         chair_down_surface_agent,
         chair_down_back_agent,
      ] = create_3D_chair(
-        obstacle_environment_lower,
-        obstacle_environment_upper,
-        chair_down_reference_start,
-        chair_down_reference_goal,
-        margins=0.1,
+        obstacle_environment_surface=obstacle_environment_lower,
+        obstacle_environment_back=obstacle_environment_upper,
+        start_pose=chair_down_reference_start,
+        goal_pose=chair_down_reference_goal,
+        margin_absolut=0.1,
+        margin_ctr_pt=0.0,
+        back_axis=[0.37, 0.035],
+        back_ctr_pt_number=[4, 2],
+        back_positions=np.array([[0.0, 0.2]]),
+        surface_axis=[0.4, 0.4],
+        surface_ctr_pt_number=[3,3],
+        surface_positions=np.array([[0.0, 0.0]]),
     )
 
     chair_up_reference_start = ObjectPose(
         position=np.array([4, 6]), orientation=0.0
     )
     chair_up_reference_goal = ObjectPose(
-        position=np.array([4, 3.7]), orientation=0.0
+        position=np.array([4, 3.7]), orientation=np.pi/2
     )
 
     # chair_up_surface_agent, chair_up_back_agent = create_standard_3D_chair_surface_back(
@@ -96,7 +103,7 @@ def threeD_test(args=[]):
         x_lim=[-2, 6],
         y_lim=[-1, 5],
         version="v2",
-        mini_drag="dragdist",
+        mini_drag="nodrag",
         safety_module=True,
         emergency_stop=True,
         figsize=(10, 7),

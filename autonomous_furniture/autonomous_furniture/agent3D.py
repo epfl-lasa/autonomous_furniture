@@ -300,7 +300,7 @@ class Furniture3D:
         self.angular_velocity_old = self.angular_velocity
 
         global_control_points = self.get_global_control_points()
-
+        goal_control_points = self.get_goal_control_points()
         environment_without_me = self.get_obstacles_without_me()
 
         # if not len(environment_without_me):
@@ -350,9 +350,10 @@ class Furniture3D:
             #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
             # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
             #           ii], head_width=0.1, head_length=0.2, color='m')
+            
             velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
-                goal_pos_ctr_pts=self.get_goal_control_points(),
+                goal_pos_ctr_pts=goal_control_points,
                 actual_pos_ctr_pts=self.get_global_control_points(),
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
@@ -369,7 +370,7 @@ class Furniture3D:
 
             velocities = ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel,
-                linear_velocity,
+                initial_velocity,
                 number_ctrpt=self.ctr_pt_number,
                 local_control_points=self._control_points,
                 global_control_points=global_control_points,
@@ -382,7 +383,7 @@ class Furniture3D:
         elif version == "v1":
             velocities = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
-                goal_pos_ctr_pts=self.get_goal_control_points(),
+                goal_pos_ctr_pts=goal_control_points,
                 actual_pos_ctr_pts=global_control_points,
                 environment_without_me=environment_without_me,
                 priority=self.priority,

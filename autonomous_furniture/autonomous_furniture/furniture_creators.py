@@ -297,13 +297,18 @@ def set_goals_to_arrange_on_the_left(
 
 
 def create_3D_chair(
-    obstacle_environment_lower,
-    obstacle_environment_upper,
+    obstacle_environment_surface,
+    obstacle_environment_back,
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
-    margins,
-    back_axis=None,
-    surface_axis=None,
+    margin_absolut,
+    margin_ctr_pt,
+    back_axis,
+    back_ctr_pt_number,
+    back_positions,
+    surface_axis,
+    surface_ctr_pt_number,
+    surface_positions,
     leg_positions=None,
     leg_axis=None,
     static=False,
@@ -319,32 +324,22 @@ def create_3D_chair(
         chair_reference_goal = ObjectPose(
             position=start_pose.position, orientation=start_pose.orientation
         )
-    # lower layer
-    chair_surface_control_points = np.array(
-        [
-            [0.15, 0.15],
-            [-0.15, 0.15],
-            [0.15, -0.15],
-            [-0.15, -0.15],
-            [0.0, 0.15],
-            [-0.15, 0.0],
-            [0.15, 0.0],
-            [-0.0, -0.15],
-        ]
+    # lower layer  
+    chair_surface_positions = surface_positions
+
+    chair_surface_shape, chair_surface_control_points = create_cubic_surface(
+        axes=surface_axis,
+        ctr_points_number=surface_ctr_pt_number,
+        margin_to_surface=margin_ctr_pt,
+        reference_start=chair_reference_start,
+        surface_position=surface_positions[0],
+        margin_absolut=margin_absolut,
     )
-    chair_surface_positions = np.array([[0.0, 0.0]])
-    chair_surface_shape = Cuboid(
-        axes_length=[0.5, 0.4],
-        center_position=chair_reference_start.transform_position_from_relative(
-            np.copy(chair_surface_positions[0])
-        ),
-        margin_absolut=margins,
-        orientation=chair_reference_start.orientation,
-    )
+
     chair_surface_agent = Furniture3D(
         shape_list=[chair_surface_shape],
         shape_positions=chair_surface_positions,
-        obstacle_environment=obstacle_environment_lower,
+        obstacle_environment=obstacle_environment_surface,
         control_points=chair_surface_control_points,
         starting_pose=ObjectPose(
             position=chair_reference_start.position,
@@ -356,20 +351,20 @@ def create_3D_chair(
         static=static,
     )
     # upper layer
-    chair_back_control_points = np.array([[-0.125, 0.2], [0.125, 0.2]])
-    chair_back_positions = np.array([[0.0, 0.2]])
-    chair_back_shape = Cuboid(
-        axes_length=[0.5, 0.05],
-        center_position=chair_reference_start.transform_position_from_relative(
-            np.copy(chair_back_positions[0])
-        ),
-        margin_absolut=margins,
-        orientation=chair_reference_start.orientation,
+    chair_back_positions = back_positions
+    chair_back_shape, chair_back_control_points = create_cubic_surface(
+        axes=back_axis,
+        ctr_points_number=back_ctr_pt_number,
+        margin_to_surface=margin_ctr_pt,
+        reference_start=chair_reference_start,
+        surface_position=back_positions[0],
+        margin_absolut=margin_absolut,
     )
+
     chair_back_agent = Furniture3D(
         shape_list=[chair_back_shape],
         shape_positions=chair_back_positions,
-        obstacle_environment=obstacle_environment_upper,
+        obstacle_environment=obstacle_environment_back,
         control_points=chair_back_control_points,
         starting_pose=ObjectPose(
             position=chair_reference_start.position,
@@ -513,9 +508,9 @@ def create_3D_table_surface_legs(
 
 
 def create_cubic_surface(
-    axes, ctr_points_number, margin_to_surface, surface_pose, margin_absolut
+    axes, ctr_points_number, margin_to_surface, reference_start, surface_position, margin_absolut
 ):
-    n_points = np.sum(ctr_points_number) * 2
+    n_points = np.sum(ctr_points_number) * 2 - 4
     surface_control_points = np.zeros((n_points, 2))
     x_array = np.linspace(
         -((axes[0] / 2 - margin_to_surface)),
@@ -538,13 +533,18 @@ def create_cubic_surface(
         k += 1
         surface_control_points[k] = [x_array[-1], y_array[j]]
         k += 1
+    
+    for t in range(len(surface_control_points)):
+        surface_control_points[t] += surface_position
 
     surface_shape = Cuboid(
         axes_length=axes,
-        center_position=surface_pose.position,
+        center_position=reference_start.transform_position_from_relative(surface_position),
         margin_absolut=margin_absolut,
-        orientation=surface_pose.orientation,
+        orientation=reference_start.orientation,
     )
+    
+    
 
     return surface_shape, surface_control_points
 
