@@ -30,23 +30,23 @@ def threeD_test(args=[]):
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_reference_goal = ObjectPose(position=np.array([4.0, 4.0]), orientation=np.pi/2)
-    table_reference_start = ObjectPose(position=np.array([-1.0, 4.0]), orientation=np.pi/2)
+    table_reference_goal = ObjectPose(position=np.array([4.0, 2.0]), orientation=0.0)
+    table_reference_start = ObjectPose(position=np.array([2.5, 2.0]), orientation=np.pi/2)
 
-    # [table_legs_agent, table_surface_agent] = create_3D_table_surface_legs(
-    #     obstacle_environment_lower,
-    #     obstacle_environment_upper,
-    #     table_reference_start,
-    #     table_reference_goal,
-    #     margin_shape=0.1,
-    #     margin_control_points=0.1,
-    #     axes_table=[1.6, 0.7],
-    #     axes_legs=[0.1, 0.1],
-    #     ctr_points_number=[6,4]
-    # )
+    [table_legs_agent, table_surface_agent] = create_3D_table_surface_legs(
+        obstacle_environment_lower,
+        obstacle_environment_upper,
+        table_reference_start,
+        table_reference_goal,
+        margin_shape=0.1,
+        margin_control_points=0.0,
+        axes_table=[1.6, 0.7],
+        axes_legs=[0.1, 0.1],
+        ctr_points_number=[6,4]
+    )
     
     chair_down_reference_start = ObjectPose(
-        position=np.array([-1.0, 0.0]), orientation=0.0
+        position=np.array([2.5, 0.0]), orientation=0.0
     )
     chair_down_reference_goal = ObjectPose(
         position=np.array([4.0, 0.0]), orientation=np.pi/2
@@ -87,9 +87,21 @@ def threeD_test(args=[]):
 
     # chair_surface_agent.priority = 1e3
     # chair_back_agent.priority = 1e3
+    
+    table_legs_agent.cutoff_gamma_obs=1.0
+    chair_down_surface_agent.cutoff_gamma_obs=1.0
+    table_surface_agent.cutoff_gamma_obs=1.0
+    chair_down_back_agent.cutoff_gamma_obs=1.0
 
-    layer_lower = [chair_down_surface_agent]
-    layer_upper = [chair_down_back_agent]
+    layer_lower = [table_legs_agent, chair_down_surface_agent]
+    layer_upper = [table_surface_agent, chair_down_back_agent]
+
+    # layer_lower = [chair_down_surface_agent]
+    # layer_upper = [chair_down_back_agent]
+
+    # layer_lower = [table_legs_agent]
+    # layer_upper = [table_surface_agent]
+
 
     my_animation = DynamicalSystemAnimation3D(
         it_max=1000,
@@ -100,8 +112,8 @@ def threeD_test(args=[]):
 
     my_animation.setup(
         layer_list=[layer_lower, layer_upper],
-        x_lim=[-2, 6],
-        y_lim=[-1, 5],
+        x_lim=[1.5, 5.0],
+        y_lim=[-0.5, 3],
         version="v2",
         mini_drag="nodrag",
         safety_module=True,

@@ -15,6 +15,7 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
 from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
+from autonomous_furniture.furniture_creators import assign_agent_virtual_drag
 
 parser = argparse.ArgumentParser()
 
@@ -92,9 +93,15 @@ def test(visualize=False):
             goal_pose=goal1,
             priority_value=1,
             name="fur",
+            cutoff_gamma_obs=10.0,
+            cutoff_gamma_weights=10.0
         ),
     ]
-
+    
+    for i in range(len(my_furniture)):
+        agent = assign_agent_virtual_drag([my_furniture[i]])
+        my_furniture[i] = agent[0]
+        
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
     my_animation = DynamicalSystemAnimation3D(
         it_max=200,

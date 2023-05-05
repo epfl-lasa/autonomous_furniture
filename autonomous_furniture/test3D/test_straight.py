@@ -17,7 +17,7 @@ from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
 from autonomous_furniture.furniture_creators import (
-    create_standard_table_3D_surface_legs,
+    create_3D_table_surface_legs
 )
 
 parser = argparse.ArgumentParser()
@@ -38,14 +38,20 @@ def test_straight(visualize=False):
     table_reference_start = ObjectPose(position=np.array([-1, 1]), orientation=0)
     table_reference_goal = ObjectPose(position=np.array([1, 1]), orientation=0)
 
-    table_legs_agent, table_surface_agent = create_standard_table_3D_surface_legs(
-        obstacle_environment_lower,
-        obstacle_environment_upper,
-        table_reference_start,
-        table_reference_goal,
-        margins=0.1,
+    table_legs_agent, table_surface_agent = create_3D_table_surface_legs(
+        obstacle_environment_legs=obstacle_environment_lower,
+        obstacle_environment_surface=obstacle_environment_upper,
+        start_pose=table_reference_start,
+        goal_pose=table_reference_goal,
+        margin_shape=0.1,
+        margin_control_points=0.0,
+        axes_table=[1.6, 0.7],
+        axes_legs=[0.2, 0.2],
+        ctr_points_number=[3, 2],
         static=False,
     )
+    
+    table_legs_agent.cutoff_gamma_obs = 3.0
 
     obstacle_shape = CuboidXd(
         center_position=table_reference_goal.position,

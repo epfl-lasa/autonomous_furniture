@@ -152,25 +152,30 @@ def ctr_point_vel_from_agent_kinematics(
     environment_without_me,
     priority,
     DSM,
+    reference_position,
+    cutoff_gamma_obs,
 ):
     ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
     velocities = np.zeros((2, number_ctrpt))
+            
+    for i in range(number_ctrpt):
+        control_point_global_relative = global_control_points[:,i]-reference_position
+        velocity_3D = np.append(initial_velocity,0.0)+np.cross(np.array([0.0, 0.0, initial_angular_vel]), np.append(control_point_global_relative, 0.0))
+        velocities[:, i] = velocity_3D[0:2]
 
-    for ii in range(number_ctrpt):
-        # doing the cross product formula by "hand" than using the funct
-        tang_vel = [
-            -initial_angular_vel * local_control_points[ii, 1],
-            initial_angular_vel * local_control_points[ii, 0],
-        ]
-        tang_vel = get_veloctity_in_global_frame(actual_orientation, tang_vel)
-        velocities[:, ii] = initial_velocity + tang_vel
-
-        ctp = global_control_points[:, ii]
+        ctp = global_control_points[:, i]
         if DSM:
-            velocities[:, ii] = obs_avoidance_interpolation_moving(
+            environment_without_me_adapted = []
+            for k in range(len(environment_without_me)):
+                obs = environment_without_me[k]
+                ctr_pt_i = np.array([global_control_points[0][i], global_control_points[1][i]])
+                gamma = obs.get_gamma(ctr_pt_i, in_global_frame=True)
+                if gamma < cutoff_gamma_obs:
+                    environment_without_me_adapted.append(obs)
+            velocities[:, i] = obs_avoidance_interpolation_moving(
                 position=ctp,
-                initial_velocity=velocities[:, ii],
-                obs=environment_without_me,
+                initial_velocity=velocities[:, i],
+                obs=environment_without_me_adapted,
                 self_priority=priority,
             )
 
@@ -180,19 +185,51 @@ def ctr_point_vel_from_agent_kinematics(
 def agent_kinematics_from_ctr_point_vel(
     velocities, weights, global_control_points, ctrpt_number, global_reference_position
 ):
-    ### CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
-    # linear velocity
-    linear_velocity = np.sum(velocities * np.tile(weights, (2, 1)), axis=1)
+    # CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
+    # # linear velocity
+    # linear_velocity = np.sum(velocities * np.tile(weights, (2, 1)), axis=1)
 
-    # angular velocity
-    angular_vel = np.zeros(ctrpt_number)
-    for ii in range(ctrpt_number):
-        angular_vel[ii] = weights[ii] * np.cross(
-            global_control_points[:, ii] - global_reference_position,
-            velocities[:, ii] - linear_velocity,
-        )
-    angular_velocity = np.sum(angular_vel)
+    # # angular velocity
+    # #normalize control points to their mean value to avoid doing leverage when shape is displaced from reference point
+    # # cotrol_points_relative_global = []
+    # # for i in range(ctrpt_number):
+    # #     cotrol_points_relative_global.append(global_control_points[:, i]-global_reference_position)
+    # # mean_control_point = np.mean(cotrol_points_relative_global, axis=0)
+    
+    # # cotrol_points_relative_normal = []
+    # # for i in range(ctrpt_number):
+    # #     cotrol_points_relative_normal.append(cotrol_points_relative_global[i]-mean_control_point)
+    
+    # angular_vel = np.zeros(ctrpt_number)
+    # for ii in range(ctrpt_number):
+    #     angular_vel[ii] = weights[ii] * np.cross(
+    #         global_control_points[:,ii]-global_reference_position,
+    #         velocities[:, ii],
+    #     )
+    # angular_velocity = np.sum(angular_vel)
+    
+    cotrol_points_relative_global = []
+    for i in range(ctrpt_number):
+        cotrol_points_relative_global.append(global_control_points[:, i]-global_reference_position)
+    
+    N = 2*ctrpt_number
+    A = np.zeros((N, 3))
+    b = np.zeros((N))
+    w_diag = np.zeros((N))
+    
+    for i in range(ctrpt_number):
+        A[2*i:2*i+2, 0:2] = np.eye(2)
+        A[2*i:2*i+2, 2] = np.array([-cotrol_points_relative_global[i][1], cotrol_points_relative_global[i][0]])
+        b[2*i:2*i+2] = velocities[:, i]
+        w_diag[2*i:2*i+2] = np.array([weights[i], weights[i]])
+    W = np.diag(w_diag)
+    Aw = np.dot(W,A)
+    bw = np.dot(b,W)
+    x = np.linalg.lstsq(Aw, bw, rcond=None)
 
+    linear_velocity = x[0][0:2]
+    angular_velocity = x[0][2]
+    
     return linear_velocity, angular_velocity
 
 
@@ -442,25 +479,28 @@ def update_multi_layer_simulation(
         # in case the agent has an emergency stop triggered in one of the layers set kinematics to zero
         stop_triggerred = False
         for k in range(number_layer):
-            if layer_list[k][jj].stop:
-                linear_velocity = 0.0
-                angular_velocity = 0.0
-                for l in range(number_layer):
-                    layer_list[l][jj].linear_velocity = linear_velocity
-                    layer_list[l][jj].angular_velocity = angular_velocity
-                stop_triggerred = True
-                break
+            if not layer_list[k][jj] == None:
+                if layer_list[k][jj].stop:
+                    linear_velocity = 0.0
+                    angular_velocity = 0.0
+                    for l in range(number_layer):
+                        if not layer_list[l][jj] == None:
+                            layer_list[l][jj].linear_velocity = linear_velocity
+                            layer_list[l][jj].angular_velocity = angular_velocity
+                    stop_triggerred = True
+                    break
         if not stop_triggerred:
             # collect the velocities of each layer for each agent
-            agent_linear_velocities = np.zeros((2, number_layer))
-            agent_angular_velocities = np.zeros((number_layer))
+            agent_linear_velocities = []
+            agent_angular_velocities = []
             for k in range(number_layer):
-                agent_linear_velocities[:, k] = np.copy(
-                    layer_list[k][jj].linear_velocity
-                )
-                agent_angular_velocities[k] = np.copy(
-                    layer_list[k][jj].angular_velocity
-                )
+                if not layer_list[k][jj] == None:
+                    agent_linear_velocities.append(np.copy(
+                        layer_list[k][jj].linear_velocity
+                    ))
+                    agent_angular_velocities.append(np.copy(
+                        layer_list[k][jj].angular_velocity
+                    ))
             # weight each layer for this specific agent
             weights = compute_layer_weights(
                 jj,
@@ -468,23 +508,26 @@ def update_multi_layer_simulation(
                 layer_list,
             )  ####     NEEDS TO BE CHANGED!!!!  ######
             # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
-            linear_velocity = np.sum(
-                agent_linear_velocities * np.tile(weights, (2, 1)), axis=1
-            )
+            linear_velocity = np.zeros((2))
+            for i in range(len(agent_linear_velocities)):
+                linear_velocity[0] += agent_linear_velocities[i][0]*weights[i]
+                linear_velocity[1] += agent_linear_velocities[i][1]*weights[i]
+                
             angular_velocity = np.sum(
                 agent_angular_velocities * np.tile(weights, (1, 1))
             )
 
             # update each layers positions and orientations
             for k in range(number_layer):
-                layer_list[k][jj].linear_velocity = linear_velocity
-                layer_list[k][jj].angular_velocity = angular_velocity
-                layer_list[k][jj].apply_kinematic_constraints()
-                layer_list[k][jj].do_velocity_step(dt_simulation)
-                if not agent_pos_saver == None:
-                    agent_pos_saver[jj].append(
-                        layer_list[k][jj]._reference_pose.position
-                    )
+                if not layer_list[k][jj] == None:
+                    layer_list[k][jj].linear_velocity = linear_velocity
+                    layer_list[k][jj].angular_velocity = angular_velocity
+                    layer_list[k][jj].apply_kinematic_constraints()
+                    layer_list[k][jj].do_velocity_step(dt_simulation)
+                    if not agent_pos_saver == None:
+                        agent_pos_saver[jj].append(
+                            layer_list[k][jj]._reference_pose.position
+                        )
 
     if not agent_pos_saver == None:
         return layer_list, agent_pos_saver
@@ -493,11 +536,12 @@ def update_multi_layer_simulation(
 
 
 def compute_layer_weights(agent_number, number_layer, layer_list):
-    gamma_list = np.zeros(number_layer)
+    gamma_list = []
     for k in range(number_layer):
-        gamma_list[k] = layer_list[k][agent_number].min_gamma
+        if not layer_list[k][agent_number] == None:
+            gamma_list.append(layer_list[k][agent_number].min_gamma) 
     weights = get_weight_from_gamma(
-        gammas=gamma_list, cutoff_gamma=10, n_points=number_layer
+        gammas=np.array(gamma_list), cutoff_gamma=10, n_points=len(gamma_list)
     )
     weights = weights / np.sum(weights)
     return weights

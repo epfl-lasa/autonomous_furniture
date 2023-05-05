@@ -70,12 +70,12 @@ class Furniture3D:
         symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
-        gamma_critic_max: float = 1.1,
+        gamma_critic_max: float = 1.2,
         gamma_critic_min: float = 1.1,
         gamma_stop: float = 1.05,
         safety_damping: float = 1.0,
         cutoff_gamma_weights: float = 1.0,
-        cutoff_gamma_obs: float = 1.0,
+        cutoff_gamma_obs: float = 10.0,
         maximum_linear_velocity: float = 0.4,  # m/s
         maximum_angular_velocity: float = 1.57,  # rad/s
         maximum_linear_acceleration: float = 4.0,  # m/s^2
@@ -343,7 +343,7 @@ class Furniture3D:
                 )
             )
             # TODO Very clunky : Rather make a function out of it
-            K = 3  # K proportionnal parameter for the speed
+            K = 1  # K proportionnal parameter for the speed
             # Initial angular_velocity is computedenv
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
             # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
@@ -370,7 +370,7 @@ class Furniture3D:
 
             velocities = ctr_point_vel_from_agent_kinematics(
                 initial_angular_vel,
-                initial_velocity,
+                linear_velocity,
                 number_ctrpt=self.ctr_pt_number,
                 local_control_points=self._control_points,
                 global_control_points=global_control_points,
@@ -378,6 +378,8 @@ class Furniture3D:
                 environment_without_me=environment_without_me,
                 priority=self.priority,
                 DSM=True,
+                reference_position=self._reference_pose.position,
+                cutoff_gamma_obs=self.cutoff_gamma_obs,
             )
 
         elif version == "v1":
@@ -495,6 +497,8 @@ class Furniture3D:
                         environment_without_me=environment_without_me,
                         priority=self.priority,
                         DSM=False,
+                        reference_position=self._reference_pose.position,
+                        cutoff_gamma_obs=self.cutoff_gamma_obs,
                     )
                     velocities = evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,

@@ -380,8 +380,8 @@ def create_3D_chair(
 
 
 def create_3D_table_surface_legs(
-    obstacle_environment_lower,
-    obstacle_environment_upper,
+    obstacle_environment_legs,
+    obstacle_environment_surface,
     start_pose: ObjectPose,
     goal_pose: ObjectPose,
     margin_shape,
@@ -402,108 +402,78 @@ def create_3D_table_surface_legs(
         table_reference_goal = ObjectPose(
             position=start_pose.position, orientation=start_pose.orientation
         )
-
-    # lower layer
-    table_legs_control_points = np.array(
-        [
-            [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
-            [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
-            [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
+        
+    table_legs_agent = None
+    if not obstacle_environment_legs==None:
+        # legs
+        table_legs_control_points = np.array(
             [
-                -((axes_table[0] - axes_legs[0]) / 2),
-                -((axes_table[1] - axes_legs[1]) / 2),
-            ],
-        ]
-    )
-
-    table_legs_positions = np.copy(table_legs_control_points)
-    table_legs_shapes = []
-    for i in range(4):
-        table_leg_shape = Cuboid(
-            axes_length=axes_legs,
-            center_position=table_reference_start.transform_position_from_relative(
-                np.copy(table_legs_positions[i])
-            ),
-            margin_absolut=margin_shape,
-            orientation=table_reference_start.orientation,
-            tail_effect=False,
+                [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
+                [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
+                [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
+                [
+                    -((axes_table[0] - axes_legs[0]) / 2),
+                    -((axes_table[1] - axes_legs[1]) / 2),
+                ],
+            ]
         )
-        table_legs_shapes.append(table_leg_shape)
-    table_legs_agent = Furniture3D(
-        shape_list=table_legs_shapes,
-        shape_positions=table_legs_positions,
-        obstacle_environment=obstacle_environment_lower,
-        control_points=table_legs_control_points,
-        starting_pose=ObjectPose(
-            position=table_reference_start.position,
-            orientation=table_reference_start.orientation,
-        ),
-        goal_pose=table_reference_goal,
-        name="table",
-        object_type=ObjectType.TABLE,
-        static=static,
-    )
-    # upper layer
-    table_surface_positions = np.array([[0.0, 0.0]])
-    table_surface_pose = ObjectPose(
-        position=table_reference_start.transform_position_from_relative(
-            np.copy(table_surface_positions[0])
-        ),
-        orientation=table_reference_start.orientation,
-    )
-    table_surface_shape, table_surface_control_points = create_cubic_surface(
-        axes=axes_table,
-        ctr_points_number=ctr_points_number,
-        margin_to_surface=margin_control_points,
-        surface_pose=table_surface_pose,
-        margin_absolut=margin_shape,
-    )
-    # n_points = np.sum(ctr_points_number) * 2 + 4
-    # table_surface_control_points = np.zeros((n_points, 2))
-    # x_array = np.linspace(
-    #     -((axes_table[0] - axes_legs[0]) / 2),
-    #     (axes_table[0] - axes_legs[0]) / 2,
-    #     num=ctr_points_number[0] + 2,
-    # )
-    # y_array = np.linspace(
-    #     -((axes_table[1] - axes_legs[1]) / 2),
-    #     (axes_table[1] - axes_legs[1]) / 2,
-    #     num=ctr_points_number[1] + 2,
-    # )
-    # k = 0
-    # for i in range(len(x_array)):
-    #     table_surface_control_points[k] = [x_array[i], y_array[0]]
-    #     k += 1
-    #     table_surface_control_points[k] = [x_array[i], y_array[-1]]
-    #     k += 1
-    # for j in range(1, len(y_array) - 1):
-    #     table_surface_control_points[k] = [x_array[0], y_array[j]]
-    #     k += 1
-    #     table_surface_control_points[k] = [x_array[-1], y_array[j]]
-    #     k += 1
-    # # table_surface_control_points = np.array([[1, 1], [1, -1], [-1, 1], [-1, -1], [1,0], [-1,0], [0, 1], [0, -1]])
-    # table_surface_shape = Cuboid(
-    #     axes_length=axes_table,
-    #     center_position=table_reference_start.transform_position_from_relative(
-    #         np.copy(table_surface_positions[0])
-    #     ),
-    #     margin_absolut=margins,
-    #     orientation=table_reference_start.orientation,
-    # )
-    table_surface_agent = Furniture3D(
-        shape_list=[table_surface_shape],
-        shape_positions=table_surface_positions,
-        obstacle_environment=obstacle_environment_upper,
-        control_points=table_surface_control_points,
-        starting_pose=ObjectPose(
-            position=table_reference_start.position,
-            orientation=table_reference_start.orientation,
-        ),
-        goal_pose=table_reference_goal,
-        name="table",
-        object_type=ObjectType.TABLE,
-        static=static,
-    )
+
+        table_legs_positions = np.copy(table_legs_control_points)
+        table_legs_shapes = []
+        for i in range(4):
+            table_leg_shape = Cuboid(
+                axes_length=axes_legs,
+                center_position=table_reference_start.transform_position_from_relative(
+                    np.copy(table_legs_positions[i])
+                ),
+                margin_absolut=margin_shape,
+                orientation=table_reference_start.orientation,
+                tail_effect=False,
+            )
+            table_legs_shapes.append(table_leg_shape)
+        table_legs_agent = Furniture3D(
+            shape_list=table_legs_shapes,
+            shape_positions=table_legs_positions,
+            obstacle_environment=obstacle_environment_legs,
+            control_points=table_legs_control_points,
+            starting_pose=ObjectPose(
+                position=table_reference_start.position,
+                orientation=table_reference_start.orientation,
+            ),
+            goal_pose=table_reference_goal,
+            name="table",
+            object_type=ObjectType.TABLE,
+            static=static,
+        )
+        
+    table_surface_agent = None
+    if not obstacle_environment_surface==None:
+        # surface layer
+        table_surface_positions = np.array([[0.0, 0.0]])
+        table_surface_shape, table_surface_control_points = create_cubic_surface(
+            axes=axes_table,
+            ctr_points_number=ctr_points_number,
+            margin_to_surface=margin_control_points,
+            reference_start=table_reference_start,
+            surface_position=table_surface_positions[0],
+            margin_absolut=margin_shape,
+        )
+
+        table_surface_agent = Furniture3D(
+            shape_list=[table_surface_shape],
+            shape_positions=table_surface_positions,
+            obstacle_environment=obstacle_environment_surface,
+            control_points=table_surface_control_points,
+            starting_pose=ObjectPose(
+                position=table_reference_start.position,
+                orientation=table_reference_start.orientation,
+            ),
+            goal_pose=table_reference_goal,
+            name="table",
+            object_type=ObjectType.TABLE,
+            static=static,
+        )
+    
     return assign_agent_virtual_drag([table_legs_agent, table_surface_agent])
 
 
@@ -553,9 +523,10 @@ def assign_agent_virtual_drag(agent_sections_list):
     shapes = []
     shape_positions = []
     for i in range(len(agent_sections_list)):
-        for j in range(len(agent_sections_list[i]._shape_list)):
-            shapes.append(agent_sections_list[i]._shape_list[j])
-            shape_positions.append(agent_sections_list[i]._shape_positions[j])
+        if not agent_sections_list[i]==None:
+            for j in range(len(agent_sections_list[i]._shape_list)):
+                shapes.append(agent_sections_list[i]._shape_list[j])
+                shape_positions.append(agent_sections_list[i]._shape_positions[j])
 
     if len(shapes) == 1:
         virtual_drag = max(shapes[0].axes_length) / min(
@@ -576,6 +547,7 @@ def assign_agent_virtual_drag(agent_sections_list):
         virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
 
     for i in range(len(agent_sections_list)):
-        agent_sections_list[i].virtual_drag = virtual_drag  
+        if not agent_sections_list[i]==None:
+            agent_sections_list[i].virtual_drag = virtual_drag  
     
     return agent_sections_list

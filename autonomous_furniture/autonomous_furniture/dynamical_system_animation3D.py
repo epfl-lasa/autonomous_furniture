@@ -125,112 +125,113 @@ class DynamicalSystemAnimation3D(Animator):
                 color = "black"
 
             for jj in range(self.number_agent):
-                goal_control_points = self.layer_list[k][
-                    jj
-                ].get_goal_control_points()  ##plot agent center position
+                if not self.layer_list[k][jj] == None:
+                    goal_control_points = self.layer_list[k][
+                        jj
+                    ].get_goal_control_points()  ##plot agent center position
 
-                global_control_points = self.layer_list[k][
-                    jj
-                ].get_global_control_points()
-                self.ax.plot(
-                    global_control_points[0, :],
-                    global_control_points[1, :],
-                    color="black",
-                    marker=".",
-                    linestyle="",
-                )
+                    global_control_points = self.layer_list[k][
+                        jj
+                    ].get_global_control_points()
+                    self.ax.plot(
+                        global_control_points[0, :],
+                        global_control_points[1, :],
+                        color="black",
+                        marker=".",
+                        linestyle="",
+                    )
 
-                self.ax.plot(
-                    goal_control_points[0, :],
-                    goal_control_points[1, :],
-                    color=color,
-                    marker=".",
-                    linestyle="",
-                )
+                    self.ax.plot(
+                        goal_control_points[0, :],
+                        goal_control_points[1, :],
+                        color=color,
+                        marker=".",
+                        linestyle="",
+                    )
 
-                self.ax.plot(
-                    self.layer_list[k][jj]._goal_pose.position[0],
-                    self.layer_list[k][jj]._goal_pose.position[1],
-                    color=color,
-                    marker="*",
-                )
+                    self.ax.plot(
+                        self.layer_list[k][jj]._goal_pose.position[0],
+                        self.layer_list[k][jj]._goal_pose.position[1],
+                        color=color,
+                        marker="*",
+                    )
 
-                self.ax.plot(
-                    self.layer_list[k][jj]._reference_pose.position[0],
-                    self.layer_list[k][jj]._reference_pose.position[1],
-                    color="black",
-                    marker="*",
-                )
+                    self.ax.plot(
+                        self.layer_list[k][jj]._reference_pose.position[0],
+                        self.layer_list[k][jj]._reference_pose.position[1],
+                        color="black",
+                        marker="*",
+                    )
 
-                x_values = np.zeros(len(self.agent_pos_saver[jj]))
-                y_values = x_values.copy()
-                for i in range(len(self.agent_pos_saver[jj])):
-                    x_values[i] = self.agent_pos_saver[jj][i][0]
-                    y_values[i] = self.agent_pos_saver[jj][i][1]
+                    x_values = np.zeros(len(self.agent_pos_saver[jj]))
+                    y_values = x_values.copy()
+                    for i in range(len(self.agent_pos_saver[jj])):
+                        x_values[i] = self.agent_pos_saver[jj][i][0]
+                        y_values[i] = self.agent_pos_saver[jj][i][1]
 
-                self.ax.plot(
-                    x_values,
-                    y_values,
-                    color=color,
-                    linestyle="dashed",
-                )
-                # if self.agent[jj]._static == False:
+                    self.ax.plot(
+                        x_values,
+                        y_values,
+                        color=color,
+                        linestyle="dashed",
+                    )
+                    # if self.agent[jj]._static == False:
 
-                # self.ax.plot(
-                #     self.agent[jj]._goal_pose.position[0],
-                #     self.agent[jj]._goal_pose.position[1],
-                #     color=color,
-                #     marker="*",
-                #     markersize=10,
-                # )
+                    # self.ax.plot(
+                    #     self.agent[jj]._goal_pose.position[0],
+                    #     self.agent[jj]._goal_pose.position[1],
+                    #     color=color,
+                    #     marker="*",
+                    #     markersize=10,
+                    # )
 
-                # for i in range(len(global_control_points[0,:])):
-                #     margins = plt.Circle((global_control_points[0, i], global_control_points[1, i]), self.agent[jj].margin_absolut, color="black", linestyle="dashed", fill=False)
-                #     self.ax.add_patch(margins)
+                    # for i in range(len(global_control_points[0,:])):
+                    #     margins = plt.Circle((global_control_points[0, i], global_control_points[1, i]), self.agent[jj].margin_absolut, color="black", linestyle="dashed", fill=False)
+                    #     self.ax.add_patch(margins)
 
-                # breakpoint()
+                    # breakpoint()
 
-                # Drawing and adjusting of the axis
-                # for agent in range(self.number_agent):
-                #     self.ax.plot(
-                #         self.position_list[agent, 0, :ii + 1],
-                #         self.position_list[agent, 1, :ii + 1],
-                #         ":",
-                #         color="#135e08"
-                #     )
-                #     self.ax.plot(
-                #         self.position_list[agent, 0, ii + 1],
-                #         self.position_list[agent, 1, ii + 1],
-                #         "o",
-                #         color="#135e08",
-                #         markersize=12,
-                #     )
+                    # Drawing and adjusting of the axis
+                    # for agent in range(self.number_agent):
+                    #     self.ax.plot(
+                    #         self.position_list[agent, 0, :ii + 1],
+                    #         self.position_list[agent, 1, :ii + 1],
+                    #         ":",
+                    #         color="#135e08"
+                    #     )
+                    #     self.ax.plot(
+                    #         self.position_list[agent, 0, ii + 1],
+                    #         self.position_list[agent, 1, ii + 1],
+                    #         "o",
+                    #         color="#135e08",
+                    #         markersize=12,
+                    #     )
 
-                if len(self.obstacle_colors):
-                    for i in range(len(self.layer_list[k][jj]._shape_list)):
+                    if len(self.obstacle_colors):
+                        for i in range(len(self.layer_list[k][jj]._shape_list)):
+                            plot_obstacles(
+                                ax=self.ax,
+                                obstacle_container=[self.layer_list[k][jj]._shape_list[i]],
+                                x_lim=self.x_lim,
+                                y_lim=self.y_lim,
+                                showLabel=False,
+                                obstacle_color=color,
+                                draw_reference=False,
+                                set_axes=False,
+                                drawVelArrow=True,
+                            )
+                    else:
                         plot_obstacles(
                             ax=self.ax,
-                            obstacle_container=[self.layer_list[k][jj]._shape_list[i]],
+                            obstacle_container=self.obstacle_environment,
                             x_lim=self.x_lim,
                             y_lim=self.y_lim,
                             showLabel=False,
-                            obstacle_color=color,
+                            obstacle_color=np.array([176, 124, 124]) / 255.0,
                             draw_reference=False,
                             set_axes=False,
-                            drawVelArrow=True,
+                            alpha_obstacle=0.5,
                         )
-                else:
-                    plot_obstacles(
-                        ax=self.ax,
-                        obstacle_container=self.obstacle_environment,
-                        x_lim=self.x_lim,
-                        y_lim=self.y_lim,
-                        showLabel=False,
-                        obstacle_color=np.array([176, 124, 124]) / 255.0,
-                        draw_reference=False,
-                        set_axes=False,
-                        alpha_obstacle=0.5,
-                    )
 
         self.ax.set_xlabel("x [m]", fontsize=9)
         self.ax.set_ylabel("y [m]", fontsize=9)
