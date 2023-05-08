@@ -94,8 +94,8 @@ def compute_ctr_point_vel_from_obs_avoidance(
             self_priority=priority,
         )
 
-    return attenuate_DSM_velocities(number_ctrpt, velocities)
-    # return velocities
+    # return attenuate_DSM_velocities(number_ctrpt, velocities)
+    return velocities
 
 def compute_drag_angle(initial_velocity, actual_orientation):
     # Direction (angle), of the linear_velocity in the global frame
@@ -119,26 +119,27 @@ def compute_drag_angle(initial_velocity, actual_orientation):
         drag_angle = lin_vel_dir - orientation_sym
         if drag_angle > np.pi / 2:
             drag_angle = -1 * (2 * np.pi - drag_angle)
+        
     return drag_angle
 
 
 def compute_goal_angle(goal_orientation, actual_orientation):
     # compute orientation difference to reach goal
     goal_angle = goal_orientation - actual_orientation
-    if np.abs(goal_angle) > np.pi:
-        goal_angle = -1 * (2 * np.pi - goal_angle)
+    # if np.abs(goal_angle) > np.pi:
+    #     goal_angle = -1 * (2 * np.pi - goal_angle)
 
-    if (
-        np.abs(goal_angle) > np.pi / 2
-    ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
-        if actual_orientation > 0:
-            orientation_sym = actual_orientation - np.pi
-        else:
-            orientation_sym = actual_orientation + np.pi
+    # if (
+    #     np.abs(goal_angle) > np.pi / 2
+    # ):  # np.pi/2 is the value hard coded in case for PI symetry of the furniture, if we want to introduce PI/4 symetry for instance we ahve to change this value
+    #     if actual_orientation > 0:
+    #         orientation_sym = actual_orientation - np.pi
+    #     else:
+    #         orientation_sym = actual_orientation + np.pi
 
-        goal_angle = goal_orientation - orientation_sym
-        if goal_angle > np.pi / 2:
-            goal_angle = -1 * (2 * np.pi - goal_angle)
+    #     goal_angle = goal_orientation - orientation_sym
+    #     if goal_angle > np.pi / 2:
+    #         goal_angle = -1 * (2 * np.pi - goal_angle)
     return goal_angle
 
 
@@ -238,8 +239,8 @@ def compute_ang_weights(mini_drag, d, virtual_drag):
         kappa = virtual_drag
         k = 0.01
         r = d / (d + k)
-        alpha = 1.5
-        w1 = 1 / 2 * (1 + np.tanh(kappa * (d - alpha))) * r
+        alpha = 0.5
+        w1 = 1/2*(1+np.tanh(kappa * (d - alpha))) * r * (kappa-1)/(kappa-1+1e-6)
         w2 = 1 - w1
 
     elif mini_drag == "nodrag":  # no virtual drag

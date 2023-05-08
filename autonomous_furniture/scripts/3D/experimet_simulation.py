@@ -49,7 +49,7 @@ def threeD_test(args=[]):
     )
 
     ### CREATE MOBILE LOW TABLE SECTIONS FOR ALL THE LAYERS
-    mobile_table_reference_start = ObjectPose(position=np.array([2, 1.5]), orientation=0.0)
+    mobile_table_reference_start = ObjectPose(position=np.array([2.25, 1.25]), orientation=0.0)
     mobile_table_reference_goal = ObjectPose(position=np.array([4.5, 0.5]), orientation=0.0)
 
     [mobile_table_legs_agent, mobile_table_surface_agent] = create_3D_table_surface_legs(
@@ -67,7 +67,7 @@ def threeD_test(args=[]):
     mobile_table_surface_agent.gamma_critic_max = 1.1
     
     chair_left_reference_start = ObjectPose(
-        position=np.array([1.5, 0.5]), orientation=np.pi/2+0.4
+        position=np.array([1.5, 0.5]), orientation=-np.pi/2
     )
     chair_left_reference_goal = ObjectPose(
         position=np.array([2.6, 1.0]), orientation=np.pi/2
@@ -92,7 +92,7 @@ def threeD_test(args=[]):
     )
 
     chair_right_reference_start = ObjectPose(
-        position=np.array([4.5, 1.5]), orientation=-np.pi/2
+        position=np.array([4.75, 1.75]), orientation=np.pi/2
     )
     chair_right_reference_goal = ObjectPose(
         position=np.array([3.4, 1.0]), orientation=-np.pi/2
@@ -140,7 +140,7 @@ def threeD_test(args=[]):
         x_lim=[1, 5],
         y_lim=[0, 2],
         version="v2",
-        mini_drag="nodrag",
+        mini_drag="dragdist",
         safety_module=True,
         emergency_stop=True,
         figsize=(10, 7),

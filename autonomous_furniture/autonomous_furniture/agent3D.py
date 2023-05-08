@@ -343,7 +343,7 @@ class Furniture3D:
                 )
             )
             # TODO Very clunky : Rather make a function out of it
-            K = 1  # K proportionnal parameter for the speed
+            K = 3 # K proportionnal parameter for the speed
             # Initial angular_velocity is computedenv
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
             # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
@@ -353,8 +353,8 @@ class Furniture3D:
             
             velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
-                goal_pos_ctr_pts=goal_control_points,
-                actual_pos_ctr_pts=self.get_global_control_points(),
+                goal_pos_ctr_pts=np.copy(goal_control_points),
+                actual_pos_ctr_pts=np.copy(global_control_points),
                 environment_without_me=self.get_obstacles_without_me(),
                 priority=self.priority,
                 cutoff_gamma_obs=self.cutoff_gamma_obs,
@@ -363,7 +363,7 @@ class Furniture3D:
             linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
                 velocities_from_DSM,
                 weights,
-                global_control_points=global_control_points,
+                global_control_points=np.copy(global_control_points),
                 ctrpt_number=self.ctr_pt_number,
                 global_reference_position=self._reference_pose.position,
             )
@@ -373,7 +373,7 @@ class Furniture3D:
                 linear_velocity,
                 number_ctrpt=self.ctr_pt_number,
                 local_control_points=self._control_points,
-                global_control_points=global_control_points,
+                global_control_points=np.copy(global_control_points),
                 actual_orientation=self._reference_pose.orientation,
                 environment_without_me=environment_without_me,
                 priority=self.priority,
@@ -385,8 +385,8 @@ class Furniture3D:
         elif version == "v1":
             velocities = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
-                goal_pos_ctr_pts=goal_control_points,
-                actual_pos_ctr_pts=global_control_points,
+                goal_pos_ctr_pts=np.copy(goal_control_points),
+                actual_pos_ctr_pts=np.copy(global_control_points),
                 environment_without_me=environment_without_me,
                 priority=self.priority,
                 cutoff_gamma_obs=self.cutoff_gamma_obs,
@@ -401,7 +401,7 @@ class Furniture3D:
             ) = agent_kinematics_from_ctr_point_vel(
                 velocities,
                 weights,
-                global_control_points=global_control_points,
+                global_control_points=np.copy(global_control_points),
                 ctrpt_number=self.ctr_pt_number,
                 global_reference_position=self._reference_pose.position,
             )
@@ -476,7 +476,7 @@ class Furniture3D:
                     ) = agent_kinematics_from_ctr_point_vel(
                         velocities,
                         weights,
-                        global_control_points=global_control_points,
+                        global_control_points=np.copy(global_control_points),
                         ctrpt_number=self.ctr_pt_number,
                         global_reference_position=self._reference_pose.position,
                     )
@@ -492,7 +492,7 @@ class Furniture3D:
                         linear_velocity,
                         number_ctrpt=self.ctr_pt_number,
                         local_control_points=self._control_points,
-                        global_control_points=global_control_points,
+                        global_control_points=np.copy(global_control_points),
                         actual_orientation=self._reference_pose.orientation,
                         environment_without_me=environment_without_me,
                         priority=self.priority,
@@ -503,7 +503,7 @@ class Furniture3D:
                     velocities = evaluate_safety_repulsion(
                         list_critic_gammas_indx=list_critic_gammas_indx,
                         environment_without_me=environment_without_me,
-                        global_control_points=global_control_points,
+                        global_control_points=np.copy(global_control_points),
                         obs_idx=obs_idx,
                         gamma_values=gamma_values,
                         velocities=velocities,
@@ -515,7 +515,7 @@ class Furniture3D:
         linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
             velocities,
             weights,
-            global_control_points=global_control_points,
+            global_control_points=np.copy(global_control_points),
             ctrpt_number=self.ctr_pt_number,
             global_reference_position=self._reference_pose.position,
         )
