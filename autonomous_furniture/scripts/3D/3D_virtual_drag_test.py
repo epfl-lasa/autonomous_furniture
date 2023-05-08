@@ -1,0 +1,113 @@
+import numpy as np
+
+import matplotlib.pyplot as plt
+from scipy import rand
+from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
+from vartools.states import ObjectPose
+
+from dynamic_obstacle_avoidance.containers import ObstacleContainer
+
+from dynamic_obstacle_avoidance.visualization import plot_obstacles
+
+from vartools.dynamical_systems import LinearSystem
+from vartools.animator import Animator
+
+from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
+
+from autonomous_furniture.agent3D import Furniture3D
+
+from autonomous_furniture.furniture_creators import (
+    create_3D_table_surface_legs,
+    assign_agent_virtual_drag
+)
+
+import argparse
+
+
+def threeD_test(args=[]):
+    # List of environment shared by all the furniture/agent in the same layer
+    obstacle_environment_lower = ObstacleContainer()
+    obstacle_environment_upper = ObstacleContainer()
+
+    ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
+    table_normal_reference_goal = ObjectPose(position=np.array([3.0, 1.0]), orientation=np.pi/2)
+    table_normal_reference_start = ObjectPose(position=np.array([0.0, 1.0]), orientation=np.pi/2)
+
+    [table_normal_legs_agent, table_normal_surface_agent] = create_3D_table_surface_legs(
+        obstacle_environment_lower,
+        obstacle_environment_upper,
+        table_normal_reference_start,
+        table_normal_reference_goal,
+        margin_shape=0.1,
+        margin_control_points=0.0,
+        axes_table=[1.6, 0.7],
+        axes_legs=[0.1, 0.1],
+        ctr_points_number=[6,4]
+    )
+    
+    table_shifted_reference_goal = ObjectPose(position=np.array([7.0, 1.0]), orientation=np.pi/2)
+    table_shifted_reference_start = ObjectPose(position=np.array([4.0, 1.0]), orientation=np.pi/2)
+
+    [table_shifted_legs_agent, table_shifted_surface_agent] = create_3D_table_surface_legs(
+        obstacle_environment_lower,
+        obstacle_environment_upper,
+        table_shifted_reference_start,
+        table_shifted_reference_goal,
+        margin_shape=0.1,
+        margin_control_points=0.0,
+        axes_table=[1.6, 0.7],
+        axes_legs=[0.1, 0.1],
+        ctr_points_number=[6,4],
+        leg_positions=np.array([[0.75, 1.2], [-0.75, 1.2], [0.75, 0.6], [-0.75, 0.6]])
+    )
+
+    table_normal_legs_agent.cutoff_gamma_obs=1.0
+    table_normal_surface_agent.cutoff_gamma_obs=1.0
+    table_shifted_legs_agent.cutoff_gamma_obs=1.0
+    table_shifted_surface_agent.cutoff_gamma_obs=1.0
+
+    layer_lower = [table_normal_legs_agent, table_shifted_legs_agent]
+    layer_upper = [table_normal_surface_agent, table_shifted_surface_agent]
+
+    # layer_lower = [chair_down_surface_agent]
+    # layer_upper = [chair_down_back_agent]
+
+    # layer_lower = [table_legs_agent]y
+    # layer_upper = [table_surface_agent]
+
+
+    my_animation = DynamicalSystemAnimation3D(
+        it_max=1000,
+        dt_simulation=0.02,
+        dt_sleep=0.02,
+        animation_name=args.name,
+    )
+
+    my_animation.setup(
+        layer_list=[layer_lower, layer_upper],
+        x_lim=[-1.0, 8.0],
+        y_lim=[0.0, 2.0],
+        version="v2",
+        mini_drag="dragdist",
+        safety_module=True,
+        emergency_stop=True,
+        figsize=(10, 7),
+    )
+
+    my_animation.run(save_animation=args.rec)
+    # my_animation.logs(len(my_furniture))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--rec", action="store", default=False, help="Record flag")
+    parser.add_argument(
+        "--name", action="store", default="recording", help="Name of the simulation"
+    )
+    args = parser.parse_args()
+
+    plt.close("all")
+    plt.ion()
+
+    threeD_test(args)

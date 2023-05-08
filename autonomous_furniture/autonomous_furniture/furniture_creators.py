@@ -389,6 +389,7 @@ def create_3D_table_surface_legs(
     axes_table=[1.6, 0.7],
     axes_legs=[0.2, 0.2],
     ctr_points_number=[3, 1],
+    leg_positions = [],
     static=False,
 ):
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
@@ -406,17 +407,20 @@ def create_3D_table_surface_legs(
     table_legs_agent = None
     if not obstacle_environment_legs==None:
         # legs
-        table_legs_control_points = np.array(
-            [
-                [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
-                [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
-                [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
+        if leg_positions==[]:
+            table_legs_control_points = np.array(
                 [
-                    -((axes_table[0] - axes_legs[0]) / 2),
-                    -((axes_table[1] - axes_legs[1]) / 2),
-                ],
-            ]
-        )
+                    [(axes_table[0] - axes_legs[0]) / 2, (axes_table[1] - axes_legs[1]) / 2],
+                    [-((axes_table[0] - axes_legs[0]) / 2), (axes_table[1] - axes_legs[1]) / 2],
+                    [(axes_table[0] - axes_legs[0]) / 2, -((axes_table[1] - axes_legs[1]) / 2)],
+                    [
+                        -((axes_table[0] - axes_legs[0]) / 2),
+                        -((axes_table[1] - axes_legs[1]) / 2),
+                    ],
+                ]
+            )
+        else:
+            table_legs_control_points=np.copy(leg_positions)
 
         table_legs_positions = np.copy(table_legs_control_points)
         table_legs_shapes = []
