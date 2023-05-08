@@ -181,6 +181,8 @@ class RvizQoloAnimator(Animator):
         # )
 
         self.robot = RvizQolo(pose=start_pose)
+        margin_absolut = self.robot.required_margin
+
         self.agent_container = AgentContainer()
         self.agent_container.append(
             RvizTable(pose=Pose(position=[-3.4, -2.5], orientation=-0.1 * np.pi))
@@ -188,12 +190,23 @@ class RvizQoloAnimator(Animator):
         self.agent_container.append(
             RvizTable(pose=Pose(position=[4.0, 3.6], orientation=np.pi / 2))
         )
+
+        intersecting_id = [self.agent_container.n_obstacles]
         self.agent_container.append(
             RvizTable(pose=Pose(position=[1.2, 0.5], orientation=-0.2 * np.pi))
         )
+        # obs = self.agent_container.get_single_obstacle(-1)
+        # obs.margin_absolut = margin_absolut
+        # obs.set_reference_point(shared_reference, in_global_frame=True)
+        # breakpoint()
+        intersecting_id.append(self.agent_container.n_obstacles)
         self.agent_container.append(
             RvizTable(pose=Pose(position=[-0.4, 1.3], orientation=0.4 * np.pi))
         )
+        # obs = self.agent_container.get_single_obstacle(-1)
+        # obs.margin_absolut = margin_absolut
+        # obs.set_reference_point(shared_reference, in_global_frame=True)
+
         self.agent_container.append(
             RvizTable(pose=Pose(position=[-0.2, -3.9], orientation=-0.3 * np.pi))
         )
@@ -239,8 +252,14 @@ class RvizQoloAnimator(Animator):
 
         # Initial update of transform
         update_shapes_of_agent(self.robot)
-        for agent in self.agent_container:
+        for ii, agent in enumerate(self.agent_container):
             update_shapes_of_agent(agent)
+
+            if ii in intersecting_id:
+                agent.shapes[0].margin_absolut = self.robot.required_margin
+                agent.shapes[0].set_reference_point(
+                    np.array([0.0, 0.75]), in_global_frame=True
+                )
 
     def update_step(self, ii):
         print("ii", ii)
@@ -340,27 +359,24 @@ def main_wavy(
 
 
 def plot_vectorfield():
-    # x_lim = [-10, 10.0]
-    # y_lim = [-10.0, 10.5]
-    x_lim = [-2.0, -0.5]
-    y_lim = [-4.5, -3.0]
+    x_lim = [-10, 10.0]
+    y_lim = [-10.0, 10.5]
+    # x_lim = [-2.0, -0.5]
+    # y_lim = [-4.5, -3.0]
     n_grid = 20
 
     animator = RvizQoloAnimator()
     animator.setup(x_lim=[-10, 10], y_lim=[-10, 10])
 
-    pos0 = np.array([-1.446, -3.709])
-    velocity0 = animator.avoider.evaluate(pos0)
-    pos1 = np.array([-1.531, -3.702])
-    velocity1 = animator.avoider.evaluate(pos1)
-    breakpoint()
+    position = np.array([-1.5, -4.0])
+    velocity = animator.avoider.evaluate_sequence(position)
 
     plt.close("all")
 
     fig, ax = plt.subplots(figsize=(7, 5))
     plot_obstacle_dynamics(
         obstacle_container=animator.agent_container.get_obstacles(),
-        dynamics=animator.avoider.evaluate,
+        dynamics=animator.avoider.evaluate_sequence,
         x_lim=x_lim,
         y_lim=y_lim,
         n_grid=n_grid,
@@ -374,8 +390,8 @@ def plot_vectorfield():
         obstacle_container=animator.agent_container.get_obstacles(),
         x_lim=x_lim,
         y_lim=y_lim,
+        draw_reference=True,
     )
-    breakpoint()
 
 
 def main():
@@ -389,7 +405,6 @@ def main():
         pass
 
     rclpy.shutdown()
-
     logging.info("Simulation ended.")
 
 
