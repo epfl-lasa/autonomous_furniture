@@ -132,9 +132,7 @@ def ctr_point_vel_from_agent_kinematics(
     initial_angular_vel,
     initial_velocity,
     number_ctrpt,
-    local_control_points,
     global_control_points,
-    actual_orientation,
     environment_without_me,
     priority,
     DSM,
@@ -172,28 +170,6 @@ def agent_kinematics_from_ctr_point_vel(
     velocities, weights, global_control_points, ctrpt_number, global_reference_position
 ):
     # CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
-    # # linear velocity
-    # linear_velocity = np.sum(velocities * np.tile(weights, (2, 1)), axis=1)
-
-    # # angular velocity
-    # #normalize control points to their mean value to avoid doing leverage when shape is displaced from reference point
-    # # cotrol_points_relative_global = []
-    # # for i in range(ctrpt_number):
-    # #     cotrol_points_relative_global.append(global_control_points[:, i]-global_reference_position)
-    # # mean_control_point = np.mean(cotrol_points_relative_global, axis=0)
-    
-    # # cotrol_points_relative_normal = []
-    # # for i in range(ctrpt_number):
-    # #     cotrol_points_relative_normal.append(cotrol_points_relative_global[i]-mean_control_point)
-    
-    # angular_vel = np.zeros(ctrpt_number)
-    # for ii in range(ctrpt_number):
-    #     angular_vel[ii] = weights[ii] * np.cross(
-    #         global_control_points[:,ii]-global_reference_position,
-    #         velocities[:, ii],
-    #     )
-    # angular_velocity = np.sum(angular_vel)
-    
     cotrol_points_relative_global = []
     for i in range(ctrpt_number):
         cotrol_points_relative_global.append(global_control_points[:, i]-global_reference_position)
@@ -219,13 +195,10 @@ def agent_kinematics_from_ctr_point_vel(
     return linear_velocity, angular_velocity
 
 
-def compute_ang_weights(mini_drag, d, virtual_drag):
+def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
     if mini_drag == "dragdist":  # a1 computed as in the paper depending on the distance
-        kappa = virtual_drag
-        k = 0.01
         r = d / (d + k)
-        alpha = 0.5
-        w1 = 1/2*(1+np.tanh(kappa * (d - alpha))) * r * (kappa-1)/(kappa-1+1e-6)
+        w1 = 1/2*(1+np.tanh(virtual_drag * (d - alpha))) * r * (virtual_drag-1)/(virtual_drag-1+1e-6)
         w2 = 1 - w1
 
     elif mini_drag == "nodrag":  # no virtual drag
@@ -252,14 +225,10 @@ def evaluate_safety_repulsion(
 ) -> None:
     (
         gamma_list_colliding,  # list with critical gamma value
-        normal_list_tot,  # list with all normal directions of critical obstacles for each control point
-        weight_list_tot,  # list with all weights of each normal direction for each critical obstacle
         normals_for_ang_vel,  # list with already weighted normal direction for each control point
-        control_point_d_list,  # list with distance from each control point with critical obstacle to center of mass
     ) = collect_infos_for_crit_ctr_points(
         list_critic_gammas_indx,
         environment_without_me,
-        local_control_points,
         global_control_points,
         obs_idx,
         gamma_values,
@@ -296,17 +265,15 @@ def apply_velocity_constraints(
 def collect_infos_for_crit_ctr_points(
     list_critic_gammas_indx,
     environment_without_me,
-    local_control_points,
     global_control_points,
     obs_idx,
     gamma_values,
     gamma_critic,
 ):
-    normal_list_tot = []
-    weight_list_tot = []
+
     normals_for_ang_vel = []
     gamma_list_colliding = []
-    control_point_d_list = []
+
     for ii in list_critic_gammas_indx:
         # get all the critical normal directions for the given control point
         normal_list = []
@@ -337,35 +304,14 @@ def collect_infos_for_crit_ctr_points(
         )
         normal = normal / LA.norm(normal)
 
-        # plt.arrow(self.get_global_control_points()[0][ii], self.get_global_control_points()[1][ii], instant_velocity[0],
-        #             instant_velocity[1], head_width=0.1, head_length=0.2, color='b')
         gamma_list_colliding.append(gamma_values[ii])
 
-        normal_list_tot.append(normal_list)
-        weight_list_tot.append(weight_list)
         normals_for_ang_vel.append(normal)
-        control_point_d_list.append(local_control_points[ii][0])
 
     return (
         gamma_list_colliding,
-        normal_list_tot,
-        weight_list_tot,
         normals_for_ang_vel,
-        control_point_d_list,
     )
-
-
-def get_veloctity_in_global_frame(orientation, velocity) -> np.ndarray:
-    """Returns the transform of the velocity from relative to global frame."""
-    R = np.array(
-        [
-            [np.cos(orientation), (-1) * np.sin(orientation)],
-            [np.sin(orientation), np.cos(orientation)],
-        ]
-    )
-    velocity = np.dot(R, velocity)
-    return velocity
-
 
 def get_gamma_product_crowd(position, env):
     if not len(env):
@@ -376,27 +322,16 @@ def get_gamma_product_crowd(position, env):
     for ii, obs in enumerate(env):
         gamma_list[ii] = obs.get_gamma(position, in_global_frame=True)
 
-    n_obs = len(gamma_list)
-
-    # Total gamma [1, infinity]
-    # Take root of order 'n_obs' to make up for the obstacle multiple
     if any(gamma_list < 1):
-        # BaseAgent.number_collisions += 1
-        # if show_collision_info:
-        #     print("[INFO] Collision")
         return 0, 0
 
     gamma = np.min(gamma_list)
     index = int(np.argmin(gamma_list))
 
-    if np.isnan(gamma):
-        # Debugging
-        breakpoint()
     return index, gamma
 
-
 def get_weight_from_gamma(
-    gammas, cutoff_gamma, n_points, gamma0=1.0, frac_gamma_nth=0.5
+    gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth
 ):
     weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
     weights = weights / frac_gamma_nth
@@ -406,8 +341,7 @@ def get_weight_from_gamma(
     return weights
 
 
-def get_weight_of_control_points(control_points, environment_without_me, cutoff_gamma):
-    # gamma_values = self.get_gamma_at_control_point(control_points[self.obs_multi_agent[obs]], obs, temp_env)
+def get_weight_of_control_points(control_points, environment_without_me, cutoff_gamma, gamma0, frac_gamma_nth):
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
     for ii in range(control_points.shape[1]):
@@ -417,14 +351,15 @@ def get_weight_of_control_points(control_points, environment_without_me, cutoff_
 
     ctl_point_weight = np.zeros(gamma_values.shape)
     ind_nonzero = gamma_values < cutoff_gamma
-    if not any(ind_nonzero):  # TODO Case he there is ind_nonzero
-        # ctl_point_weight[-1] = 1
+    if not any(ind_nonzero): 
         ctl_point_weight = np.full(gamma_values.shape, 1 / control_points.shape[1])
     # for index in range(len(gamma_values)):
     ctl_point_weight[ind_nonzero] = get_weight_from_gamma(
         gamma_values[ind_nonzero],
         cutoff_gamma=cutoff_gamma,
         n_points=control_points.shape[1],
+        gamma0=gamma0,
+        frac_gamma_nth=frac_gamma_nth
     )
 
     ctl_point_weight_sum = np.sum(ctl_point_weight)
@@ -519,9 +454,11 @@ def compute_layer_weights(agent_number, number_layer, layer_list):
     gamma_list = []
     for k in range(number_layer):
         if not layer_list[k][agent_number] == None:
-            gamma_list.append(layer_list[k][agent_number].min_gamma) 
+            gamma_list.append(layer_list[k][agent_number].min_gamma)
+            gamma0 = layer_list[k][agent_number].gamma0
+            frac_gamma_nth = layer_list[k][agent_number].frac_gamma_nth
     weights = get_weight_from_gamma(
-        gammas=np.array(gamma_list), cutoff_gamma=10, n_points=len(gamma_list)
+        gammas=np.array(gamma_list), cutoff_gamma=10, n_points=len(gamma_list), gamma0=gamma0, frac_gamma_nth=frac_gamma_nth
     )
     weights = weights / np.sum(weights)
     return weights

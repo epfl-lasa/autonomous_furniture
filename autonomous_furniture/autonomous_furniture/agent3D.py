@@ -171,6 +171,15 @@ class Furniture3D:
             self.priority = json_object["priority"]
         else:
             self.priority = priority_value
+        
+        #save variables only for the agent helper functions
+        #compute_ang_weights
+        self.k = json_object["k"] #parameter for term d/(d+k) which ensures the virtual drag weight w1 goes to zero when d=0
+        self.alpha = json_object["angle switch distance"] #distance at which the soft decoupling becomes stronger than the virtual drag
+        
+        #get_weight_from_gamma
+        self.gamma0 = json_object["gamma surface"] # gamma value on obstacle surface
+        self.frac_gamma_nth = json_object["frac_gamma_nth"] # boh this I don't know
 
         
         for i in range(len(shape_list)):
@@ -326,6 +335,8 @@ class Furniture3D:
                 global_control_points,
                 environment_without_me,
                 cutoff_gamma=self.cutoff_gamma_weights,
+                gamma0=self.gamma0,
+                frac_gamma_nth=self.frac_gamma_nth
             )
         else:
             weights = np.ones(self.ctr_pt_number) / self.ctr_pt_number
