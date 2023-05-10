@@ -95,7 +95,6 @@ def create_table(
         priority_value=1.0,
         name=name,
         object_type=ObjectType.TABLE,
-        symmetry=math.pi,
     )
 
     return new_furniture
@@ -198,7 +197,6 @@ def add_walls(
             priority_value=1.0,
             name="wall",
             object_type=ObjectType.OTHER,
-            symmetry=math.pi,
             static=True,
         )
 

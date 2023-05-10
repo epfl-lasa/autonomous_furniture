@@ -15,6 +15,7 @@ from vartools.animator import Animator
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
 from autonomous_furniture.agent3D import Furniture3D
+import pathlib
 
 import argparse
 
@@ -66,6 +67,7 @@ def threeD_test(args=[]):
             control_points=table_legs_control_points,
             starting_pose=table_reference_start,
             goal_pose=table_reference_goal,
+            parameter_file=str(pathlib.Path(__file__).parent.resolve())+"/parameter_file.json",
             name="table_legs",
         ),
         Furniture3D(
@@ -77,6 +79,7 @@ def threeD_test(args=[]):
             goal_pose=goal2,
             static=False,
             name="static",
+            parameter_file=str(pathlib.Path(__file__).parent.resolve())+"/parameter_file.json",
         ),
     ]
 

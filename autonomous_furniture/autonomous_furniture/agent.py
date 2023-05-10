@@ -106,7 +106,6 @@ class BaseAgent(ABC):
         name: str = "no_name",
         static: bool = False,
         object_type: ObjectType = ObjectType.OTHER,
-        symmetry: Optional[float] = None,
         gamma_critic: float = 0.0,
         d_critic: float = 1.0,
         gamma_critic_max: float = 2.0,
@@ -129,11 +128,7 @@ class BaseAgent(ABC):
         self.cutoff_gamma_weights = cutoff_gamma_weights
         self.cutoff_gamma_obs = cutoff_gamma_obs
 
-        self.symmetry = symmetry
         self.safety_damping = safety_damping
-        # Default values for new variables
-        self.danger = False
-        self.color = np.array([176, 124, 124]) / 255.0
 
         self.priority = priority_value
         self.virtual_drag = max(self._shape.axes_length) / min(self._shape.axes_length)
@@ -226,16 +221,6 @@ class BaseAgent(ABC):
         self._shape.reactivity = value
 
     @property
-    def danger(self):
-        # return self._shape.danger
-        return self._danger
-
-    @danger.setter
-    def danger(self, value: bool):
-        # self._shape.danger = value
-        self._danger = value
-
-    @property
     def gamma_critic(self):
         return self._gamma_critic
         # return self._shape.gamma_critic
@@ -244,15 +229,6 @@ class BaseAgent(ABC):
     def gamma_critic(self, value):
         # self._shape.gamma_critic = value
         self._gamma_critic = value
-
-    @property
-    def color(self):
-        # return self._shape.color
-        return self._color
-
-    @color.setter
-    def color(self, value):
-        self._color = value
 
     @property
     def name(self):
@@ -447,7 +423,6 @@ class Furniture(BaseAgent):
                 for ii in range(global_control_points.shape[1]):
                     if gamma_values[ii] < self.gamma_critic:
                         list_critic_gammas_indx.append(ii)
-                        self.color = "k"  # np.array([221, 16, 16]) / 255.0
                 if len(list_critic_gammas_indx) > 0:
                     for i in range(self._control_points.shape[0]):
                         plt.arrow(

@@ -26,6 +26,8 @@ from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleCon
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
+import json
+
 from autonomous_furniture.agent_helper_functions import (
     compute_ang_weights,
     compute_drag_angle,
@@ -57,95 +59,127 @@ class Furniture3D:
     def __init__(
         self,
         shape_list: list[Obstacle],
+        shape_positions: Optional[np.ndarray],
         obstacle_environment: ObstacleContainer,
         control_points: Optional[np.ndarray],
-        shape_positions: Optional[np.ndarray] = None,
-        priority_value: float = 1.0,
-        starting_pose: ObjectPose = None,
+        starting_pose: ObjectPose,
+        goal_pose: ObjectPose,
+        parameter_file: str,
+        priority_value: float = None,
         parking_pose: ObjectPose = None,
-        goal_pose: ObjectPose = None,
         name: str = "no_name",
-        static: bool = False,
+        static: bool = None,
         object_type: ObjectType = ObjectType.OTHER,
-        symmetry: Optional[float] = None,
-        gamma_critic: float = 0.0,
-        d_critic: float = 1.0,
-        gamma_critic_max: float = 1.2,
-        gamma_critic_min: float = 1.1,
-        gamma_stop: float = 1.05,
-        safety_damping: float = 1.0,
-        cutoff_gamma_weights: float = 1.0,
-        cutoff_gamma_obs: float = 10.0,
-        maximum_linear_velocity: float = 0.4,  # m/s
-        maximum_angular_velocity: float = 1.57,  # rad/s
-        maximum_linear_acceleration: float = 4.0,  # m/s^2
-        maximum_angular_acceleration: float = 10.0,  # rad/s^2
+        d_critic: float = None,
+        gamma_critic_max: float = None,
+        gamma_critic_min: float =None,
+        gamma_stop: float = None,
+        safety_damping: float = None,
+        cutoff_gamma_weights: float = None,
+        cutoff_gamma_obs: float = None,
+        maximum_linear_velocity: float = None,  # m/s
+        maximum_angular_velocity: float = None,  # rad/s
+        maximum_linear_acceleration: float = None,  # m/s^2
+        maximum_angular_acceleration: float = None,  # rad/s^2
     ) -> None:
-        self._shape_list = shape_list
-        self.object_type = object_type
-        self.maximum_linear_velocity = maximum_linear_velocity
-        self.maximum_angular_velocity = maximum_angular_velocity
-        self.maximum_linear_acceleration = maximum_linear_acceleration
-        self.maximum_angular_acceleration = maximum_angular_acceleration
         
-        self.symmetry = symmetry
-
-        self.safety_damping = safety_damping
-
-        # Default values for new variables
-        self.danger = False
-        self.color = np.array([176, 124, 124]) / 255.0
-
-        self.priority = priority_value
-        for i in range(len(shape_list)):
-            self._shape_list[i].reactivity = self.priority
-
-        # if len(shape_list) == 1:
-        #     self.virtual_drag = max(self._shape_list[0].axes_length) / min(
-        #         self._shape_list[0].axes_length
-        #     )
-        # else:
-        #     maxima_x = np.zeros((2, len(shape_list)))
-        #     maxima_y = np.zeros((2, len(shape_list)))
-        #     for i in range(len(shape_list)):
-        #         maxima_x[0, i] = shape_positions[i][0] + shape_list[i].semiaxes[0]
-        #         maxima_x[1, i] = shape_positions[i][0] - shape_list[i].semiaxes[0]
-        #         maxima_y[0, i] = shape_positions[i][1] + shape_list[i].semiaxes[1]
-        #         maxima_y[1, i] = shape_positions[i][1] - shape_list[i].semiaxes[1]
-
-        #     x_stretch = np.amax(maxima_x) - np.amin(maxima_x)
-        #     y_stretch = np.amax(maxima_y) - np.amin(maxima_y)
-        #     agent_stretches = np.array([x_stretch, y_stretch])
-        #     self.virtual_drag = np.amax(agent_stretches) / np.amin(agent_stretches)
-
-        self._obstacle_environment = obstacle_environment
+        #safe mandatory variables
+        self._shape_list = shape_list
+        self._goal_pose = goal_pose
+        self._reference_pose = starting_pose
+        self._parking_pose = parking_pose
+        self._shape_positions = shape_positions
         self._control_points = control_points
         self.ctr_pt_number = self._control_points.shape[0]
-        self._parking_pose = parking_pose
-        self._goal_pose = goal_pose
+        self._obstacle_environment = obstacle_environment
 
-        if starting_pose == None:
-            if len(shape_list) == 1:
-                self._reference_pose = ObjectPose(
-                    position=shape_list[0].pose.position,
-                    orientation=shape_list[0].pose.orientation,
-                )
-                self._shape_positions = np.array([[0.0, 0.0]])
-            else:
-                raise Exception(
-                    "Please define a starting pose if agent has more than one shape!"
-                )
+        #check if any non-mandatory variable was defined, otherwise take the value from the json file
+        with open(parameter_file, 'r') as openfile:
+            json_object = json.load(openfile)
+
+        #kinematic constraints
+        if maximum_linear_velocity==None:
+            self.maximum_linear_velocity = json_object["maximum linear velocity"]
         else:
-            self._reference_pose = starting_pose
-            self._shape_positions = shape_positions
+            self.maximum_linear_velocity = maximum_linear_velocity
+        
+        if maximum_angular_velocity==None:
+            self.maximum_angular_velocity = json_object["maximum angular velocity"]
+        else:
+            self.maximum_angular_velocity = maximum_angular_velocity
+    
+        if maximum_linear_acceleration==None:
+            self.maximum_linear_acceleration = json_object["maximum linear acceleration"]
+        else:
+            self.maximum_linear_acceleration = maximum_linear_acceleration
+            
+        if maximum_angular_acceleration==None:
+            self.maximum_angular_acceleration = json_object["maximum angular acceleration"]
+        else:
+            self.maximum_angular_acceleration = maximum_angular_acceleration
+
+        # safety module
+        if safety_damping==None:
+            self.safety_damping = json_object["safety module damping"]
+        else:
+            self.safety_damping = safety_damping
+            
+        if gamma_critic_max==None: # value of gamma_critic before being closer than d_critic
+            self.gamma_critic_max = json_object["max gamma critic"]
+        else:
+            self.gamma_critic_max = gamma_critic_max
+            
+        if gamma_critic_min==None: # minimal value of gamma_critic as it should stay vigilant
+            self.gamma_critic_min = json_object["min gamma critic"]
+        else: 
+            self.gamma_critic_min = gamma_critic_min
+            
+        if gamma_stop==None: # agent should stop when a ctrpoint reaches a gamma value under this threshold
+            self.gamma_stop = json_object["gamma stop"]
+        else:
+            self.gamma_stop = gamma_stop
+            
+        if d_critic==None: # distance from which gamma_critic starts shrinking
+            self.d_critic = json_object["critical distance"]
+        else:
+            self.d_critic = d_critic
+        
+        #cutoff gammas
+        if cutoff_gamma_weights==None:
+            self.cutoff_gamma_weights = json_object["cutoff gamma for control point weights"]
+        else:
+            self.cutoff_gamma_weights = cutoff_gamma_weights
+            
+        if cutoff_gamma_obs==None:
+            self.cutoff_gamma_obs = json_object["cutoff gamma for obstacle environment"]
+        else:
+            self.cutoff_gamma_obs = cutoff_gamma_obs
+            
+        #static or dynamic agent
+        if static==None:
+            self.static = json_object["static"]
+        else:
+            self.static = static
+        
+        #agent name
+        if name=="no_name":
+            self.name = json_object["name"]
+        else:
+            self.name= name
+
+        if priority_value ==None:
+            self.priority = json_object["priority"]
+        else:
+            self.priority = priority_value
+
+        
+        for i in range(len(shape_list)):
+            self._shape_list[i].reactivity = self.priority
 
         # Adding the current shape of the agent to the list of
         # obstacle_env so as to be visible to other agents
         for i in range(len(self._shape_list)):
             self._obstacle_environment.append(self._shape_list[i])
-
-        self._static = static
-        self.name = name
 
         self.converged: bool = False
         # Emergency Stop
@@ -164,26 +198,10 @@ class Furniture3D:
         self._list_prox = []
 
         ##  Emergency stop values ##
-        self.gamma_critic = gamma_critic
-        # distance from which gamma_critic starts shrinking
-        self.d_critic = d_critic
-        # value of gamma_critic before being closer than d_critic
-        self.gamma_critic_max = gamma_critic_max
-        # minimal value of gamma_critic as it should stay vigilant
-        # and make space even at the goal
-        self.gamma_critic_min = gamma_critic_min
-        # agent should stop when a ctrpoint reaches a gamma value under this threshold
-        self.gamma_stop = gamma_stop
-
-        self.cutoff_gamma_weights = cutoff_gamma_weights
-        self.cutoff_gamma_obs = cutoff_gamma_obs
+        self.gamma_critic = 0.0
 
         self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
-
-        # self.linear_velocity_old = np.array([0.0, 0.0])
-        # self.angular_velocity_old = 0.0
-        # self.time_step = 0.0
 
         self.min_gamma = 1e6
 
@@ -220,7 +238,7 @@ class Furniture3D:
     def update_shape_kinematics(self):
         # set the shape's linear and angular velocity, maybe not the right place do define it once we try multiple layers?
         for i in range(len(self._shape_list)):
-            if self._static:
+            if self.static:
                 self._shape_list[i].linear_velocity = 0.0
                 self._shape_list[i].angular_velocity = np.zeros(2)
             else:
@@ -287,7 +305,7 @@ class Furniture3D:
         time_step: float = 0.1,
     ) -> None:
         # if static velocities will always be 0 per definition
-        if self._static:
+        if self.static:
             self.linear_velocity = np.array([0.0, 0.0])
             self.angular_velocity = 0.0
             self.stop = True
@@ -303,9 +321,6 @@ class Furniture3D:
         goal_control_points = self.get_goal_control_points()
         environment_without_me = self.get_obstacles_without_me()
 
-        # if not len(environment_without_me):
-        #     raise Exception("NO OBSTACLES FOUND!")
-
         if bool(environment_without_me):  # if there are other objects to take care of
             weights = get_weight_of_control_points(
                 global_control_points,
@@ -315,8 +330,6 @@ class Furniture3D:
         else:
             weights = np.ones(self.ctr_pt_number) / self.ctr_pt_number
 
-        # plt.arrow(self.position[0], self.position[1], initial_velocity[0],
-        #       initial_velocity[1], head_width=0.1, head_length=0.2, color='g')
         d = LA.norm(self._reference_pose.position - self._goal_pose.position)
 
         if version == "v2":
@@ -331,7 +344,7 @@ class Furniture3D:
                 )
             else:
                 initial_velocity = self.linear_velocity_old.copy()
-            # plt.arrow(self.position[0], self.position[1], initial_velocity[0], initial_velocity[1], head_width=0.1, head_length=0.2, color='m')
+
             # compute goal orientation wheights
             w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag)
             drag_angle = compute_drag_angle(
@@ -346,10 +359,6 @@ class Furniture3D:
             K = 3 # K proportionnal parameter for the speed
             # Initial angular_velocity is computedenv
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
-            # plt.arrow(ctp[0], ctp[1], init_velocities[0, ii],
-            #           init_velocities[1, ii], head_width=0.1, head_length=0.2, color='g')
-            # plt.arrow(ctp[0], ctp[1], velocities[0, ii], velocities[1,
-            #           ii], head_width=0.1, head_length=0.2, color='m')
             
             velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
@@ -409,18 +418,6 @@ class Furniture3D:
             self.angular_velocity = angular_velocity
             return
 
-        # ctp = self.get_global_control_points()
-        # for i in range(self.ctr_pt_number):
-        #     plt.arrow(
-        #         ctp[0, i],
-        #         ctp[1, i],
-        #         velocities[0, i],
-        #         velocities[1, i],
-        #         head_width=0.1,
-        #         head_length=0.2,
-        #         color="g",
-        #     )
-
         ### gett gamma values and save the smallest one
         gamma_values = np.zeros(
             self.ctr_pt_number
@@ -467,7 +464,6 @@ class Furniture3D:
                 for ii in range(self.ctr_pt_number):
                     if gamma_values[ii] < self.gamma_critic:
                         list_critic_gammas_indx.append(ii)
-                        self.color = "k"  # np.array([221, 16, 16]) / 255.0
                 if len(list_critic_gammas_indx) > 0:
                     # calculate the real velocties of the control points after weighting before applying safety module
                     (

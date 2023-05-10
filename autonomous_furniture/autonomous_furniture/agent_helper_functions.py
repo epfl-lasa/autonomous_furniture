@@ -23,20 +23,7 @@ def apply_linear_and_angular_acceleration_constraints(
             / LA.norm(linear_velocity_difference)
             * linear_velocity_difference_allowed
         )
-        # plt.clf()
-        # plt.arrow(self.position[0], self.position[1], linear_velocity_old[0],
-        #           linear_velocity_old[1], head_width=0.01, head_length=0.01, color='red')
-        # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-        #           self.linear_velocity[1], head_width=0.01, head_length=0.01, color='yellow')
-        # plt.arrow(self.position[0]+linear_velocity_old[0], self.position[1]+linear_velocity_old[1], linear_velocity_difference[0],
-        #           linear_velocity_difference[1], head_width=0.01, head_length=0.01, color='purple')
-
         linear_velocity = linear_velocity_old + vel_correction
-
-        # plt.arrow(self.position[0], self.position[1], self.linear_velocity[0],
-        #           self.linear_velocity[1], head_width=0.01, head_length=0.01, color='green')
-        # plt.arrow(self.position[0]+linear_velocity_old[0], self.position[1]+linear_velocity_old[1], vel_correction[0],
-        #           vel_correction[1], head_width=0.01, head_length=0.01, color='blue')
 
     if LA.norm(angular_velocity_difference) > angular_velocity_difference_allowed:
         angular_velocity = (
@@ -79,8 +66,6 @@ def compute_ctr_point_vel_from_obs_avoidance(
             [goal_pos_ctr_pts[0][i], goal_pos_ctr_pts[1][i]]
         )  # extract i-th goal control points position
         initial_velocity = ctr_pt_i_goal - ctr_pt_i
-        # if LA.norm(initial_velocity) > max_linear_velocity:
-        #     initial_velocity = initial_velocity/LA.norm(initial_velocity)*max_linear_velocity
         environment_without_me_adapted = []
         for k in range(len(environment_without_me)):
             obs = environment_without_me[k]
@@ -94,8 +79,8 @@ def compute_ctr_point_vel_from_obs_avoidance(
             self_priority=priority,
         )
 
-    # return attenuate_DSM_velocities(number_ctrpt, velocities)
-    return velocities
+    return attenuate_DSM_velocities(number_ctrpt, velocities)
+    # return velocities
 
 def compute_drag_angle(initial_velocity, actual_orientation):
     # Direction (angle), of the linear_velocity in the global frame
@@ -418,12 +403,6 @@ def get_weight_from_gamma(
     weights = 1.0 / weights
     weights = (weights - frac_gamma_nth) / (1 - frac_gamma_nth)
     weights = weights / n_points
-    # in case there are some critical gammas, ignore the rest
-    # critic_indx = np.where(gammas<1.3)[0]
-    # if np.any(critic_indx):
-    #     for i in range(len(weights)):
-    #         if not np.any(np.where(critic_indx==i)[0]):
-    #             weights[i] = 1e-3
     return weights
 
 
