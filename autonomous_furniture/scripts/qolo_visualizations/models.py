@@ -132,8 +132,18 @@ class AgentContainer:
     def __iter__(self):
         return iter(self._agent_list)
 
+    @property
+    def n_obstacles(self) -> int:
+        return len(self._agent_list)
+
     def append(self, agent: SimpleAgent) -> None:
         self._agent_list.append(agent)
+
+    def get_single_obstacle(self, ind: int) -> Obstacle:
+        if len(self._agent_list[ind].shapes) > 1:
+            raise NotImplementedError()
+
+        return self._agent_list[ind].shapes[0]
 
     def get_obstacles(
         self,
@@ -152,12 +162,11 @@ class AgentContainer:
             for obs in agent.shapes:
                 if desired_margin is not None:
                     obs.margin_absolut = desired_margin
+
                 if level is None:
                     container_.append(obs)
                     continue
-
                 # TODO: only take specific level [future implementation]
-                pass
 
         return container_
 

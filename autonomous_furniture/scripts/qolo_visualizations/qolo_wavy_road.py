@@ -4,6 +4,7 @@ from typing import Optional
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 from vartools.states import Pose
 from vartools.dynamical_systems import LinearSystem
@@ -39,6 +40,8 @@ from models import AgentContainer
 class GrassPublisher(Node):
     line_length = 1.0
     x_lim = [-5, 5]
+    position = [[0.0, -8.0], [0.0, 8.0], [-6.0, 4.0], [6.0, -4.0]]
+    axes_length = [[20.0, 4.0], [20.0, 4.0], [8.0, 12.0], [8.0, 12.0]]
 
     def __init__(self, x_lim=[-5, 5], y_lim=[-5, 5]):
         super().__init__("environment_publisher")
@@ -47,18 +50,28 @@ class GrassPublisher(Node):
         self.publisher_ = self.create_publisher(MarkerArray, "environment", 3)
         self.markers_array.markers.append(self.create_ground())
 
-        self.markers_array.markers.append(
-            self.create_grass(x_pos=0.0, y_pos=-8.0, delta_x=20, delta_y=4, ns="grass0")
-        )
-        self.markers_array.markers.append(
-            self.create_grass(x_pos=0.0, y_pos=8.0, delta_x=20, delta_y=4, ns="grass1")
-        )
-        self.markers_array.markers.append(
-            self.create_grass(x_pos=-6, y_pos=4, delta_x=8, delta_y=12, ns="grass2")
-        )
-        self.markers_array.markers.append(
-            self.create_grass(x_pos=6, y_pos=-4, delta_x=8, delta_y=12, ns="grass3")
-        )
+        for ii, (pos, axes) in enumerate(zip(self.position, self.axes_length)):
+            self.markers_array.markers.append(
+                self.create_grass(
+                    x_pos=pos[0],
+                    y_pos=pos[1],
+                    delta_x=axes[0],
+                    delta_y=axes[1],
+                    ns=f"grass{ii}",
+                )
+            )
+        # self.markers_array.markers.append(
+        #     self.create_grass(x_pos=0.0, y_pos=-8.0, delta_x=20, delta_y=4, ns="grass0")
+        # )
+        # self.markers_array.markers.append(
+        #     self.create_grass(x_pos=0.0, y_pos=8.0, delta_x=20, delta_y=4, ns="grass1")
+        # )
+        # self.markers_array.markers.append(
+        #     self.create_grass(x_pos=-6, y_pos=4, delta_x=8, delta_y=12, ns="grass2")
+        # )
+        # self.markers_array.markers.append(
+        #     self.create_grass(x_pos=6, y_pos=-4, delta_x=8, delta_y=12, ns="grass3")
+        # )
 
         # self.place_lines(n_lines=5)
         # Line
@@ -181,6 +194,9 @@ class RvizQoloAnimator(Animator):
         # )
 
         self.robot = RvizQolo(pose=start_pose)
+        self.robot.required_margin = 0.6
+        margin_absolut = self.robot.required_margin
+
         self.agent_container = AgentContainer()
         self.agent_container.append(
             RvizTable(pose=Pose(position=[-3.4, -2.5], orientation=-0.1 * np.pi))
@@ -188,17 +204,28 @@ class RvizQoloAnimator(Animator):
         self.agent_container.append(
             RvizTable(pose=Pose(position=[4.0, 3.6], orientation=np.pi / 2))
         )
+
+        intersecting_id = [self.agent_container.n_obstacles]
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[1.2, 0.5], orientation=-0.2 * np.pi))
+            RvizTable(pose=Pose(position=[1.4, 0.5], orientation=-0.2 * np.pi))
         )
+        # obs = self.agent_container.get_single_obstacle(-1)
+        # obs.margin_absolut = margin_absolut
+        # obs.set_reference_point(shared_reference, in_global_frame=True)
+        # breakpoint()
+        intersecting_id.append(self.agent_container.n_obstacles)
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-0.4, 1.3], orientation=0.4 * np.pi))
+            RvizTable(pose=Pose(position=[-0.2, 1.3], orientation=0.4 * np.pi))
         )
+        # obs = self.agent_container.get_single_obstacle(-1)
+        # obs.margin_absolut = margin_absolut
+        # obs.set_reference_point(shared_reference, in_global_frame=True)
+
         self.agent_container.append(
             RvizTable(pose=Pose(position=[-0.2, -3.9], orientation=-0.3 * np.pi))
         )
         self.agent_container.append(
-            RvizTable(pose=Pose(position=[-0.3, 4.0], orientation=-0.9 * np.pi))
+            RvizTable(pose=Pose(position=[-0.7, 4.0], orientation=-0.9 * np.pi))
         )
 
         # self.avoider = RotationalAvoider(
@@ -239,8 +266,14 @@ class RvizQoloAnimator(Animator):
 
         # Initial update of transform
         update_shapes_of_agent(self.robot)
-        for agent in self.agent_container:
+        for ii, agent in enumerate(self.agent_container):
             update_shapes_of_agent(agent)
+
+            if ii in intersecting_id:
+                agent.shapes[0].margin_absolut = self.robot.required_margin
+                agent.shapes[0].set_reference_point(
+                    np.array([0.3, 0.75]), in_global_frame=True
+                )
 
     def update_step(self, ii):
         print("ii", ii)
@@ -250,8 +283,8 @@ class RvizQoloAnimator(Animator):
         #         desired_margin=self.robot.required_margin
         #     ),
         # )
-        self.robot.twist.linear = self.avoider.evaluate(
-            position=self.robot.pose.position
+        self.robot.twist.linear = self.avoider.evaluate_sequence(
+            self.robot.pose.position
         )
 
         self.robot.update_step(dt=self.dt_simulation)
@@ -339,47 +372,101 @@ def main_wavy(
     print("End of script")
 
 
-def plot_vectorfield():
+def plot_grass(ax, publisher):
+    for ii, (pos, axes) in enumerate(zip(publisher.position, publisher.axes_length)):
+        pos_edge = np.array(pos) - np.array(axes) * 0.5
+        grass = patches.Rectangle(pos_edge, axes[0], axes[1], color="black", zorder=-3)
+        grass.set(color="#D3D3D3")
+        ax.add_artist(grass)
+
+
+def plot_vectorfield(n_grid=20, save_figure=False):
+    from nonlinear_avoidance.visualization.plot_qolo import integrate_with_qolo
+
     # x_lim = [-10, 10.0]
-    # y_lim = [-10.0, 10.5]
-    x_lim = [-2.0, -0.5]
-    y_lim = [-4.5, -3.0]
-    n_grid = 20
+    # y_lim = [-10.0, 10.]
+
+    x_lim = [-6.5, 8.5]
+    y_lim = [-7.0, 7.0]
+
+    # x_lim = [-2.0, -0.5]
+    # y_lim = [-4.5, -3.0]
 
     animator = RvizQoloAnimator()
     animator.setup(x_lim=[-10, 10], y_lim=[-10, 10])
 
-    pos0 = np.array([-1.446, -3.709])
-    velocity0 = animator.avoider.evaluate(pos0)
-    pos1 = np.array([-1.531, -3.702])
-    velocity1 = animator.avoider.evaluate(pos1)
-    breakpoint()
+    figsize = (4, 3.5)
+    figtype = ".pdf"
+    position_start = np.array([-4, -4.0])
+
+    it_max = 1000
 
     plt.close("all")
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=figsize)
     plot_obstacle_dynamics(
         obstacle_container=animator.agent_container.get_obstacles(),
-        dynamics=animator.avoider.evaluate,
+        dynamics=animator.avoider.evaluate_sequence,
         x_lim=x_lim,
         y_lim=y_lim,
         n_grid=n_grid,
         ax=ax,
         # attractor_position=dynamic.attractor_position,
-        do_quiver=True,
-        # show_ticks=False,
+        do_quiver=False,
+        show_ticks=False,
     )
     plot_obstacles(
         ax=ax,
         obstacle_container=animator.agent_container.get_obstacles(),
         x_lim=x_lim,
         y_lim=y_lim,
+        # draw_reference=True,
     )
+    plot_grass(ax=ax, publisher=GrassPublisher)
+
+    integrate_with_qolo(
+        position_start,
+        animator.avoider.evaluate_sequence,
+        it_max=it_max,
+        dt=0.03,
+        ax=ax,
+    )
+
+    if save_figure:
+        fig_name = "qolo_along_wavy_road_avoiding"
+        fig.savefig("media/" + fig_name + figtype, bbox_inches="tight", dpi=300)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    plot_obstacle_dynamics(
+        obstacle_container=[],
+        dynamics=animator.initial_dynamics.evaluate,
+        x_lim=x_lim,
+        y_lim=y_lim,
+        n_grid=n_grid,
+        ax=ax,
+        # attractor_position=dynamic.attractor_position,
+        do_quiver=False,
+        show_ticks=False,
+    )
+    integrate_with_qolo(
+        position_start,
+        animator.initial_dynamics.evaluate,
+        it_max=it_max,
+        dt=0.03,
+        ax=ax,
+    )
+    plot_grass(ax=ax, publisher=GrassPublisher)
+
+    if save_figure:
+        fig_name = "qolo_along_wavy_road_initial"
+        fig.savefig("media/" + fig_name + figtype, bbox_inches="tight", dpi=300)
+
     breakpoint()
 
 
 def main():
     logging.basicConfig(level=logging.INFO)
+    # This script is best to be run with the 'rviz_config'
 
     logging.info("Simulation started.")
     rclpy.init()
@@ -389,10 +476,9 @@ def main():
         pass
 
     rclpy.shutdown()
-
     logging.info("Simulation ended.")
 
 
 if (__name__) == "__main__":
     # main()
-    plot_vectorfield()
+    plot_vectorfield(n_grid=90, save_figure=True)
