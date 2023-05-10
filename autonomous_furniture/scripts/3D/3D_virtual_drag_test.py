@@ -18,7 +18,7 @@ from autonomous_furniture.agent3D import Furniture3D
 
 from autonomous_furniture.furniture_creators import (
     create_3D_table_surface_legs,
-    assign_agent_virtual_drag
+    assign_agent_virtual_drag,
 )
 
 import argparse
@@ -30,10 +30,17 @@ def threeD_test(args=[]):
     obstacle_environment_upper = ObstacleContainer()
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
-    table_normal_reference_goal = ObjectPose(position=np.array([3.0, 1.0]), orientation=np.pi/2)
-    table_normal_reference_start = ObjectPose(position=np.array([0.0, 1.0]), orientation=np.pi/2)
+    table_normal_reference_goal = ObjectPose(
+        position=np.array([3.0, 1.0]), orientation=np.pi / 2
+    )
+    table_normal_reference_start = ObjectPose(
+        position=np.array([0.0, 1.0]), orientation=np.pi / 2
+    )
 
-    [table_normal_legs_agent, table_normal_surface_agent] = create_3D_table_surface_legs(
+    [
+        table_normal_legs_agent,
+        table_normal_surface_agent,
+    ] = create_3D_table_surface_legs(
         obstacle_environment_lower,
         obstacle_environment_upper,
         table_normal_reference_start,
@@ -42,13 +49,20 @@ def threeD_test(args=[]):
         margin_control_points=0.0,
         axes_table=[1.6, 0.7],
         axes_legs=[0.1, 0.1],
-        ctr_points_number=[6,4]
+        ctr_points_number=[6, 4],
     )
-    
-    table_shifted_reference_goal = ObjectPose(position=np.array([7.0, 1.0]), orientation=np.pi/2)
-    table_shifted_reference_start = ObjectPose(position=np.array([4.0, 1.0]), orientation=np.pi/2)
 
-    [table_shifted_legs_agent, table_shifted_surface_agent] = create_3D_table_surface_legs(
+    table_shifted_reference_goal = ObjectPose(
+        position=np.array([7.0, 1.0]), orientation=np.pi / 2
+    )
+    table_shifted_reference_start = ObjectPose(
+        position=np.array([4.0, 1.0]), orientation=np.pi / 2
+    )
+
+    [
+        table_shifted_legs_agent,
+        table_shifted_surface_agent,
+    ] = create_3D_table_surface_legs(
         obstacle_environment_lower,
         obstacle_environment_upper,
         table_shifted_reference_start,
@@ -57,14 +71,14 @@ def threeD_test(args=[]):
         margin_control_points=0.0,
         axes_table=[1.6, 0.7],
         axes_legs=[0.1, 0.1],
-        ctr_points_number=[6,4],
-        leg_positions=np.array([[0.75, 1.2], [-0.75, 1.2], [0.75, 0.6], [-0.75, 0.6]])
+        ctr_points_number=[6, 4],
+        leg_positions=np.array([[0.75, 1.2], [-0.75, 1.2], [0.75, 0.6], [-0.75, 0.6]]),
     )
 
-    table_normal_legs_agent.cutoff_gamma_obs=1.0
-    table_normal_surface_agent.cutoff_gamma_obs=1.0
-    table_shifted_legs_agent.cutoff_gamma_obs=1.0
-    table_shifted_surface_agent.cutoff_gamma_obs=1.0
+    table_normal_legs_agent.cutoff_gamma_obs = 1.0
+    table_normal_surface_agent.cutoff_gamma_obs = 1.0
+    table_shifted_legs_agent.cutoff_gamma_obs = 1.0
+    table_shifted_surface_agent.cutoff_gamma_obs = 1.0
 
     layer_lower = [table_normal_legs_agent, table_shifted_legs_agent]
     layer_upper = [table_normal_surface_agent, table_shifted_surface_agent]
@@ -74,7 +88,6 @@ def threeD_test(args=[]):
 
     # layer_lower = [table_legs_agent]y
     # layer_upper = [table_surface_agent]
-
 
     my_animation = DynamicalSystemAnimation3D(
         it_max=1000,

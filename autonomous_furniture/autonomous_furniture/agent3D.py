@@ -26,7 +26,6 @@ from dynamic_obstacle_avoidance.containers.obstacle_container import ObstacleCon
 from dynamic_obstacle_avoidance.avoidance import DynamicCrowdAvoider
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 
-import json
 
 from autonomous_furniture.agent_helper_functions import (
     compute_ang_weights,
@@ -42,9 +41,8 @@ from autonomous_furniture.agent_helper_functions import (
     evaluate_safety_repulsion,
     get_gamma_product_crowd,
     get_weight_of_control_points,
+    get_params_from_file,
 )
-
-# from vartools.states
 
 
 class ObjectType(Enum):
@@ -72,7 +70,7 @@ class Furniture3D:
         object_type: ObjectType = ObjectType.OTHER,
         d_critic: float = None,
         gamma_critic_max: float = None,
-        gamma_critic_min: float =None,
+        gamma_critic_min: float = None,
         gamma_stop: float = None,
         safety_damping: float = None,
         cutoff_gamma_weights: float = None,
@@ -82,106 +80,34 @@ class Furniture3D:
         maximum_linear_acceleration: float = None,  # m/s^2
         maximum_angular_acceleration: float = None,  # rad/s^2
     ) -> None:
-        
-        #safe mandatory variables
+        # safe mandatory variables
         self._shape_list = shape_list
         self._goal_pose = goal_pose
         self._reference_pose = starting_pose
         self._parking_pose = parking_pose
         self._shape_positions = shape_positions
         self._control_points = control_points
-        self.ctr_pt_number = self._control_points.shape[0]
         self._obstacle_environment = obstacle_environment
 
-        #check if any non-mandatory variable was defined, otherwise take the value from the json file
-        with open(parameter_file, 'r') as openfile:
-            json_object = json.load(openfile)
+        self = get_params_from_file(
+            self,
+            parameter_file,
+            maximum_linear_velocity,
+            maximum_angular_velocity,
+            maximum_linear_acceleration,
+            maximum_angular_acceleration,
+            safety_damping,
+            gamma_critic_max,
+            gamma_critic_min,
+            gamma_stop,
+            d_critic,
+            cutoff_gamma_weights,
+            cutoff_gamma_obs,
+            static,
+            name,
+            priority_value,
+        )
 
-        #kinematic constraints
-        if maximum_linear_velocity==None:
-            self.maximum_linear_velocity = json_object["maximum linear velocity"]
-        else:
-            self.maximum_linear_velocity = maximum_linear_velocity
-        
-        if maximum_angular_velocity==None:
-            self.maximum_angular_velocity = json_object["maximum angular velocity"]
-        else:
-            self.maximum_angular_velocity = maximum_angular_velocity
-    
-        if maximum_linear_acceleration==None:
-            self.maximum_linear_acceleration = json_object["maximum linear acceleration"]
-        else:
-            self.maximum_linear_acceleration = maximum_linear_acceleration
-            
-        if maximum_angular_acceleration==None:
-            self.maximum_angular_acceleration = json_object["maximum angular acceleration"]
-        else:
-            self.maximum_angular_acceleration = maximum_angular_acceleration
-
-        # safety module
-        if safety_damping==None:
-            self.safety_damping = json_object["safety module damping"]
-        else:
-            self.safety_damping = safety_damping
-            
-        if gamma_critic_max==None: # value of gamma_critic before being closer than d_critic
-            self.gamma_critic_max = json_object["max gamma critic"]
-        else:
-            self.gamma_critic_max = gamma_critic_max
-            
-        if gamma_critic_min==None: # minimal value of gamma_critic as it should stay vigilant
-            self.gamma_critic_min = json_object["min gamma critic"]
-        else: 
-            self.gamma_critic_min = gamma_critic_min
-            
-        if gamma_stop==None: # agent should stop when a ctrpoint reaches a gamma value under this threshold
-            self.gamma_stop = json_object["gamma stop"]
-        else:
-            self.gamma_stop = gamma_stop
-            
-        if d_critic==None: # distance from which gamma_critic starts shrinking
-            self.d_critic = json_object["critical distance"]
-        else:
-            self.d_critic = d_critic
-        
-        #cutoff gammas
-        if cutoff_gamma_weights==None:
-            self.cutoff_gamma_weights = json_object["cutoff gamma for control point weights"]
-        else:
-            self.cutoff_gamma_weights = cutoff_gamma_weights
-            
-        if cutoff_gamma_obs==None:
-            self.cutoff_gamma_obs = json_object["cutoff gamma for obstacle environment"]
-        else:
-            self.cutoff_gamma_obs = cutoff_gamma_obs
-            
-        #static or dynamic agent
-        if static==None:
-            self.static = json_object["static"]
-        else:
-            self.static = static
-        
-        #agent name
-        if name=="no_name":
-            self.name = json_object["name"]
-        else:
-            self.name= name
-
-        if priority_value ==None:
-            self.priority = json_object["priority"]
-        else:
-            self.priority = priority_value
-        
-        #save variables only for the agent helper functions
-        #compute_ang_weights
-        self.k = json_object["k"] #parameter for term d/(d+k) which ensures the virtual drag weight w1 goes to zero when d=0
-        self.alpha = json_object["angle switch distance"] #distance at which the soft decoupling becomes stronger than the virtual drag
-        
-        #get_weight_from_gamma
-        self.gamma0 = json_object["gamma surface"] # gamma value on obstacle surface
-        self.frac_gamma_nth = json_object["frac_gamma_nth"] # boh this I don't know
-
-        
         for i in range(len(shape_list)):
             self._shape_list[i].reactivity = self.priority
 
@@ -213,6 +139,8 @@ class Furniture3D:
         self.angular_velocity = 0.0
 
         self.min_gamma = 1e6
+        self.ctr_pt_number = self._control_points.shape[0]
+        self.object_type = object_type
 
     def get_obstacles_without_me(self):
         obs_env_without_me = []
@@ -336,7 +264,7 @@ class Furniture3D:
                 environment_without_me,
                 cutoff_gamma=self.cutoff_gamma_weights,
                 gamma0=self.gamma0,
-                frac_gamma_nth=self.frac_gamma_nth
+                frac_gamma_nth=self.frac_gamma_nth,
             )
         else:
             weights = np.ones(self.ctr_pt_number) / self.ctr_pt_number
@@ -357,7 +285,7 @@ class Furniture3D:
                 initial_velocity = self.linear_velocity_old.copy()
 
             # compute goal orientation wheights
-            w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag)
+            w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag, self.k, self.alpha)
             drag_angle = compute_drag_angle(
                 initial_velocity, self._reference_pose.orientation
             )
@@ -367,10 +295,10 @@ class Furniture3D:
                 )
             )
             # TODO Very clunky : Rather make a function out of it
-            K = 3 # K proportionnal parameter for the speed
+            K = 3  # K proportionnal parameter for the speed
             # Initial angular_velocity is computedenv
             initial_angular_vel = K * (w1 * drag_angle + w2 * goal_angle)
-            
+
             velocities_from_DSM = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
                 goal_pos_ctr_pts=np.copy(goal_control_points),
@@ -392,9 +320,7 @@ class Furniture3D:
                 initial_angular_vel,
                 linear_velocity,
                 number_ctrpt=self.ctr_pt_number,
-                local_control_points=self._control_points,
                 global_control_points=np.copy(global_control_points),
-                actual_orientation=self._reference_pose.orientation,
                 environment_without_me=environment_without_me,
                 priority=self.priority,
                 DSM=True,
@@ -498,9 +424,7 @@ class Furniture3D:
                         angular_velocity,
                         linear_velocity,
                         number_ctrpt=self.ctr_pt_number,
-                        local_control_points=self._control_points,
                         global_control_points=np.copy(global_control_points),
-                        actual_orientation=self._reference_pose.orientation,
                         environment_without_me=environment_without_me,
                         priority=self.priority,
                         DSM=False,

@@ -18,7 +18,7 @@ from autonomous_furniture.agent3D import Furniture3D
 
 from autonomous_furniture.furniture_creators import (
     create_3D_table_surface_legs,
-    create_3D_chair
+    create_3D_chair,
 )
 
 import argparse
@@ -28,14 +28,21 @@ def threeD_test(args=[]):
     # List of environment shared by all the furniture/agent in the same layer
     obstacle_environment_lower = ObstacleContainer()
     obstacle_environment_upper = ObstacleContainer()
-    
+
     margins = 0.05
 
     ### CREATE STATIC TABLE SECTIONS FOR ALL THE LAYERS
-    static_table_reference_start = ObjectPose(position=np.array([3.0, 1.0]), orientation=np.pi/2)
-    static_table_reference_goal = ObjectPose(position=np.array([-1.0, 4.0]), orientation=np.pi/2)
+    static_table_reference_start = ObjectPose(
+        position=np.array([3.0, 1.0]), orientation=np.pi / 2
+    )
+    static_table_reference_goal = ObjectPose(
+        position=np.array([-1.0, 4.0]), orientation=np.pi / 2
+    )
 
-    [static_table_legs_agent, static_table_surface_agent] = create_3D_table_surface_legs(
+    [
+        static_table_legs_agent,
+        static_table_surface_agent,
+    ] = create_3D_table_surface_legs(
         obstacle_environment_legs=obstacle_environment_lower,
         obstacle_environment_surface=obstacle_environment_upper,
         start_pose=static_table_reference_start,
@@ -49,10 +56,17 @@ def threeD_test(args=[]):
     )
 
     ### CREATE MOBILE LOW TABLE SECTIONS FOR ALL THE LAYERS
-    mobile_table_reference_start = ObjectPose(position=np.array([2.25, 1.25]), orientation=0.0)
-    mobile_table_reference_goal = ObjectPose(position=np.array([4.5, 0.5]), orientation=0.0)
+    mobile_table_reference_start = ObjectPose(
+        position=np.array([2.25, 1.25]), orientation=0.0
+    )
+    mobile_table_reference_goal = ObjectPose(
+        position=np.array([4.5, 0.5]), orientation=0.0
+    )
 
-    [mobile_table_legs_agent, mobile_table_surface_agent] = create_3D_table_surface_legs(
+    [
+        mobile_table_legs_agent,
+        mobile_table_surface_agent,
+    ] = create_3D_table_surface_legs(
         obstacle_environment_legs=None,
         obstacle_environment_surface=obstacle_environment_lower,
         start_pose=mobile_table_reference_start,
@@ -65,18 +79,18 @@ def threeD_test(args=[]):
         static=False,
     )
     mobile_table_surface_agent.gamma_critic_max = 1.1
-    
+
     chair_left_reference_start = ObjectPose(
-        position=np.array([1.5, 0.5]), orientation=-np.pi/2
+        position=np.array([1.5, 0.5]), orientation=-np.pi / 2
     )
     chair_left_reference_goal = ObjectPose(
-        position=np.array([2.6, 1.0]), orientation=np.pi/2
+        position=np.array([2.6, 1.0]), orientation=np.pi / 2
     )
 
     [
         chair_left_surface_agent,
         chair_left_back_agent,
-     ] = create_3D_chair(
+    ] = create_3D_chair(
         obstacle_environment_surface=obstacle_environment_lower,
         obstacle_environment_back=obstacle_environment_upper,
         start_pose=chair_left_reference_start,
@@ -87,21 +101,21 @@ def threeD_test(args=[]):
         back_ctr_pt_number=[4, 2],
         back_positions=np.array([[0.0, 0.2]]),
         surface_axis=[0.4, 0.4],
-        surface_ctr_pt_number=[3,3],
+        surface_ctr_pt_number=[3, 3],
         surface_positions=np.array([[0.0, 0.0]]),
     )
 
     chair_right_reference_start = ObjectPose(
-        position=np.array([4.75, 1.75]), orientation=np.pi/2
+        position=np.array([4.75, 1.75]), orientation=np.pi / 2
     )
     chair_right_reference_goal = ObjectPose(
-        position=np.array([3.4, 1.0]), orientation=-np.pi/2
+        position=np.array([3.4, 1.0]), orientation=-np.pi / 2
     )
 
     [
         chair_right_surface_agent,
         chair_right_back_agent,
-     ] = create_3D_chair(
+    ] = create_3D_chair(
         obstacle_environment_surface=obstacle_environment_lower,
         obstacle_environment_back=obstacle_environment_upper,
         start_pose=chair_right_reference_start,
@@ -112,21 +126,30 @@ def threeD_test(args=[]):
         back_ctr_pt_number=[4, 2],
         back_positions=np.array([[0.0, 0.2]]),
         surface_axis=[0.4, 0.4],
-        surface_ctr_pt_number=[3,3],
+        surface_ctr_pt_number=[3, 3],
         surface_positions=np.array([[0.0, 0.0]]),
     )
 
     chair_right_surface_agent.gamma_critic_max = 1.3
-    
-    layer_lower = [chair_left_surface_agent, chair_right_surface_agent, mobile_table_surface_agent, static_table_legs_agent]
-    layer_upper = [chair_left_back_agent, chair_right_back_agent, None, static_table_surface_agent]
+
+    layer_lower = [
+        chair_left_surface_agent,
+        chair_right_surface_agent,
+        mobile_table_surface_agent,
+        static_table_legs_agent,
+    ]
+    layer_upper = [
+        chair_left_back_agent,
+        chair_right_back_agent,
+        None,
+        static_table_surface_agent,
+    ]
 
     # layer_lower = [mobile_table_surface_agent, static_table_legs_agent]
     # layer_upper = [None, static_table_surface_agent]
 
     # layer_lower = [chair_left_surface_agent, static_table_legs_agent]
     # layer_upper = [chair_left_back_agent, static_table_surface_agent]
-
 
     my_animation = DynamicalSystemAnimation3D(
         it_max=1000,

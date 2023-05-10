@@ -16,6 +16,8 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent import Furniture, Person
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
+import pathlib
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -29,6 +31,11 @@ def test_uneven_priority(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
+
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
 
     # List of environment shared by all the furniture/agent
     obstacle_environment_with_decoupling = ObstacleContainer()
@@ -49,31 +56,11 @@ def test_uneven_priority(visualize=False):
         tail_effect=False,
     )
 
-    goal2_with_decoupling = ObjectPose(
-        position=np.array([-1, 3]), orientation=np.pi / 2
-    )
-    table_shape2_with_decoupling = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_with_decoupling.position,
-        margin_absolut=1,
-        orientation=goal2_with_decoupling.orientation,
-        tail_effect=False,
-    )
-
     table_shape_no_decoupling = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([1, 3]),
         margin_absolut=1,
         orientation=np.pi / 2,
-        tail_effect=False,
-    )
-
-    goal2_no_decoupling = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
-    table_shape2_no_decoupling = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_no_decoupling.position,
-        margin_absolut=1,
-        orientation=goal2_no_decoupling.orientation,
         tail_effect=False,
     )
 
@@ -84,14 +71,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture(
-            shape=table_shape2_with_decoupling,
-            obstacle_environment=obstacle_environment_with_decoupling,
-            control_points=control_points,
-            goal_pose=goal2_with_decoupling,
-            name="fur",
-            static=True,
+            parameter_file=parameter_file,
         ),
     ]
 
@@ -102,14 +82,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture(
-            shape=table_shape2_no_decoupling,
-            obstacle_environment=obstacle_environment_no_decoupling,
-            control_points=control_points,
-            goal_pose=goal2_no_decoupling,
-            name="fur",
-            static=True,
+            parameter_file=parameter_file,
         ),
     ]
 
@@ -185,4 +158,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=False)
+    test_uneven_priority(visualize=True)

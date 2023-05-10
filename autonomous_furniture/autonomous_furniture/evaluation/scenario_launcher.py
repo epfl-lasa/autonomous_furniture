@@ -162,7 +162,7 @@ class ScenarioLauncher:
 
         return new_pose
 
-    def setup(self):
+    def setup(self, parameter_file):
         self.agents = []
         self.obstacle_environment = ObstacleContainer()
 
@@ -182,6 +182,7 @@ class ScenarioLauncher:
                     obstacle_environment=self.obstacle_environment,
                     control_points=np.array([[0.4, 0], [-0.4, 0]]),
                     goal_pose=self._goal_setup[ii],
+                    parameter_file=parameter_file,
                 )
             )
 

@@ -138,8 +138,16 @@ def create_layer_list():
     # table_surface_agent.priority = 1e6
     # table_legs_agent.priority = 1e6
 
-    layer_lower = [table_legs_agent, chair_static_surface_agent, chair_moving_surface_agent]
-    layer_upper = [table_surface_agent, chair_static_back_agent, chair_moving_back_agent]
+    layer_lower = [
+        table_legs_agent,
+        chair_static_surface_agent,
+        chair_moving_surface_agent,
+    ]
+    layer_upper = [
+        table_surface_agent,
+        chair_static_back_agent,
+        chair_moving_back_agent,
+    ]
     return [layer_lower, layer_upper]
 
     # chair_moving_surface_agent._obstacle_environment.append(

@@ -1,6 +1,8 @@
 import numpy as np
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
+import json
+
 
 def apply_linear_and_angular_acceleration_constraints(
     linear_velocity_old,
@@ -82,6 +84,7 @@ def compute_ctr_point_vel_from_obs_avoidance(
     return attenuate_DSM_velocities(number_ctrpt, velocities)
     # return velocities
 
+
 def compute_drag_angle(initial_velocity, actual_orientation):
     # Direction (angle), of the linear_velocity in the global frame
     lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
@@ -104,7 +107,7 @@ def compute_drag_angle(initial_velocity, actual_orientation):
         drag_angle = lin_vel_dir - orientation_sym
         if drag_angle > np.pi / 2:
             drag_angle = -1 * (2 * np.pi - drag_angle)
-        
+
     return drag_angle
 
 
@@ -141,10 +144,13 @@ def ctr_point_vel_from_agent_kinematics(
 ):
     ### CALCULATE THE VELOCITY OF THE CONTROL POINTS GIVEN THE INITIAL ANGULAR AND LINEAR VELOCITY OF THE AGENT ###
     velocities = np.zeros((2, number_ctrpt))
-            
+
     for i in range(number_ctrpt):
-        control_point_global_relative = global_control_points[:,i]-reference_position
-        velocity_3D = np.append(initial_velocity,0.0)+np.cross(np.array([0.0, 0.0, initial_angular_vel]), np.append(control_point_global_relative, 0.0))
+        control_point_global_relative = global_control_points[:, i] - reference_position
+        velocity_3D = np.append(initial_velocity, 0.0) + np.cross(
+            np.array([0.0, 0.0, initial_angular_vel]),
+            np.append(control_point_global_relative, 0.0),
+        )
         velocities[:, i] = velocity_3D[0:2]
 
         ctp = global_control_points[:, i]
@@ -152,7 +158,9 @@ def ctr_point_vel_from_agent_kinematics(
             environment_without_me_adapted = []
             for k in range(len(environment_without_me)):
                 obs = environment_without_me[k]
-                ctr_pt_i = np.array([global_control_points[0][i], global_control_points[1][i]])
+                ctr_pt_i = np.array(
+                    [global_control_points[0][i], global_control_points[1][i]]
+                )
                 gamma = obs.get_gamma(ctr_pt_i, in_global_frame=True)
                 if gamma < cutoff_gamma_obs:
                     environment_without_me_adapted.append(obs)
@@ -172,33 +180,44 @@ def agent_kinematics_from_ctr_point_vel(
     # CALCULATE FINAL LINEAR AND ANGULAT VELOCITY OF AGENT GIVEN THE LINEAR VELOCITY OF EACH CONTROL POINT ###
     cotrol_points_relative_global = []
     for i in range(ctrpt_number):
-        cotrol_points_relative_global.append(global_control_points[:, i]-global_reference_position)
-    
-    N = 2*ctrpt_number
+        cotrol_points_relative_global.append(
+            global_control_points[:, i] - global_reference_position
+        )
+
+    N = 2 * ctrpt_number
     A = np.zeros((N, 3))
     b = np.zeros((N))
     w_diag = np.zeros((N))
-    
+
     for i in range(ctrpt_number):
-        A[2*i:2*i+2, 0:2] = np.eye(2)
-        A[2*i:2*i+2, 2] = np.array([-cotrol_points_relative_global[i][1], cotrol_points_relative_global[i][0]])
-        b[2*i:2*i+2] = velocities[:, i]
-        w_diag[2*i:2*i+2] = np.array([weights[i], weights[i]])
+        A[2 * i : 2 * i + 2, 0:2] = np.eye(2)
+        A[2 * i : 2 * i + 2, 2] = np.array(
+            [-cotrol_points_relative_global[i][1], cotrol_points_relative_global[i][0]]
+        )
+        b[2 * i : 2 * i + 2] = velocities[:, i]
+        w_diag[2 * i : 2 * i + 2] = np.array([weights[i], weights[i]])
     W = np.diag(w_diag)
-    Aw = np.dot(W,A)
-    bw = np.dot(b,W)
+    Aw = np.dot(W, A)
+    bw = np.dot(b, W)
     x = np.linalg.lstsq(Aw, bw, rcond=None)
 
     linear_velocity = x[0][0:2]
     angular_velocity = x[0][2]
-    
+
     return linear_velocity, angular_velocity
 
 
 def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
     if mini_drag == "dragdist":  # a1 computed as in the paper depending on the distance
         r = d / (d + k)
-        w1 = 1/2*(1+np.tanh(virtual_drag * (d - alpha))) * r * (virtual_drag-1)/(virtual_drag-1+1e-6)
+        w1 = (
+            1
+            / 2
+            * (1 + np.tanh(virtual_drag * (d - alpha)))
+            * r
+            * (virtual_drag - 1)
+            / (virtual_drag - 1 + 1e-6)
+        )
         w2 = 1 - w1
 
     elif mini_drag == "nodrag":  # no virtual drag
@@ -270,7 +289,6 @@ def collect_infos_for_crit_ctr_points(
     gamma_values,
     gamma_critic,
 ):
-
     normals_for_ang_vel = []
     gamma_list_colliding = []
 
@@ -313,6 +331,7 @@ def collect_infos_for_crit_ctr_points(
         normals_for_ang_vel,
     )
 
+
 def get_gamma_product_crowd(position, env):
     if not len(env):
         # Very large number
@@ -330,9 +349,8 @@ def get_gamma_product_crowd(position, env):
 
     return index, gamma
 
-def get_weight_from_gamma(
-    gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth
-):
+
+def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth):
     weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
     weights = weights / frac_gamma_nth
     weights = 1.0 / weights
@@ -341,7 +359,9 @@ def get_weight_from_gamma(
     return weights
 
 
-def get_weight_of_control_points(control_points, environment_without_me, cutoff_gamma, gamma0, frac_gamma_nth):
+def get_weight_of_control_points(
+    control_points, environment_without_me, cutoff_gamma, gamma0, frac_gamma_nth
+):
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
     for ii in range(control_points.shape[1]):
@@ -351,7 +371,7 @@ def get_weight_of_control_points(control_points, environment_without_me, cutoff_
 
     ctl_point_weight = np.zeros(gamma_values.shape)
     ind_nonzero = gamma_values < cutoff_gamma
-    if not any(ind_nonzero): 
+    if not any(ind_nonzero):
         ctl_point_weight = np.full(gamma_values.shape, 1 / control_points.shape[1])
     # for index in range(len(gamma_values)):
     ctl_point_weight[ind_nonzero] = get_weight_from_gamma(
@@ -359,7 +379,7 @@ def get_weight_of_control_points(control_points, environment_without_me, cutoff_
         cutoff_gamma=cutoff_gamma,
         n_points=control_points.shape[1],
         gamma0=gamma0,
-        frac_gamma_nth=frac_gamma_nth
+        frac_gamma_nth=frac_gamma_nth,
     )
 
     ctl_point_weight_sum = np.sum(ctl_point_weight)
@@ -410,12 +430,12 @@ def update_multi_layer_simulation(
             agent_angular_velocities = []
             for k in range(number_layer):
                 if not layer_list[k][jj] == None:
-                    agent_linear_velocities.append(np.copy(
-                        layer_list[k][jj].linear_velocity
-                    ))
-                    agent_angular_velocities.append(np.copy(
-                        layer_list[k][jj].angular_velocity
-                    ))
+                    agent_linear_velocities.append(
+                        np.copy(layer_list[k][jj].linear_velocity)
+                    )
+                    agent_angular_velocities.append(
+                        np.copy(layer_list[k][jj].angular_velocity)
+                    )
             # weight each layer for this specific agent
             weights = compute_layer_weights(
                 jj,
@@ -425,9 +445,9 @@ def update_multi_layer_simulation(
             # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
             linear_velocity = np.zeros((2))
             for i in range(len(agent_linear_velocities)):
-                linear_velocity[0] += agent_linear_velocities[i][0]*weights[i]
-                linear_velocity[1] += agent_linear_velocities[i][1]*weights[i]
-                
+                linear_velocity[0] += agent_linear_velocities[i][0] * weights[i]
+                linear_velocity[1] += agent_linear_velocities[i][1] * weights[i]
+
             angular_velocity = np.sum(
                 agent_angular_velocities * np.tile(weights, (1, 1))
             )
@@ -458,7 +478,11 @@ def compute_layer_weights(agent_number, number_layer, layer_list):
             gamma0 = layer_list[k][agent_number].gamma0
             frac_gamma_nth = layer_list[k][agent_number].frac_gamma_nth
     weights = get_weight_from_gamma(
-        gammas=np.array(gamma_list), cutoff_gamma=10, n_points=len(gamma_list), gamma0=gamma0, frac_gamma_nth=frac_gamma_nth
+        gammas=np.array(gamma_list),
+        cutoff_gamma=10,
+        n_points=len(gamma_list),
+        gamma0=gamma0,
+        frac_gamma_nth=frac_gamma_nth,
     )
     weights = weights / np.sum(weights)
     return weights
@@ -471,3 +495,124 @@ def attenuate_DSM_velocities(ctr_pt_number, velocities):
         velocities[:, i] = velocities[:, i] / LA.norm(velocities[:, i]) * avg_norm
 
     return velocities
+
+
+def get_params_from_file(
+    agent,
+    parameter_file,
+    maximum_linear_velocity,
+    maximum_angular_velocity,
+    maximum_linear_acceleration,
+    maximum_angular_acceleration,
+    safety_damping,
+    gamma_critic_max,
+    gamma_critic_min,
+    gamma_stop,
+    d_critic,
+    cutoff_gamma_weights,
+    cutoff_gamma_obs,
+    static,
+    name,
+    priority_value,
+):
+    # check if any non-mandatory variable was defined, otherwise take the value from the json file
+    with open(parameter_file, "r") as openfile:
+        json_object = json.load(openfile)
+
+    # kinematic constraints
+    if maximum_linear_velocity == None:
+        agent.maximum_linear_velocity = json_object["maximum linear velocity"]
+    else:
+        agent.maximum_linear_velocity = maximum_linear_velocity
+
+    if maximum_angular_velocity == None:
+        agent.maximum_angular_velocity = json_object["maximum angular velocity"]
+    else:
+        agent.maximum_angular_velocity = maximum_angular_velocity
+
+    if maximum_linear_acceleration == None:
+        agent.maximum_linear_acceleration = json_object["maximum linear acceleration"]
+    else:
+        agent.maximum_linear_acceleration = maximum_linear_acceleration
+
+    if maximum_angular_acceleration == None:
+        agent.maximum_angular_acceleration = json_object["maximum angular acceleration"]
+    else:
+        agent.maximum_angular_acceleration = maximum_angular_acceleration
+
+    # safety module
+    if safety_damping == None:
+        agent.safety_damping = json_object["safety module damping"]
+    else:
+        agent.safety_damping = safety_damping
+
+    if (
+        gamma_critic_max == None
+    ):  # value of gamma_critic before being closer than d_critic
+        agent.gamma_critic_max = json_object["max gamma critic"]
+    else:
+        agent.gamma_critic_max = gamma_critic_max
+
+    if (
+        gamma_critic_min == None
+    ):  # minimal value of gamma_critic as it should stay vigilant
+        agent.gamma_critic_min = json_object["min gamma critic"]
+    else:
+        agent.gamma_critic_min = gamma_critic_min
+
+    if (
+        gamma_stop == None
+    ):  # agent should stop when a ctrpoint reaches a gamma value under this threshold
+        agent.gamma_stop = json_object["gamma stop"]
+    else:
+        agent.gamma_stop = gamma_stop
+
+    if d_critic == None:  # distance from which gamma_critic starts shrinking
+        agent.d_critic = json_object["critical distance"]
+    else:
+        agent.d_critic = d_critic
+
+    # cutoff gammas
+    if cutoff_gamma_weights == None:
+        agent.cutoff_gamma_weights = json_object[
+            "cutoff gamma for control point weights"
+        ]
+    else:
+        agent.cutoff_gamma_weights = cutoff_gamma_weights
+
+    if cutoff_gamma_obs == None:
+        agent.cutoff_gamma_obs = json_object["cutoff gamma for obstacle environment"]
+    else:
+        agent.cutoff_gamma_obs = cutoff_gamma_obs
+
+    # static or dynamic agent
+    if static == None:
+        agent.static = json_object["static"]
+    else:
+        agent.static = static
+
+    # agent name
+    if name == "no_name":
+        agent.name = json_object["name"]
+    else:
+        agent.name = name
+
+    if priority_value == None:
+        agent.priority = json_object["priority"]
+    else:
+        agent.priority = priority_value
+
+    # save variables only for the agent helper functions
+    # compute_ang_weights
+    agent.k = json_object[
+        "k"
+    ]  # parameter for term d/(d+k) which ensures the virtual drag weight w1 goes to zero when d=0
+    agent.alpha = json_object[
+        "angle switch distance"
+    ]  # distance at which the soft decoupling becomes stronger than the virtual drag
+
+    # get_weight_from_gamma
+    agent.gamma0 = json_object["gamma surface"]  # gamma value on obstacle surface
+    agent.frac_gamma_nth = json_object["frac_gamma_nth"]  # boh this I don't know
+
+    return agent

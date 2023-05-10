@@ -17,6 +17,8 @@ from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 from autonomous_furniture.furniture_creators import assign_agent_virtual_drag
 
+import pathlib
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -30,6 +32,11 @@ def test(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
+
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
 
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
@@ -70,38 +77,47 @@ def test(visualize=False):
     my_furniture = [
         Furniture3D(
             shape_list=[table_shape2],
+            shape_positions= np.array([[0.0, 0.0]]),
+            starting_pose = table_shape2.pose,
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal2,
             priority_value=1e3,
             static=True,
             name="static",
+            parameter_file=parameter_file,
         ),
         Furniture3D(
             shape_list=[table_shape3],
+            shape_positions= np.array([[0.0, 0.0]]),
+            starting_pose = table_shape3.pose,
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal3,
             priority_value=1e-3,
             static=True,
             name="static",
+            parameter_file=parameter_file,
         ),
         Furniture3D(
             shape_list=[table_shape],
+            shape_positions= np.array([[0.0, 0.0]]),
+            starting_pose = table_shape.pose,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal1,
             priority_value=1,
             name="fur",
             cutoff_gamma_obs=10.0,
-            cutoff_gamma_weights=10.0
+            cutoff_gamma_weights=10.0,
+            parameter_file=parameter_file,
         ),
     ]
-    
+
     for i in range(len(my_furniture)):
         agent = assign_agent_virtual_drag([my_furniture[i]])
         my_furniture[i] = agent[0]
-        
+
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
     my_animation = DynamicalSystemAnimation3D(
         it_max=200,

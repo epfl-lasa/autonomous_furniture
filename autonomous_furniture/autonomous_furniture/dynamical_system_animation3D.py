@@ -211,7 +211,9 @@ class DynamicalSystemAnimation3D(Animator):
                         for i in range(len(self.layer_list[k][jj]._shape_list)):
                             plot_obstacles(
                                 ax=self.ax,
-                                obstacle_container=[self.layer_list[k][jj]._shape_list[i]],
+                                obstacle_container=[
+                                    self.layer_list[k][jj]._shape_list[i]
+                                ],
                                 x_lim=self.x_lim,
                                 y_lim=self.y_lim,
                                 showLabel=False,

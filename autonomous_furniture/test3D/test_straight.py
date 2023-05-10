@@ -16,9 +16,9 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
-from autonomous_furniture.furniture_creators import (
-    create_3D_table_surface_legs
-)
+from autonomous_furniture.furniture_creators import create_3D_table_surface_legs
+
+import pathlib
 
 parser = argparse.ArgumentParser()
 
@@ -33,6 +33,12 @@ def test_straight(visualize=False):
     # List of environment shared by all the furniture/agent in the same layer
     obstacle_environment_lower = ObstacleContainer()
     obstacle_environment_upper = ObstacleContainer()
+
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
+
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
     table_reference_start = ObjectPose(position=np.array([-1, 1]), orientation=0)
@@ -49,8 +55,9 @@ def test_straight(visualize=False):
         axes_legs=[0.2, 0.2],
         ctr_points_number=[3, 2],
         static=False,
+        parameter_file=parameter_file
     )
-    
+
     table_legs_agent.cutoff_gamma_obs = 3.0
 
     obstacle_shape = CuboidXd(
@@ -60,6 +67,7 @@ def test_straight(visualize=False):
     )
     obstacle = Furniture3D(
         shape_list=[obstacle_shape],
+        shape_positions=np.array([[0.0, 0.0]]),
         starting_pose=ObjectPose(
             position=table_reference_goal.position,
             orientation=table_reference_goal.orientation,
@@ -71,6 +79,7 @@ def test_straight(visualize=False):
         static=True,
         obstacle_environment=obstacle_environment_lower,
         control_points=np.array([[0.0, 0.0]]),
+        parameter_file=parameter_file
     )
 
     spectator_pose = ObjectPose(position=np.array([3.0, 3.0]), orientation=0)
@@ -81,6 +90,7 @@ def test_straight(visualize=False):
     )
     spectator = Furniture3D(
         shape_list=[spectator_shape],
+        shape_positions=np.array([[0.0, 0.0]]),
         starting_pose=ObjectPose(
             position=spectator_pose.position, orientation=spectator_pose.orientation
         ),
@@ -90,6 +100,7 @@ def test_straight(visualize=False):
         static=True,
         obstacle_environment=obstacle_environment_lower,
         control_points=np.array([[0.0, 0.0]]),
+        parameter_file=parameter_file
     )
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]

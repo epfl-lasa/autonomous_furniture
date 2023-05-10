@@ -24,6 +24,10 @@ def threeD_test(args=[]):
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
 
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/3D_test_1layer.json"
+    )
+
     # control_points for the table
     table_legs_control_points = np.array([[2, 1.5], [2, -1.5], [-2, 1.5], [-2, -1.5]])
     table_legs_positions = np.copy(table_legs_control_points)
@@ -31,9 +35,7 @@ def threeD_test(args=[]):
 
     # , orientation = 1.6) Goal of the CuboidXd
     # , orientation = 1.6) Goal of the CuboidXd
-    table_reference_goal = ObjectPose(
-        position=np.array([6, 2.75]), orientation=0.0
-    )
+    table_reference_goal = ObjectPose(position=np.array([6, 2.75]), orientation=0.0)
     table_reference_start = ObjectPose(position=np.array([0, 2.75]), orientation=0)
 
     table_legs = []
@@ -67,7 +69,7 @@ def threeD_test(args=[]):
             control_points=table_legs_control_points,
             starting_pose=table_reference_start,
             goal_pose=table_reference_goal,
-            parameter_file=str(pathlib.Path(__file__).parent.resolve())+"/parameter_file.json",
+            parameter_file=parameter_file,
             name="table_legs",
         ),
         Furniture3D(
@@ -79,7 +81,7 @@ def threeD_test(args=[]):
             goal_pose=goal2,
             static=False,
             name="static",
-            parameter_file=str(pathlib.Path(__file__).parent.resolve())+"/parameter_file.json",
+            parameter_file=parameter_file,
         ),
     ]
 

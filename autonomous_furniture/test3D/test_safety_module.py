@@ -17,6 +17,8 @@ from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 from autonomous_furniture.furniture_creators import assign_agent_virtual_drag
 
+import pathlib
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -30,6 +32,11 @@ def test(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
+
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
 
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
@@ -62,21 +69,27 @@ def test(visualize=False):
     my_furniture = [
         Furniture3D(
             shape_list=[table_shape],
+            shape_positions= np.array([[0.0, 0.0]]),
+            starting_pose = table_shape.pose,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal,
             name="fur",
             safety_damping=1,
             gamma_critic_max=2,
+            parameter_file=parameter_file,
         ),
         Furniture3D(
             shape_list=[table_shape2],
+            shape_positions= np.array([[0.0, 0.0]]),
+            starting_pose = table_shape2.pose,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal2,
             name="fur",
             safety_damping=1,
             gamma_critic_max=2,
+            parameter_file=parameter_file,
         ),
     ]
 

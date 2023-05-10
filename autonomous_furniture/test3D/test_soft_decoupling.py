@@ -17,6 +17,8 @@ from autonomous_furniture.agent3D import Furniture3D
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 from autonomous_furniture.furniture_creators import assign_agent_virtual_drag
 
+import pathlib
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -30,6 +32,11 @@ def test(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
+
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
 
     # List of environment shared by all the furniture/agent
     obstacle_environment_with_decoupling = ObstacleContainer()
@@ -58,25 +65,35 @@ def test(visualize=False):
         tail_effect=False,
     )
 
-    my_furniture_with_decoupling = assign_agent_virtual_drag([
-        Furniture3D(
-            shape_list=[table_shape_with_decoupling],
-            obstacle_environment=obstacle_environment_with_decoupling,
-            control_points=control_points,
-            goal_pose=goal,
-            name="fur",
-        ),
-    ])
+    my_furniture_with_decoupling = assign_agent_virtual_drag(
+        [
+            Furniture3D(
+                shape_list=[table_shape_with_decoupling],
+                shape_positions= np.array([[0.0, 0.0]]),
+                starting_pose = table_shape_with_decoupling.pose,
+                obstacle_environment=obstacle_environment_with_decoupling,
+                control_points=control_points,
+                goal_pose=goal,
+                name="fur",
+                parameter_file=parameter_file,
+            ),
+        ]
+    )
 
-    my_furniture_no_decoupling = assign_agent_virtual_drag([
-        Furniture3D(
-            shape_list=[table_shape_no_decoupling],
-            obstacle_environment=obstacle_environment_no_decoupling,
-            control_points=control_points,
-            goal_pose=goal,
-            name="fur",
-        ),
-    ])
+    my_furniture_no_decoupling = assign_agent_virtual_drag(
+        [
+            Furniture3D(
+                shape_list=[table_shape_no_decoupling],
+                shape_positions= np.array([[0.0, 0.0]]),
+                starting_pose = table_shape_no_decoupling.pose,
+                obstacle_environment=obstacle_environment_no_decoupling,
+                control_points=control_points,
+                goal_pose=goal,
+                name="fur",
+                parameter_file=parameter_file,
+            ),
+        ]
+    )
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]
 

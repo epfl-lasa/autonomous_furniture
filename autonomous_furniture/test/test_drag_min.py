@@ -16,6 +16,8 @@ from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent import Furniture, Person
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
 
+import pathlib
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--rec", action="store", default=False, help="Record flag")
@@ -26,6 +28,12 @@ args = parser.parse_args()
 
 
 def test_uneven_priority(visualize=False):
+    
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
+
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
@@ -49,29 +57,11 @@ def test_uneven_priority(visualize=False):
         tail_effect=False,
     )
 
-    goal2_with_drag = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
-    table_shape2_with_drag = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_with_drag.position,
-        margin_absolut=1,
-        orientation=goal2_with_drag.orientation,
-        tail_effect=False,
-    )
-
     table_shape_nodrag = CuboidXd(
         axes_length=[max_ax_len, min_ax_len],
         center_position=np.array([1, 3]),
         margin_absolut=1,
         orientation=np.pi / 2,
-        tail_effect=False,
-    )
-
-    goal2_nodrag = ObjectPose(position=np.array([-1, 3]), orientation=np.pi / 2)
-    table_shape2_nodrag = CuboidXd(
-        axes_length=[max_ax_len, min_ax_len],
-        center_position=goal2_nodrag.position,
-        margin_absolut=1,
-        orientation=goal2_nodrag.orientation,
         tail_effect=False,
     )
 
@@ -82,14 +72,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture(
-            shape=table_shape2_with_drag,
-            obstacle_environment=obstacle_environment_with_drag,
-            control_points=control_points,
-            goal_pose=goal2_with_drag,
-            name="fur",
-            static=True,
+            parameter_file=parameter_file,
         ),
     ]
 
@@ -100,14 +83,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
-        ),
-        Furniture(
-            shape=table_shape2_nodrag,
-            obstacle_environment=obstacle_environment_nodrag,
-            control_points=control_points,
-            goal_pose=goal2_nodrag,
-            name="fur",
-            static=True,
+            parameter_file=parameter_file,
         ),
     ]
 

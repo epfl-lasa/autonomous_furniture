@@ -14,9 +14,8 @@ from autonomous_furniture.evaluation.scenario_launcher import ScenarioLauncher
 
 import argparse
 
-import json
-import os
 import random
+import pathlib
 
 from multiprocessing import Process
 
@@ -94,6 +93,7 @@ def single_simulation(
     do_drag: str,
     safety_module: bool,
     emergency_stop: bool,
+    parameter_file: str,
     version: str = "v1",
     anim: bool = True,
 ):
@@ -117,7 +117,7 @@ def single_simulation(
     anim_name += version
     my_animation.animation_name = anim_name
 
-    my_scenario.setup()
+    my_scenario.setup(parameter_file)
 
     n_agents = nb_furniture
     cm = plt.get_cmap("gist_rainbow")
@@ -161,10 +161,6 @@ def main():
     for nb_furniture in nb_array:
         for version in version_array:
             for do_drag in drag_array:
-                # p = Process(multi_simulation, args=([scenarios, nb_furniture, do_drag, 1000, version, False]))
-                # process_array.append(p)
-                # p.start()
-                # p.join()
                 multi_simulation(
                     scenarios,
                     nb_furniture,
@@ -173,15 +169,9 @@ def main():
                     version=version,
                     anim=False,
                 )
-    # for i in range(n_process):
-    #     p = process_array[i]
-    #     p.start()
-    # for i in range(n_process):
-    #     p = process_array[i]
-    #     p.join()
 
 
-def run_single():
+def run_single(parameter_file):
     scen = 240
     nb_furniture = 10
     version = "v2"
@@ -196,6 +186,7 @@ def run_single():
             emergency_stop,
             version=version,
             anim=True,
+            parameter_file=parameter_file,
         )
 
 
@@ -203,5 +194,10 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/example_scenario_mkr.json"
+    )
+
     # main()
-    run_single()
+    run_single(parameter_file)

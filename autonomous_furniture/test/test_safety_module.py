@@ -13,8 +13,10 @@ from dynamic_obstacle_avoidance.containers import ObstacleContainer
 from dynamic_obstacle_avoidance.obstacles.cuboid_xd import CuboidXd
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 
-from autonomous_furniture.agent import Furniture, Person
+from autonomous_furniture.agent import Furniture
 from autonomous_furniture.dynamical_system_animation import DynamicalSystemAnimation
+
+import pathlib
 
 parser = argparse.ArgumentParser()
 
@@ -29,7 +31,11 @@ def test_uneven_priority(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-
+    
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve())
+        + "/parameters/test.json"
+    )
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()
 
@@ -64,6 +70,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal,
             name="fur",
+            parameter_file=parameter_file,
         ),
         Furniture(
             shape=table_shape2,
@@ -71,6 +78,7 @@ def test_uneven_priority(visualize=False):
             control_points=control_points,
             goal_pose=goal2,
             name="fur",
+            parameter_file=parameter_file,
         ),
     ]
 
@@ -122,4 +130,4 @@ if __name__ == "__main__":
     plt.close("all")
     plt.ion()
 
-    test_uneven_priority(visualize=True)
+    test_uneven_priority(visualize=False)
