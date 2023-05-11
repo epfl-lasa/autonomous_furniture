@@ -1,5 +1,7 @@
 import time
 import logging
+import warnings
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -10,13 +12,20 @@ from vartools.states import Pose
 from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
+from dynamic_obstacle_avoidance.obstacles import get_intersection_position
+from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
+from dynamic_obstacle_avoidance.avoidance import ModulationAvoider
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from dynamic_obstacle_avoidance.visualization.plot_obstacle_dynamics import (
     plot_obstacle_dynamics,
 )
 
+from nonlinear_avoidance.visualization.plot_qolo import integrate_with_qolo
 from nonlinear_avoidance.avoidance import RotationalAvoider
+from nonlinear_avoidance.rotation_container import RotationContainer
 from nonlinear_avoidance.dynamics.segmented_dynamics import create_segment_from_points
+from nonlinear_avoidance.dynamics.segmented_dynamics import WavyPathFollowing
+
 from nonlinear_avoidance.dynamics.projected_rotation_dynamics import (
     ProjectedRotationDynamics,
 )
@@ -171,67 +180,34 @@ class GrassPublisher(Node):
 
 
 class RvizQoloAnimator(Animator):
+    initial_dynamics = create_segment_from_points(
+        [[-7.0, -4.0], [0.0, -4.0], [0.0, 4.0], [7.5, 4.0]]
+    )
+
     def setup(
         self,
         broadcaster: Optional[AgentTransformBroadCaster] = None,
         do_plotting: bool = True,
         x_lim=[-5, 5],
         y_lim=[-5, 5],
+        container=None,
     ) -> None:
         self.x_lim = x_lim
         self.y_lim = y_lim
-
-        self.initial_dynamics = create_segment_from_points(
-            [[-7.0, -4.0], [0.0, -4.0], [0.0, 4.0], [7.5, 4.0]]
-        )
 
         start_pose = Pose(
             position=self.initial_dynamics.segments[0].start, orientation=0.0
         )
 
-        # convergence_dynamics = LinearSystem(
-        #     attractor_position=initial_dynamics.segments[-1].end
-        # )
-
         self.robot = RvizQolo(pose=start_pose)
-        self.robot.required_margin = 0.6
-        margin_absolut = self.robot.required_margin
+        self.robot.required_margin = 0.7
 
-        self.agent_container = AgentContainer()
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[-3.4, -2.5], orientation=-0.1 * np.pi))
-        )
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[4.0, 3.6], orientation=np.pi / 2))
-        )
-
-        intersecting_id = [self.agent_container.n_obstacles]
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[1.4, 0.5], orientation=-0.2 * np.pi))
-        )
-        # obs = self.agent_container.get_single_obstacle(-1)
-        # obs.margin_absolut = margin_absolut
-        # obs.set_reference_point(shared_reference, in_global_frame=True)
+        if container is None:
+            intersecting_id, reference_point = self.create_agent_container()
+        else:
+            self.agent_container = container
+            intersecting_id = []
         # breakpoint()
-        intersecting_id.append(self.agent_container.n_obstacles)
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[-0.2, 1.3], orientation=0.4 * np.pi))
-        )
-        # obs = self.agent_container.get_single_obstacle(-1)
-        # obs.margin_absolut = margin_absolut
-        # obs.set_reference_point(shared_reference, in_global_frame=True)
-
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[-0.2, -3.9], orientation=-0.3 * np.pi))
-        )
-        self.agent_container.append(
-            RvizTable(pose=Pose(position=[-0.7, 4.0], orientation=-0.9 * np.pi))
-        )
-
-        # self.avoider = RotationalAvoider(
-        #     initial_dynamics=initial_dynamics,
-        #     convergence_system=convergence_dynamics,
-        # )
 
         rotation_projector = ProjectedRotationDynamics(
             attractor_position=self.initial_dynamics.segments[-1].end,
@@ -247,14 +223,6 @@ class RvizQoloAnimator(Animator):
             ),
             obstacle_convergence=rotation_projector,
         )
-        # attractor = np.array([4.5, 0])
-
-        # initial_dynamics = LinearSystem(
-        #     attractor_position=attractor, maximum_velocity=1.0
-        # )
-        # convergence_dynamics = LinearSystem(
-        #     attractor_position=initial_dynamics.attractor_position
-        # )
 
         self.broadcaster = broadcaster
 
@@ -272,8 +240,36 @@ class RvizQoloAnimator(Animator):
             if ii in intersecting_id:
                 agent.shapes[0].margin_absolut = self.robot.required_margin
                 agent.shapes[0].set_reference_point(
-                    np.array([0.3, 0.75]), in_global_frame=True
+                    reference_point, in_global_frame=True
                 )
+
+    def create_agent_container(self):
+        self.agent_container = AgentContainer()
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[-3.6, -3.7], orientation=0.4 * np.pi))
+        )
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[4.0, 3.3], orientation=0.4 * np.pi))
+        )
+
+        reference_point = np.array([0.4, 0.7])
+        intersecting_id = [self.agent_container.n_obstacles]
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[1.5, 0.4], orientation=-0.1 * np.pi))
+        )
+        intersecting_id.append(self.agent_container.n_obstacles)
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[0.3, 1.3], orientation=0.4 * np.pi))
+        )
+
+        self.agent_container.append(
+            RvizTable(pose=Pose(position=[-0.6, -2.6], orientation=-0.1 * np.pi))
+        )
+        # self.agent_container.append(
+        #     RvizTable(pose=Pose(position=[0.7, 4.8], orientation=-0.3 * np.pi))
+        # )
+
+        return intersecting_id, reference_point
 
     def update_step(self, ii):
         print("ii", ii)
@@ -380,7 +376,192 @@ def plot_grass(ax, publisher):
         ax.add_artist(grass)
 
 
-def plot_vectorfield(n_grid=20, save_figure=False):
+def create_container_from_grass(publisher):
+    container = RotationContainer()
+    for ii, (pos, axes) in enumerate(zip(publisher.position, publisher.axes_length)):
+        container.append(Cuboid(pose=Pose(pos), axes_length=axes))
+    return container
+
+
+def create_new_table(
+    environment,
+    x_lim,
+    y_lim,
+    start,
+    goal,
+    it_max=100,
+    margin_absolut=0.7,
+):
+    grass_container = create_container_from_grass(publisher=GrassPublisher)
+
+    for ii in range(100):
+        pose = np.random.rand(3)
+        pose[0] = pose[0] * (x_lim[1] - x_lim[0]) + x_lim[0]
+        pose[1] = pose[1] * (y_lim[1] - x_lim[0]) + x_lim[0]
+        pose[2] = pose[2] * 2 * np.pi - np.pi
+
+        gamma = grass_container.get_minimum_gamma(pose[:2])
+        if gamma <= 1:
+            continue
+
+        table = RvizTable(pose=Pose(position=pose[:2], orientation=pose[2]))
+        update_shapes_of_agent(table)
+
+        colliding = False
+        for obs in table.shapes:
+            obs.margin_absolut = margin_absolut
+
+            if obs.get_gamma(start, in_global_frame=True) <= 1:
+                colliding = True
+                break
+
+            if obs.get_gamma(goal, in_global_frame=True) <= 1:
+                colliding = True
+                break
+
+        if colliding:
+            continue
+
+        return table
+
+    warnings.warn("Not found after too many iterations --- quitting...")
+    return None
+
+
+def update_references(obstacle, environment) -> bool:
+    """Returns False if there is a 'double' intersection."""
+    reference_position = None
+    obs_other = None
+    for other in environment:
+        intersection = get_intersection_position(obstacle, other)
+
+        if intersection is None:
+            continue
+
+        if reference_position is not None:
+            warnings.warn("Reference point already replaced ignoring..")
+            return False
+
+        reference_position = intersection
+        obs_other = other
+
+        if not np.allclose(
+            other.get_reference_point(in_global_frame=True), other.center_position
+        ):
+            warnings.warn("Reference point already replaced ignoring..")
+            return False
+
+    if reference_position is None:
+        return True
+
+    obs_other.set_reference_point(reference_position, in_global_frame=True)
+    obstacle.set_reference_point(reference_position, in_global_frame=True)
+    return True
+
+
+def random_placement_tables(x_lim, y_lim, start, goal, n_tables=7) -> AgentContainer:
+    container = AgentContainer()
+    for tt in range(n_tables):
+        environment = container.get_obstacles()
+        new_table = create_new_table(
+            environment, x_lim=x_lim, y_lim=y_lim, start=start, goal=goal
+        )
+
+        successfull_reference = update_references(new_table.shapes[0], environment)
+
+        if not successfull_reference:
+            continue
+
+        container.append(new_table)
+
+    print(f"Placed tables: {container.n_obstacles} / {n_tables}")
+    return container
+
+
+class SwitchingDynamics:
+    def __init__(self, segments, width: float = 1.0):
+
+        self._mid_points = [ss.end for ss in segments]
+        self._local_attractors = [
+            np.array([2, -3.5]),
+            np.array([0, 6.0]),
+            segments[-1].end,
+        ]
+        self.attractor_position = np.array(self._local_attractors[-1])
+        # self.x_limit_1 = -2
+        # self.y_limit_2 = 2
+
+        self.switch_direction = np.array([1, 1])
+
+        self.slowdown_distance = 1.0
+        self.maximum_speed = 1.0
+
+    def get_direction(self, position: np.ndarray) -> np.ndarray:
+        if np.dot(self.switch_direction, (self._mid_points[1] - position)) < 0:
+            return LinearSystem(self._local_attractors[2]).evaluate(position)
+
+        if np.dot(self.switch_direction, (self._mid_points[0] - position)) < 0:
+            return LinearSystem(self._local_attractors[1]).evaluate(position)
+
+        return LinearSystem(self._local_attractors[0]).evaluate(position)
+
+    def evaluate(self, position: np.ndarray) -> np.ndarray:
+        direction = self.get_direction(position)
+
+        dist = np.linalg.norm(self.attractor_position - position)
+        if dist > self.slowdown_distance:
+            vel_max = self.maximum_speed
+        else:
+            vel_max = self.maximum_speed * dist / self.slowdown_distance
+
+        if vel_max == 0:
+            return np.zeros_like(position)
+
+        return direction / np.linalg.norm(direction) * vel_max
+
+
+class SwitchingDynamicsPathFollowing:
+    def __init__(self, segments, width: float = 1.0):
+
+        self.segments = segments
+        self._mid_points = [ss.end for ss in segments]
+        self._local_attractors = [
+            np.array([2, -3.5]),
+            np.array([0, 6.0]),
+            segments[-1].end,
+        ]
+        self.attractor_position = np.array(self._local_attractors[-1])
+
+        self.switch_direction = np.array([1, 1])
+
+        self.slowdown_distance = 1.0
+        self.maximum_speed = 1.0
+
+    def get_direction(self, position: np.ndarray) -> np.ndarray:
+        if np.dot(self.switch_direction, (self._mid_points[1] - position)) < 0:
+            return WavyPathFollowing([self.segments[2]]).evaluate(position)
+
+        if np.dot(self.switch_direction, (self._mid_points[0] - position)) < 0:
+            return WavyPathFollowing([self.segments[1]]).evaluate(position)
+
+        return WavyPathFollowing([self.segments[0]]).evaluate(position)
+
+    def evaluate(self, position: np.ndarray) -> np.ndarray:
+        direction = self.get_direction(position)
+
+        dist = np.linalg.norm(self.attractor_position - position)
+        if dist > self.slowdown_distance:
+            vel_max = self.maximum_speed
+        else:
+            vel_max = self.maximum_speed * dist / self.slowdown_distance
+
+        if vel_max == 0:
+            return np.zeros_like(position)
+
+        return direction / np.linalg.norm(direction) * vel_max
+
+
+def plot_vectorfield_nonlinear_global(n_grid=20, save_figure=False):
     from nonlinear_avoidance.visualization.plot_qolo import integrate_with_qolo
 
     # x_lim = [-10, 10.0]
@@ -391,13 +572,23 @@ def plot_vectorfield(n_grid=20, save_figure=False):
 
     # x_lim = [-2.0, -0.5]
     # y_lim = [-4.5, -3.0]
+    # figsize = (4, 3.5)
+    figsize = (8, 7.0)
+    figtype = ".pdf"
+    position_start = np.array([-5.5, -4.0])
+
+    np.random.seed(10)
+    container = random_placement_tables(
+        x_lim=x_lim,
+        y_lim=y_lim,
+        start=position_start,
+        goal=RvizQoloAnimator.initial_dynamics.attractor_position,
+    )
+    # container = None
 
     animator = RvizQoloAnimator()
-    animator.setup(x_lim=[-10, 10], y_lim=[-10, 10])
-
-    figsize = (4, 3.5)
-    figtype = ".pdf"
-    position_start = np.array([-4, -4.0])
+    animator.setup(x_lim=[-10, 10], y_lim=[-10, 10], container=container)
+    # avoider = animator.avoider
 
     it_max = 1000
 
@@ -412,7 +603,8 @@ def plot_vectorfield(n_grid=20, save_figure=False):
         n_grid=n_grid,
         ax=ax,
         # attractor_position=dynamic.attractor_position,
-        do_quiver=False,
+        # do_quiver=False,
+        do_quiver=True,
         show_ticks=False,
     )
     plot_obstacles(
@@ -424,13 +616,19 @@ def plot_vectorfield(n_grid=20, save_figure=False):
     )
     plot_grass(ax=ax, publisher=GrassPublisher)
 
-    integrate_with_qolo(
+    trajectory = integrate_with_qolo(
         position_start,
         animator.avoider.evaluate_sequence,
         it_max=it_max,
         dt=0.03,
         ax=ax,
+        attractor_position=animator.initial_dynamics.attractor_position,
     )
+
+    converged = np.allclose(
+        trajectory[:, -1], animator.initial_dynamics.attractor_position, atol=1e-1
+    )
+    print(f"Has converged: {converged}")
 
     if save_figure:
         fig_name = "qolo_along_wavy_road_avoiding"
@@ -454,6 +652,7 @@ def plot_vectorfield(n_grid=20, save_figure=False):
         it_max=it_max,
         dt=0.03,
         ax=ax,
+        attractor_position=dynamics.attractor_position,
     )
     plot_grass(ax=ax, publisher=GrassPublisher)
 
@@ -462,6 +661,350 @@ def plot_vectorfield(n_grid=20, save_figure=False):
         fig.savefig("media/" + fig_name + figtype, bbox_inches="tight", dpi=300)
 
     breakpoint()
+
+
+def plot_switching_linear_dynamics(n_grid=10, save_figure=False):
+    x_lim = [-6.5, 8.5]
+    y_lim = [-7.0, 7.0]
+
+    # figsize = (4, 3.5)
+    figsize = (8, 7.0)
+    figtype = ".pdf"
+    position_start = np.array([-5, -4.0])
+    it_max = 1000
+
+    dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
+
+    # container = None
+    container = random_placement_tables(
+        x_lim=x_lim, y_lim=y_lim, start=position_start, goal=dynamics.attractor_position
+    )
+
+    animator = RvizQoloAnimator()
+    animator.setup(x_lim=[-10, 10], y_lim=[-10, 10], container=container)
+    plt.close("all")
+
+    animator.avoider = ModulationAvoider(
+        initial_dynamics=dynamics,
+        obstacle_environment=animator.agent_container.get_obstacles(),
+    )
+
+    fig, ax = plt.subplots(figsize=figsize)
+    plot_obstacle_dynamics(
+        obstacle_container=[],
+        # dynamics=dynamics.evaluate,
+        dynamics=animator.avoider.evaluate,
+        x_lim=x_lim,
+        y_lim=y_lim,
+        n_grid=n_grid,
+        ax=ax,
+        # attractor_position=dynamic.attractor_position,
+        do_quiver=True,
+        show_ticks=True,
+    )
+    plot_obstacles(
+        ax=ax,
+        obstacle_container=animator.agent_container.get_obstacles(),
+        x_lim=x_lim,
+        y_lim=y_lim,
+        draw_reference=True,
+    )
+    plot_grass(ax=ax, publisher=GrassPublisher)
+
+    integrate_with_qolo(
+        position_start,
+        # animator.initial_dynamics.evaluate,
+        animator.avoider.evaluate,
+        it_max=it_max,
+        dt=0.02,
+        ax=ax,
+        attractor_position=dynamics.attractor_position,
+    )
+    breakpoint()
+
+
+def plot_switching_path_following(n_grid=10, save_figure=False):
+    x_lim = [-6.5, 8.5]
+    y_lim = [-7.0, 7.0]
+
+    # figsize = (4, 3.5)
+    figsize = (8, 7.0)
+    figtype = ".pdf"
+    position_start = np.array([-5, -4.0])
+    it_max = 2000
+
+    dynamics = SwitchingDynamicsPathFollowing(
+        RvizQoloAnimator.initial_dynamics.segments
+    )
+    conv_dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
+
+    # container = None
+    container = random_placement_tables(
+        x_lim=x_lim, y_lim=y_lim, start=position_start, goal=dynamics.attractor_position
+    )
+
+    animator = RvizQoloAnimator()
+    animator.setup(x_lim=[-10, 10], y_lim=[-10, 10], container=container)
+    plt.close("all")
+
+    animator.avoider = RotationalAvoider(
+        initial_dynamics=dynamics,
+        convergence_system=conv_dynamics,
+        obstacle_environment=animator.agent_container.get_obstacles(),
+    )
+
+    fig, ax = plt.subplots(figsize=figsize)
+    plot_obstacle_dynamics(
+        obstacle_container=[],
+        # dynamics=dynamics.evaluate,
+        dynamics=animator.avoider.evaluate,
+        x_lim=x_lim,
+        y_lim=y_lim,
+        n_grid=n_grid,
+        ax=ax,
+        # attractor_position=dynamic.attractor_position,
+        do_quiver=True,
+        show_ticks=True,
+    )
+    plot_obstacles(
+        ax=ax,
+        obstacle_container=animator.agent_container.get_obstacles(),
+        x_lim=x_lim,
+        y_lim=y_lim,
+        draw_reference=True,
+    )
+    plot_grass(ax=ax, publisher=GrassPublisher)
+
+    integrate_with_qolo(
+        position_start,
+        # animator.initial_dynamics.evaluate,
+        animator.avoider.evaluate,
+        it_max=it_max,
+        dt=0.02,
+        ax=ax,
+        attractor_position=dynamics.attractor_position,
+    )
+    breakpoint()
+
+
+def get_fraction_outside(trajectory):
+    grass_container = create_container_from_grass(publisher=GrassPublisher)
+
+    collision_free = 0
+    mean_sqrd_gamma = 0
+    for pp in range(trajectory.shape[1]):
+        gamma = grass_container.get_minimum_gamma(trajectory[:, pp])
+        if gamma >= 1:
+            collision_free += 1
+
+        mean_sqrd_gamma += gamma**2
+
+    collision_ratio = 1.0 * collision_free / trajectory.shape[1]
+    mean_sqrd_gamma = mean_sqrd_gamma / trajectory.shape[1]
+    return (collision_ratio, mean_sqrd_gamma)
+
+
+def get_distance(trajectory):
+    local_dist = trajectory[:, :-1] - trajectory[:, 1:]
+    return np.sum(np.linalg.norm(local_dist, axis=0))
+
+
+def multi_test_switching_straight(x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt):
+    np.random.seed(rndm_seed)
+
+    distances = np.zeros(n_runs)
+    fraction_free = np.zeros(n_runs)
+    converged = np.zeros(n_runs)
+    gammas = np.zeros(n_runs)
+    n_points = np.zeros(n_runs)
+
+    for ii in range(n_runs):
+        dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
+
+        # container = None
+        container = random_placement_tables(
+            x_lim=x_lim, y_lim=y_lim, start=start, goal=dynamics.attractor_position
+        )
+
+        animator = RvizQoloAnimator()
+        animator.setup(x_lim=x_lim, y_lim=y_lim, container=container, do_plotting=0)
+
+        animator.avoider = ModulationAvoider(
+            initial_dynamics=dynamics,
+            obstacle_environment=animator.agent_container.get_obstacles(),
+        )
+
+        trajectory = integrate_with_qolo(
+            start,
+            # animator.initial_dynamics.evaluate,
+            animator.avoider.evaluate,
+            it_max=it_max,
+            dt=dt,
+            ax=None,
+            attractor_position=dynamics.attractor_position,
+        )
+
+        distances[ii] = get_distance(trajectory)
+        fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
+        converged[ii] = np.allclose(
+            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
+        )
+        n_points[ii] = trajectory.shape[1]
+
+    outfile = Path("media", f"wavy_path_switching_straight_randseed_{rndm_seed}.csv")
+    np.savetxt(
+        str(outfile),
+        ammas=np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
+        header="n_points, distance, free_fraction, converged, gammas",
+        delimiter=",",
+    )
+
+
+def multi_test_switching_pathfollowing(
+    x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt
+):
+    np.random.seed(rndm_seed)
+
+    distances = np.zeros(n_runs)
+    fraction_free = np.zeros(n_runs)
+    converged = np.zeros(n_runs)
+    gammas = np.zeros(n_runs)
+    n_points = np.zeros(n_runs)
+
+    for ii in range(n_runs):
+        dynamics = SwitchingDynamicsPathFollowing(
+            RvizQoloAnimator.initial_dynamics.segments
+        )
+
+        conv_dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
+
+        # container = None
+        container = random_placement_tables(
+            x_lim=x_lim, y_lim=y_lim, start=start, goal=dynamics.attractor_position
+        )
+
+        animator = RvizQoloAnimator()
+        animator.setup(x_lim=x_lim, y_lim=y_lim, container=container, do_plotting=0)
+
+        animator.avoider = RotationalAvoider(
+            initial_dynamics=dynamics,
+            convergence_system=conv_dynamics,
+            obstacle_environment=animator.agent_container.get_obstacles(),
+        )
+
+        trajectory = integrate_with_qolo(
+            start,
+            # animator.initial_dynamics.evaluate,
+            animator.avoider.evaluate,
+            it_max=it_max,
+            dt=dt,
+            ax=None,
+            attractor_position=dynamics.attractor_position,
+        )
+
+        distances[ii] = get_distance(trajectory)
+        fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
+        converged[ii] = np.allclose(
+            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
+        )
+        n_points[ii] = trajectory.shape[1]
+
+    outfile = Path("media", f"wavy_path_switching_path_randseed_{rndm_seed}.csv")
+    np.savetxt(
+        str(outfile),
+        ammas=np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
+        header="n_points, distance, free_fraction, converged, gammas",
+        delimiter=",",
+    )
+
+
+def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt):
+    np.random.seed(rndm_seed)
+
+    distances = np.zeros(n_runs)
+    fraction_free = np.zeros(n_runs)
+    converged = np.zeros(n_runs)
+    gammas = np.zeros(n_runs)
+    n_points = np.zeros(n_runs)
+
+    for ii in range(n_runs):
+        np.random.seed(ii)
+        print(f"seed, {ii}")
+        dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
+
+        # container = None
+        container = random_placement_tables(
+            x_lim=x_lim, y_lim=y_lim, start=start, goal=dynamics.attractor_position
+        )
+
+        animator = RvizQoloAnimator()
+        animator.setup(x_lim=x_lim, y_lim=y_lim, container=container, do_plotting=0)
+
+        trajectory = integrate_with_qolo(
+            start,
+            # animator.initial_dynamics.evaluate,
+            animator.avoider.evaluate_sequence,
+            it_max=it_max,
+            dt=dt,
+            ax=None,
+            attractor_position=dynamics.attractor_position,
+        )
+
+        distances[ii] = get_distance(trajectory)
+        fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
+        converged[ii] = np.allclose(
+            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
+        )
+        n_points[ii] = trajectory.shape[1]
+        converged[ii]
+
+    outfile = Path("media", f"wavy_path_global_nonlinear_randseed_{rndm_seed}.csv")
+    np.savetxt(
+        str(outfile),
+        np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
+        header="n_points, distance, free_fraction, converged, gammas",
+        delimiter=",",
+    )
+
+
+def run_comparison(n_runs=1):
+    rndm_seed = 0
+    x_lim = [-6.5, 8.5]
+    y_lim = [-7.0, 7.0]
+    it_max = 2000
+    dt = 0.1
+    start_position = np.array([-5, -4.0])
+
+    # np.random.seed(rndm_seed)  # Do it here to, just to be sure..
+    # multi_test_switching_straight(
+    #     x_lim=x_lim,
+    #     y_lim=y_lim,
+    #     n_runs=n_runs,
+    #     rndm_seed=rndm_seed,
+    #     start=start_position,
+    #     it_max=it_max,
+    #     dt=dt,
+    # )
+    # np.random.seed(rndm_seed)
+    # multi_test_nonlinear_global(
+    #     x_lim=x_lim,
+    #     y_lim=y_lim,
+    #     n_runs=n_runs,
+    #     rndm_seed=rndm_seed,
+    #     start=start_position,
+    #     it_max=it_max,
+    #     dt=dt,
+    # )
+    # np.random.seed(rndm_seed)
+    # multi_test_switching_pathfollowing(
+    #     x_lim=x_lim,
+    #     y_lim=y_lim,
+    #     n_runs=n_runs,
+    #     rndm_seed=rndm_seed,
+    #     start=start_position,
+    #     it_max=it_max,
+    #     dt=dt,
+    # )
 
 
 def main():
@@ -481,4 +1024,9 @@ def main():
 
 if (__name__) == "__main__":
     # main()
-    plot_vectorfield(n_grid=90, save_figure=True)
+
+    np.random.seed(0)
+    plot_vectorfield_nonlinear_global(n_grid=10, save_figure=False)
+    # plot_switching_linear_dynamics(n_grid=20)
+    # plot_switching_path_following(n_grid=20)
+    # run_comparison(n_runs=100)
