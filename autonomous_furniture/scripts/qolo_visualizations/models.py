@@ -51,7 +51,12 @@ def update_shapes_of_agent(agent):
 class RvizTable(SimpleAgent):
     shapes: list[Obstacle] = field(
         default_factory=lambda: [
-            Cuboid(pose=Pose.create_trivial(2), axes_length=np.array([1.5, 0.75]))
+            Cuboid(
+                pose=Pose.create_trivial(2),
+                axes_length=np.array([1.5, 0.75]),
+                tail_effect=False,
+                distance_scaling=1.5,
+            )
         ]
     )
     local_poses: list[Obstacle] = field(
