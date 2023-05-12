@@ -33,8 +33,7 @@ def test_uneven_priority(visualize=False):
     min_ax_len = min(axis)
 
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/test.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/test.json"
     )
 
     # List of environment shared by all the furniture/agent

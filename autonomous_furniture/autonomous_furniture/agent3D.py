@@ -289,7 +289,9 @@ class Furniture3D:
                 initial_velocity = self.linear_velocity_old.copy()
 
             # compute goal orientation wheights
-            w1, w2 = compute_ang_weights(self.min_drag, d, self.virtual_drag, self.k, self.alpha)
+            w1, w2 = compute_ang_weights(
+                self.min_drag, d, self.virtual_drag, self.k, self.alpha
+            )
             drag_angle = compute_drag_angle(
                 initial_velocity, self._reference_pose.orientation
             )

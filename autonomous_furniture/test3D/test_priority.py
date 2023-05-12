@@ -34,8 +34,7 @@ def test(visualize=False):
     min_ax_len = min(axis)
 
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/test.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/test.json"
     )
 
     # List of environment shared by all the furniture/agent
@@ -77,8 +76,8 @@ def test(visualize=False):
     my_furniture = [
         Furniture3D(
             shape_list=[table_shape2],
-            shape_positions= np.array([[0.0, 0.0]]),
-            starting_pose = table_shape2.pose,
+            shape_positions=np.array([[0.0, 0.0]]),
+            starting_pose=table_shape2.pose,
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal2,
@@ -89,8 +88,8 @@ def test(visualize=False):
         ),
         Furniture3D(
             shape_list=[table_shape3],
-            shape_positions= np.array([[0.0, 0.0]]),
-            starting_pose = table_shape3.pose,
+            shape_positions=np.array([[0.0, 0.0]]),
+            starting_pose=table_shape3.pose,
             obstacle_environment=obstacle_environment,
             control_points=np.array([[0, 0], [0, 0]]),
             goal_pose=goal3,
@@ -101,8 +100,8 @@ def test(visualize=False):
         ),
         Furniture3D(
             shape_list=[table_shape],
-            shape_positions= np.array([[0.0, 0.0]]),
-            starting_pose = table_shape.pose,
+            shape_positions=np.array([[0.0, 0.0]]),
+            starting_pose=table_shape.pose,
             obstacle_environment=obstacle_environment,
             control_points=control_points,
             goal_pose=goal1,

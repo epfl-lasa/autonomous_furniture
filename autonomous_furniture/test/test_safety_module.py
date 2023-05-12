@@ -31,10 +31,9 @@ def test_uneven_priority(visualize=False):
     axis = [2.4, 1.1]
     max_ax_len = max(axis)
     min_ax_len = min(axis)
-    
+
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/test.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/test.json"
     )
     # List of environment shared by all the furniture/agent
     obstacle_environment = ObstacleContainer()

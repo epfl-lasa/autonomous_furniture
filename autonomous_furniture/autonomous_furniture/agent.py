@@ -501,7 +501,10 @@ class Furniture(BaseAgent):
                         safety_damping=self.safety_damping,
                     )
 
-        self.linear_velocity, self.angular_velocity = agent_kinematics_from_ctr_point_vel(
+        (
+            self.linear_velocity,
+            self.angular_velocity,
+        ) = agent_kinematics_from_ctr_point_vel(
             velocities,
             weights,
             global_control_points=np.copy(global_control_points),
@@ -509,7 +512,6 @@ class Furniture(BaseAgent):
             global_reference_position=self.position,
         )
 
-        
         self.apply_kinematic_constraints()
 
     def compute_metrics(self, dt):

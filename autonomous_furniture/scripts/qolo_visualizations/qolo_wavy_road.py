@@ -480,7 +480,6 @@ def random_placement_tables(x_lim, y_lim, start, goal, n_tables=7) -> AgentConta
 
 class SwitchingDynamics:
     def __init__(self, segments, width: float = 1.0):
-
         self._mid_points = [ss.end for ss in segments]
         self._local_attractors = [
             np.array([2, -3.5]),
@@ -522,7 +521,6 @@ class SwitchingDynamics:
 
 class SwitchingDynamicsPathFollowing:
     def __init__(self, segments, width: float = 1.0):
-
         self.segments = segments
         self._mid_points = [ss.end for ss in segments]
         self._local_attractors = [
@@ -803,7 +801,7 @@ def get_fraction_outside(trajectory):
         if gamma >= 1:
             collision_free += 1
 
-        mean_sqrd_gamma += gamma ** 2
+        mean_sqrd_gamma += gamma**2
 
         tmp_distances = np.zeros(len(grass_container))
         for ii, obs in enumerate(grass_container):
