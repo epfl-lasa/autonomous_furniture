@@ -81,7 +81,7 @@ def multi_simulation(
             # save_animation=args.rec,
             my_animation.run_no_clip()
 
-        my_animation.logs(nb_furniture)
+        # my_animation.logs(nb_furniture)
         # Reset of the collisions counter (TODO: To be changed it's ugly)
         BaseAgent.number_collisions = 0
         BaseAgent.number_serious_collisions = 0
@@ -145,7 +145,7 @@ def single_simulation(
     else:
         my_animation.run_no_clip()
 
-    my_animation.logs(nb_furniture)
+    # my_animation.logs(nb_furniture)
 
 
 def main():

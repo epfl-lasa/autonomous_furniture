@@ -68,6 +68,10 @@ class Furniture3D:
         name: str = "no_name",
         static: bool = None,
         object_type: ObjectType = ObjectType.OTHER,
+        min_drag: bool = None,
+        soft_decoupling: bool = None,
+        safety_module: bool = None,
+        emergency_stop: bool = None,
         d_critic: float = None,
         gamma_critic_max: float = None,
         gamma_critic_min: float = None,
@@ -92,6 +96,10 @@ class Furniture3D:
         self = get_params_from_file(
             self,
             parameter_file,
+            min_drag,
+            soft_decoupling,
+            safety_module,
+            emergency_stop,
             maximum_linear_velocity,
             maximum_angular_velocity,
             maximum_linear_acceleration,
@@ -235,10 +243,6 @@ class Furniture3D:
 
     def update_velocity(
         self,
-        mini_drag: str = "nodrag",
-        version: str = "v1",
-        emergency_stop: bool = True,
-        safety_module: bool = True,
         time_step: float = 0.1,
     ) -> None:
         # if static velocities will always be 0 per definition
@@ -271,7 +275,7 @@ class Furniture3D:
 
         d = LA.norm(self._reference_pose.position - self._goal_pose.position)
 
-        if version == "v2":
+        if self.soft_decoupling:
             if LA.norm(self.linear_velocity_old) < 1e-6:
                 initial_velocity = (
                     self._goal_pose.position - self._reference_pose.position
@@ -285,7 +289,7 @@ class Furniture3D:
                 initial_velocity = self.linear_velocity_old.copy()
 
             # compute goal orientation wheights
-            w1, w2 = compute_ang_weights(mini_drag, d, self.virtual_drag, self.k, self.alpha)
+            w1, w2 = compute_ang_weights(self.min_drag, d, self.virtual_drag, self.k, self.alpha)
             drag_angle = compute_drag_angle(
                 initial_velocity, self._reference_pose.orientation
             )
@@ -328,7 +332,7 @@ class Furniture3D:
                 cutoff_gamma_obs=self.cutoff_gamma_obs,
             )
 
-        elif version == "v1":
+        else:
             velocities = compute_ctr_point_vel_from_obs_avoidance(
                 number_ctrpt=self.ctr_pt_number,
                 goal_pos_ctr_pts=np.copy(goal_control_points),
@@ -375,9 +379,9 @@ class Furniture3D:
 
         ### CHECK WHETHER TO ADAPT THE AGENT'S KINEMATICS TO THE CURRENT OBSTACLE SITUATION ###
         if (
-            safety_module or emergency_stop
+            self.safety_module or self.emergency_stop
         ):  # collect the gamma values of all the control points
-            if emergency_stop:
+            if self.emergency_stop:
                 # if any gamma values are lower od equal gamma_stop
                 if any(x <= self.gamma_stop for x in gamma_values):
                     # print("EMERGENCY STOP")
@@ -389,7 +393,7 @@ class Furniture3D:
                 else:
                     self.stop = False
 
-            if safety_module:
+            if self.safety_module:
                 self.gamma_critic = compute_gamma_critic(
                     d=d,
                     d_critic=self.d_critic,

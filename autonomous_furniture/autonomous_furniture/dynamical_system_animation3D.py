@@ -15,13 +15,34 @@ from autonomous_furniture.agent_helper_functions import update_multi_layer_simul
 class DynamicalSystemAnimation3D(Animator):
     def __init__(
         self,
-        it_max: int = 100,
+        parameter_file,
+        it_max: int = None,
         iterator: Optional[int] = None,
-        dt_simulation: float = 0.1,
-        dt_sleep: float = 0.1,
-        animation_name: str = "",
-        file_type=".mp4",
+        dt_simulation: float = None,
+        dt_sleep: float = None,
+        animation_name: str = "None",
+        file_type:str ="None",
     ) -> None:
+        
+        with open(parameter_file, "r") as openfile:
+            json_object = json.load(openfile)
+        
+        if it_max==None:
+            it_max = json_object["maximum simulation time"]
+            
+        if dt_simulation==None:
+            dt_simulation=json_object["time step of simulation"]
+        
+        if dt_sleep==None:
+            dt_sleep=json_object["time step of sleep"]
+        
+        if animation_name=="None":
+            animation_name=json_object["animation name"]
+        
+        if file_type=="None":
+            file_type=json_object["video file type"]
+        
+
         super().__init__(
             it_max, iterator, dt_simulation, dt_sleep, animation_name, file_type
         )
@@ -34,38 +55,51 @@ class DynamicalSystemAnimation3D(Animator):
     def setup(
         self,
         layer_list: list[list[Furniture3D]],
+        parameter_file: str,
         x_lim=None,
         y_lim=None,
-        anim: bool = True,
-        mini_drag: str = "nodrag",
-        version: str = "v1",
-        safety_module: bool = True,
-        emergency_stop: bool = True,
-        check_convergence: bool = True,
-        obstacle_colors=["orange", "blue", "red"],
-        figsize=(3.0, 2.5),
+        anim: bool = None,
+        check_convergence: bool = None,
+        obstacle_colors=None,
+        figsize=None,
     ):
-        self.mini_drag = mini_drag
-        self.version = version
-        self.safety_module = safety_module
-        self.emergency_stop = emergency_stop
-        self.check_convergence = check_convergence
 
-        dim = 2
+        with open(parameter_file, "r") as openfile:
+            json_object = json.load(openfile)
+
+        if x_lim==None:
+            self.x_lim = json_object["x limit"]
+        else:
+            self.x_lim = x_lim
+            
+        if y_lim==None:
+            self.y_lim = json_object["y limit"]
+        else:
+            self.y_lim = y_lim
+
+        if anim==None:
+            anim = json_object["animation"]
+        
+        if obstacle_colors==None:
+            self.obstacle_colors = json_object["obstacle colors"]
+        else:
+            self.obstacle_colors = obstacle_colors
+
+        if check_convergence == None:
+            self.check_convergence = json_object["check convergence"]
+        else:
+            self.check_convergence = check_convergence
+
+        if figsize==None:
+            figsize = json_object["figure size"]
+
         self.number_agent = len(layer_list[0])
         self.number_layer = len(layer_list)
 
-        if y_lim is None:
-            y_lim = [0.0, 10]
-        if x_lim is None:
-            x_lim = [0, 10]
-
-        self.position_list = np.zeros((dim, self.it_max))
+        self.position_list = np.zeros((2, self.it_max))
         self.time_list = np.zeros((self.it_max))
         # self.position_list = [agent_list[ii]._reference_pose.position for ii in range(self.number_agent)]
         self.layer_list = layer_list
-        self.x_lim = x_lim
-        self.y_lim = y_lim
 
         self.agent_pos_saver = []
         for i in range(self.number_agent):
@@ -82,10 +116,6 @@ class DynamicalSystemAnimation3D(Animator):
                         )
                         saved = True
 
-        # for i in range(len(obstacle_environment)):
-        #     self.obstacle_colors.append(np.array(np.random.choice(range(255),size=3))/254)
-        self.obstacle_colors = obstacle_colors
-
         if anim:
             self.fig, self.ax = plt.subplots(figsize=figsize, dpi=120)
 
@@ -96,26 +126,12 @@ class DynamicalSystemAnimation3D(Animator):
             number_layer=self.number_layer,
             number_agent=self.number_agent,
             layer_list=self.layer_list,
-            mini_drag=self.mini_drag,
-            version=self.version,
-            emergency_stop=self.emergency_stop,
-            safety_module=self.safety_module,
             dt_simulation=self.dt_simulation,
             agent_pos_saver=self.agent_pos_saver,
         )
 
-        # assert self.layer_list[0][0].linear_velocity[0] > 0, "Expected to move towards attractor"
-        # assert (
-        #     np.linalg.norm(self.layer_list[0][0].linear_velocity[1]) < 1e-6
-        # ), "Expected to move perfectly vertical"
-        # assert (
-        #     np.linalg.norm(self.layer_list[0][0].angular_velocity) < 1e-6
-        # ), "Expected to move perfectly vertical"
-
         if not anim:
             return
-
-        # print(f"Doing Step: {ii}")
 
         self.ax.clear()
         for k in range(self.number_layer):
@@ -175,37 +191,6 @@ class DynamicalSystemAnimation3D(Animator):
                         color=color,
                         linestyle="dashed",
                     )
-                    # if self.agent[jj]._static == False:
-
-                    # self.ax.plot(
-                    #     self.agent[jj]._goal_pose.position[0],
-                    #     self.agent[jj]._goal_pose.position[1],
-                    #     color=color,
-                    #     marker="*",
-                    #     markersize=10,
-                    # )
-
-                    # for i in range(len(global_control_points[0,:])):
-                    #     margins = plt.Circle((global_control_points[0, i], global_control_points[1, i]), self.agent[jj].margin_absolut, color="black", linestyle="dashed", fill=False)
-                    #     self.ax.add_patch(margins)
-
-                    # breakpoint()
-
-                    # Drawing and adjusting of the axis
-                    # for agent in range(self.number_agent):
-                    #     self.ax.plot(
-                    #         self.position_list[agent, 0, :ii + 1],
-                    #         self.position_list[agent, 1, :ii + 1],
-                    #         ":",
-                    #         color="#135e08"
-                    #     )
-                    #     self.ax.plot(
-                    #         self.position_list[agent, 0, ii + 1],
-                    #         self.position_list[agent, 1, ii + 1],
-                    #         "o",
-                    #         color="#135e08",
-                    #         markersize=12,
-                    #     )
 
                     if len(self.obstacle_colors):
                         for i in range(len(self.layer_list[k][jj]._shape_list)):

@@ -15,6 +15,8 @@ from vartools.animator import Animator
 from autonomous_furniture.dynamical_system_animation3D import DynamicalSystemAnimation3D
 
 from autonomous_furniture.agent3D import Furniture3D
+from autonomous_furniture.furniture_creators import assign_agent_virtual_drag
+
 import pathlib
 
 import argparse
@@ -61,8 +63,7 @@ def threeD_test(args=[]):
         tail_effect=False,
     )
 
-    layer_0 = [
-        Furniture3D(
+    table_legs = assign_agent_virtual_drag([Furniture3D(
             shape_list=table_legs,
             shape_positions=table_legs_positions,
             obstacle_environment=obstacle_environment,
@@ -71,8 +72,8 @@ def threeD_test(args=[]):
             goal_pose=table_reference_goal,
             parameter_file=parameter_file,
             name="table_legs",
-        ),
-        Furniture3D(
+        )])
+    low_table = assign_agent_virtual_drag([Furniture3D(
             shape_list=[table_shape2],
             shape_positions=np.array([[0.0, 0.0]]),
             obstacle_environment=obstacle_environment,
@@ -82,25 +83,17 @@ def threeD_test(args=[]):
             static=False,
             name="static",
             parameter_file=parameter_file,
-        ),
-    ]
+            safety_module=True
+        )])
+    layer_0 = [ table_legs[0], low_table[0]]
 
     my_animation = DynamicalSystemAnimation3D(
-        it_max=1000,
-        dt_simulation=0.02,
-        dt_sleep=0.02,
-        animation_name=args.name,
+        parameter_file=parameter_file
     )
 
     my_animation.setup(
         layer_list=[layer_0],
-        x_lim=[-3, 10],
-        y_lim=[-2, 7],
-        version="v1",
-        mini_drag="nodrag",
-        safety_module=False,
-        emergency_stop=False,
-        figsize=(10, 7),
+        parameter_file=parameter_file
     )
 
     my_animation.run(save_animation=args.rec)

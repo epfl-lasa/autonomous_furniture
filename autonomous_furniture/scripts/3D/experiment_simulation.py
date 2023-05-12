@@ -23,8 +23,14 @@ from autonomous_furniture.furniture_creators import (
 
 import argparse
 
+import pathlib
 
 def threeD_test(args=[]):
+    
+    parameter_file = (
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/experiment_simulation.json"
+    )
+
     # List of environment shared by all the furniture/agent in the same layer
     obstacle_environment_lower = ObstacleContainer()
     obstacle_environment_upper = ObstacleContainer()
@@ -53,6 +59,7 @@ def threeD_test(args=[]):
         axes_legs=[0.04, 0.04],
         ctr_points_number=[2, 2],
         static=True,
+        parameter_file=parameter_file
     )
 
     ### CREATE MOBILE LOW TABLE SECTIONS FOR ALL THE LAYERS
@@ -77,8 +84,9 @@ def threeD_test(args=[]):
         axes_legs=[0.04, 0.04],
         ctr_points_number=[4, 4],
         static=False,
+        parameter_file=parameter_file
     )
-    mobile_table_surface_agent.gamma_critic_max = 1.1
+    mobile_table_surface_agent.safety_module=False
 
     chair_left_reference_start = ObjectPose(
         position=np.array([1.5, 0.5]), orientation=-np.pi / 2
@@ -103,6 +111,7 @@ def threeD_test(args=[]):
         surface_axis=[0.4, 0.4],
         surface_ctr_pt_number=[3, 3],
         surface_positions=np.array([[0.0, 0.0]]),
+        parameter_file=parameter_file
     )
 
     chair_right_reference_start = ObjectPose(
@@ -128,9 +137,8 @@ def threeD_test(args=[]):
         surface_axis=[0.4, 0.4],
         surface_ctr_pt_number=[3, 3],
         surface_positions=np.array([[0.0, 0.0]]),
+        parameter_file=parameter_file
     )
-
-    chair_right_surface_agent.gamma_critic_max = 1.3
 
     layer_lower = [
         chair_left_surface_agent,
@@ -152,21 +160,12 @@ def threeD_test(args=[]):
     # layer_upper = [chair_left_back_agent, static_table_surface_agent]
 
     my_animation = DynamicalSystemAnimation3D(
-        it_max=1000,
-        dt_simulation=0.02,
-        dt_sleep=0.02,
-        animation_name=args.name,
+        parameter_file=parameter_file
     )
 
     my_animation.setup(
         layer_list=[layer_lower, layer_upper],
-        x_lim=[1, 5],
-        y_lim=[0, 2],
-        version="v2",
-        mini_drag="dragdist",
-        safety_module=True,
-        emergency_stop=True,
-        figsize=(10, 7),
+        parameter_file=parameter_file
     )
 
     my_animation.run(save_animation=args.rec)

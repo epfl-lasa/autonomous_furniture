@@ -208,7 +208,7 @@ def agent_kinematics_from_ctr_point_vel(
 
 
 def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
-    if mini_drag == "dragdist":  # a1 computed as in the paper depending on the distance
+    if mini_drag: #virtual drag
         r = d / (d + k)
         w1 = (
             1
@@ -220,14 +220,10 @@ def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
         )
         w2 = 1 - w1
 
-    elif mini_drag == "nodrag":  # no virtual drag
+    else:  # no virtual drag
         w1 = 0
         w2 = 1
-    else:
-        print("Error in the name of the type of drag to use")
-        w1 = 0
-        w2 = 1
-
+        
     return w1, w2
 
 
@@ -392,10 +388,6 @@ def update_multi_layer_simulation(
     number_layer,
     number_agent,
     layer_list,
-    mini_drag,
-    version,
-    emergency_stop,
-    safety_module,
     dt_simulation,
     agent_pos_saver=None,
 ):
@@ -404,10 +396,6 @@ def update_multi_layer_simulation(
         for jj in range(number_agent):
             if not layer_list[k][jj] == None:
                 layer_list[k][jj].update_velocity(
-                    mini_drag=mini_drag,
-                    version=version,
-                    emergency_stop=emergency_stop,
-                    safety_module=safety_module,
                     time_step=dt_simulation,
                 )
     for jj in range(number_agent):
@@ -500,6 +488,10 @@ def attenuate_DSM_velocities(ctr_pt_number, velocities):
 def get_params_from_file(
     agent,
     parameter_file,
+    min_drag,
+    soft_decoupling,
+    safety_module,
+    emergency_stop,
     maximum_linear_velocity,
     maximum_angular_velocity,
     maximum_linear_acceleration,
@@ -518,6 +510,27 @@ def get_params_from_file(
     # check if any non-mandatory variable was defined, otherwise take the value from the json file
     with open(parameter_file, "r") as openfile:
         json_object = json.load(openfile)
+
+    #used algorithms for agent
+    if min_drag == None:
+        agent.min_drag = json_object["minimize virtual drag"]
+    else:
+        agent.min_drag = min_drag
+    
+    if soft_decoupling == None:
+        agent.soft_decoupling = json_object["soft decoupling"]
+    else:
+        agent.soft_decoupling=soft_decoupling
+                
+    if safety_module==None:
+        agent.safety_module = json_object["safety module"]
+    else:
+        agent.safety_module = safety_module
+    
+    if emergency_stop==None:
+        agent.emergency_stop = json_object["emergency stop"]
+    else:
+        agent.emergency_stop = emergency_stop
 
     # kinematic constraints
     if maximum_linear_velocity == None:
