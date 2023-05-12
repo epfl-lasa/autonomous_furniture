@@ -628,7 +628,12 @@ def plot_vectorfield_nonlinear_global(n_grid=20, save_figure=False):
     converged = np.allclose(
         trajectory[:, -1], animator.initial_dynamics.attractor_position, atol=1e-1
     )
+    print()
     print(f"Has converged: {converged}")
+    print()
+    if True:
+        warnings.warn("No saving of figure...")
+        return
 
     if save_figure:
         fig_name = "qolo_along_wavy_road_avoiding"
@@ -792,16 +797,30 @@ def get_fraction_outside(trajectory):
 
     collision_free = 0
     mean_sqrd_gamma = 0
+    distances = np.zeros(trajectory.shape[1])
     for pp in range(trajectory.shape[1]):
         gamma = grass_container.get_minimum_gamma(trajectory[:, pp])
         if gamma >= 1:
             collision_free += 1
 
-        mean_sqrd_gamma += gamma**2
+        mean_sqrd_gamma += gamma ** 2
+
+        tmp_distances = np.zeros(len(grass_container))
+        for ii, obs in enumerate(grass_container):
+            tmp_distances[ii] = obs.get_distance_to_surface(
+                trajectory[:, pp], in_global_frame=True
+            )
+
+        distances[pp] = np.min(tmp_distances)
+
+        if gamma < 1:
+            distances[pp] = distances[pp] * (-1)
 
     collision_ratio = 1.0 * collision_free / trajectory.shape[1]
     mean_sqrd_gamma = mean_sqrd_gamma / trajectory.shape[1]
-    return (collision_ratio, mean_sqrd_gamma)
+    # return (collision_ratio, mean_sqrd_gamma)
+
+    return (collision_ratio, np.mean(distances))
 
 
 def get_distance(trajectory):
@@ -918,6 +937,30 @@ def multi_test_switching_pathfollowing(
     )
 
 
+def get_nonlinear_global_trajectory(start, x_lim, y_lim, it_max, dt):
+    # container = None
+    container = random_placement_tables(
+        x_lim=x_lim,
+        y_lim=y_lim,
+        start=start,
+        goal=RvizQoloAnimator.initial_dynamics.attractor_position,
+    )
+
+    animator = RvizQoloAnimator()
+    animator.setup(x_lim=x_lim, y_lim=y_lim, container=container, do_plotting=0)
+
+    trajectory = integrate_with_qolo(
+        start,
+        # animator.initial_dynamics.evaluate,
+        animator.avoider.evaluate_sequence,
+        it_max=it_max,
+        dt=dt,
+        ax=None,
+        attractor_position=animator.initial_dynamics.attractor_position,
+    )
+    return trajectory, animator.initial_dynamics.attractor_position
+
+
 def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt):
     np.random.seed(rndm_seed)
 
@@ -928,33 +971,13 @@ def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, 
     n_points = np.zeros(n_runs)
 
     for ii in range(n_runs):
-        np.random.seed(ii)
-        print(f"seed, {ii}")
-        dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
-
-        # container = None
-        container = random_placement_tables(
-            x_lim=x_lim, y_lim=y_lim, start=start, goal=dynamics.attractor_position
-        )
-
-        animator = RvizQoloAnimator()
-        animator.setup(x_lim=x_lim, y_lim=y_lim, container=container, do_plotting=0)
-
-        trajectory = integrate_with_qolo(
-            start,
-            # animator.initial_dynamics.evaluate,
-            animator.avoider.evaluate_sequence,
-            it_max=it_max,
-            dt=dt,
-            ax=None,
-            attractor_position=dynamics.attractor_position,
+        trajectory, attractor = get_nonlinear_global_trajectory(
+            start=start, x_lim=x_lim, y_lim=y_lim, it_max=it_max, dt=dt
         )
 
         distances[ii] = get_distance(trajectory)
         fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
-        converged[ii] = np.allclose(
-            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
-        )
+        converged[ii] = np.allclose(trajectory[:, -1], attractor, atol=1e-1)
         n_points[ii] = trajectory.shape[1]
         converged[ii]
 
@@ -985,16 +1008,16 @@ def run_comparison(n_runs=1):
     #     it_max=it_max,
     #     dt=dt,
     # )
-    # np.random.seed(rndm_seed)
-    # multi_test_nonlinear_global(
-    #     x_lim=x_lim,
-    #     y_lim=y_lim,
-    #     n_runs=n_runs,
-    #     rndm_seed=rndm_seed,
-    #     start=start_position,
-    #     it_max=it_max,
-    #     dt=dt,
-    # )
+    np.random.seed(rndm_seed)
+    multi_test_nonlinear_global(
+        x_lim=x_lim,
+        y_lim=y_lim,
+        n_runs=n_runs,
+        rndm_seed=rndm_seed,
+        start=start_position,
+        it_max=it_max,
+        dt=dt,
+    )
     # np.random.seed(rndm_seed)
     # multi_test_switching_pathfollowing(
     #     x_lim=x_lim,
@@ -1005,6 +1028,26 @@ def run_comparison(n_runs=1):
     #     it_max=it_max,
     #     dt=dt,
     # )
+
+
+def check_convergence():
+    x_lim = [-6.5, 8.5]
+    y_lim = [-7.0, 7.0]
+    it_max = 2000
+    dt = 0.1
+    start = np.array([-5, -4.0])
+
+    for ii in range(50):
+        np.random.seed(ii)
+        trajectory, attractor = get_nonlinear_global_trajectory(
+            start=start, x_lim=x_lim, y_lim=y_lim, it_max=it_max, dt=dt
+        )
+
+        converged = np.allclose(trajectory[:, -1], attractor, atol=1e-1)
+
+        # print()
+        # print(f"Converged: {converged} at it={ii}")
+        # print()
 
 
 def main():
@@ -1025,8 +1068,8 @@ def main():
 if (__name__) == "__main__":
     # main()
 
-    np.random.seed(0)
-    plot_vectorfield_nonlinear_global(n_grid=10, save_figure=False)
+    # plot_vectorfield_nonlinear_global(n_grid=10, save_figure=False)
     # plot_switching_linear_dynamics(n_grid=20)
     # plot_switching_path_following(n_grid=20)
-    # run_comparison(n_runs=100)
+    run_comparison(n_runs=100)
+    # check_convergence()
