@@ -28,10 +28,8 @@ args = parser.parse_args()
 
 
 def test_uneven_priority(visualize=False):
-    
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/test.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/test.json"
     )
 
     axis = [2.4, 1.1]

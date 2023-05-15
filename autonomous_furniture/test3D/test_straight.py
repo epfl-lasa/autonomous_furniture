@@ -35,10 +35,8 @@ def test_straight(visualize=False):
     obstacle_environment_upper = ObstacleContainer()
 
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/test.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/test.json"
     )
-
 
     ### CREATE TABLE SECTIONS FOR ALL THE LAYERS
     table_reference_start = ObjectPose(position=np.array([-1, 1]), orientation=0)
@@ -55,7 +53,7 @@ def test_straight(visualize=False):
         axes_legs=[0.2, 0.2],
         ctr_points_number=[3, 2],
         static=False,
-        parameter_file=parameter_file
+        parameter_file=parameter_file,
     )
 
     table_legs_agent.cutoff_gamma_obs = 3.0
@@ -79,7 +77,7 @@ def test_straight(visualize=False):
         static=True,
         obstacle_environment=obstacle_environment_lower,
         control_points=np.array([[0.0, 0.0]]),
-        parameter_file=parameter_file
+        parameter_file=parameter_file,
     )
 
     spectator_pose = ObjectPose(position=np.array([3.0, 3.0]), orientation=0)
@@ -100,7 +98,7 @@ def test_straight(visualize=False):
         static=True,
         obstacle_environment=obstacle_environment_lower,
         control_points=np.array([[0.0, 0.0]]),
-        parameter_file=parameter_file
+        parameter_file=parameter_file,
     )
 
     # Furniture(shape=table_shape, obstacle_environment=obstacle_environment, control_points=control_points, goal_pose=goal, priority_value=1, name="fur")]

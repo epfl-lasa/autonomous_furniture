@@ -63,38 +63,41 @@ def threeD_test(args=[]):
         tail_effect=False,
     )
 
-    table_legs = assign_agent_virtual_drag([Furniture3D(
-            shape_list=table_legs,
-            shape_positions=table_legs_positions,
-            obstacle_environment=obstacle_environment,
-            control_points=table_legs_control_points,
-            starting_pose=table_reference_start,
-            goal_pose=table_reference_goal,
-            parameter_file=parameter_file,
-            name="table_legs",
-        )])
-    low_table = assign_agent_virtual_drag([Furniture3D(
-            shape_list=[table_shape2],
-            shape_positions=np.array([[0.0, 0.0]]),
-            obstacle_environment=obstacle_environment,
-            control_points=np.array([[0, -0.5], [0, 0.5]]),
-            starting_pose=start2,
-            goal_pose=goal2,
-            static=False,
-            name="static",
-            parameter_file=parameter_file,
-            safety_module=True
-        )])
-    layer_0 = [ table_legs[0], low_table[0]]
-
-    my_animation = DynamicalSystemAnimation3D(
-        parameter_file=parameter_file
+    table_legs = assign_agent_virtual_drag(
+        [
+            Furniture3D(
+                shape_list=table_legs,
+                shape_positions=table_legs_positions,
+                obstacle_environment=obstacle_environment,
+                control_points=table_legs_control_points,
+                starting_pose=table_reference_start,
+                goal_pose=table_reference_goal,
+                parameter_file=parameter_file,
+                name="table_legs",
+            )
+        ]
     )
-
-    my_animation.setup(
-        layer_list=[layer_0],
-        parameter_file=parameter_file
+    low_table = assign_agent_virtual_drag(
+        [
+            Furniture3D(
+                shape_list=[table_shape2],
+                shape_positions=np.array([[0.0, 0.0]]),
+                obstacle_environment=obstacle_environment,
+                control_points=np.array([[0, -0.5], [0, 0.5]]),
+                starting_pose=start2,
+                goal_pose=goal2,
+                static=False,
+                name="static",
+                parameter_file=parameter_file,
+                safety_module=True,
+            )
+        ]
     )
+    layer_0 = [table_legs[0], low_table[0]]
+
+    my_animation = DynamicalSystemAnimation3D(parameter_file=parameter_file)
+
+    my_animation.setup(layer_list=[layer_0], parameter_file=parameter_file)
 
     my_animation.run(save_animation=args.rec)
     # my_animation.logs(len(my_furniture))

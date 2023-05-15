@@ -21,27 +21,25 @@ class DynamicalSystemAnimation3D(Animator):
         dt_simulation: float = None,
         dt_sleep: float = None,
         animation_name: str = "None",
-        file_type:str ="None",
+        file_type: str = "None",
     ) -> None:
-        
         with open(parameter_file, "r") as openfile:
             json_object = json.load(openfile)
-        
-        if it_max==None:
+
+        if it_max == None:
             it_max = json_object["maximum simulation time"]
-            
-        if dt_simulation==None:
-            dt_simulation=json_object["time step of simulation"]
-        
-        if dt_sleep==None:
-            dt_sleep=json_object["time step of sleep"]
-        
-        if animation_name=="None":
-            animation_name=json_object["animation name"]
-        
-        if file_type=="None":
-            file_type=json_object["video file type"]
-        
+
+        if dt_simulation == None:
+            dt_simulation = json_object["time step of simulation"]
+
+        if dt_sleep == None:
+            dt_sleep = json_object["time step of sleep"]
+
+        if animation_name == "None":
+            animation_name = json_object["animation name"]
+
+        if file_type == "None":
+            file_type = json_object["video file type"]
 
         super().__init__(
             it_max, iterator, dt_simulation, dt_sleep, animation_name, file_type
@@ -63,24 +61,23 @@ class DynamicalSystemAnimation3D(Animator):
         obstacle_colors=None,
         figsize=None,
     ):
-
         with open(parameter_file, "r") as openfile:
             json_object = json.load(openfile)
 
-        if x_lim==None:
+        if x_lim == None:
             self.x_lim = json_object["x limit"]
         else:
             self.x_lim = x_lim
-            
-        if y_lim==None:
+
+        if y_lim == None:
             self.y_lim = json_object["y limit"]
         else:
             self.y_lim = y_lim
 
-        if anim==None:
+        if anim == None:
             anim = json_object["animation"]
-        
-        if obstacle_colors==None:
+
+        if obstacle_colors == None:
             self.obstacle_colors = json_object["obstacle colors"]
         else:
             self.obstacle_colors = obstacle_colors
@@ -90,7 +87,7 @@ class DynamicalSystemAnimation3D(Animator):
         else:
             self.check_convergence = check_convergence
 
-        if figsize==None:
+        if figsize == None:
             figsize = json_object["figure size"]
 
         self.number_agent = len(layer_list[0])

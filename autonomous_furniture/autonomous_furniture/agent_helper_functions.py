@@ -208,7 +208,7 @@ def agent_kinematics_from_ctr_point_vel(
 
 
 def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
-    if mini_drag: #virtual drag
+    if mini_drag:  # virtual drag
         r = d / (d + k)
         w1 = (
             1
@@ -223,7 +223,7 @@ def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
     else:  # no virtual drag
         w1 = 0
         w2 = 1
-        
+
     return w1, w2
 
 
@@ -511,23 +511,23 @@ def get_params_from_file(
     with open(parameter_file, "r") as openfile:
         json_object = json.load(openfile)
 
-    #used algorithms for agent
+    # used algorithms for agent
     if min_drag == None:
         agent.min_drag = json_object["minimize virtual drag"]
     else:
         agent.min_drag = min_drag
-    
+
     if soft_decoupling == None:
         agent.soft_decoupling = json_object["soft decoupling"]
     else:
-        agent.soft_decoupling=soft_decoupling
-                
-    if safety_module==None:
+        agent.soft_decoupling = soft_decoupling
+
+    if safety_module == None:
         agent.safety_module = json_object["safety module"]
     else:
         agent.safety_module = safety_module
-    
-    if emergency_stop==None:
+
+    if emergency_stop == None:
         agent.emergency_stop = json_object["emergency stop"]
     else:
         agent.emergency_stop = emergency_stop

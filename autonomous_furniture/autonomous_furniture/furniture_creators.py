@@ -348,7 +348,7 @@ def create_3D_chair(
         name="chair",
         object_type=ObjectType.CHAIR,
         static=static,
-        parameter_file=parameter_file
+        parameter_file=parameter_file,
     )
     # upper layer
     chair_back_positions = back_positions
@@ -374,7 +374,7 @@ def create_3D_chair(
         name="chair",
         object_type=ObjectType.CHAIR,
         static=static,
-        parameter_file=parameter_file
+        parameter_file=parameter_file,
     )
 
     return assign_agent_virtual_drag([chair_surface_agent, chair_back_agent])
@@ -459,7 +459,7 @@ def create_3D_table_surface_legs(
             name="table",
             object_type=ObjectType.TABLE,
             static=static,
-            parameter_file=parameter_file
+            parameter_file=parameter_file,
         )
 
     table_surface_agent = None
@@ -488,7 +488,7 @@ def create_3D_table_surface_legs(
             name="table",
             object_type=ObjectType.TABLE,
             static=static,
-            parameter_file=parameter_file
+            parameter_file=parameter_file,
         )
 
     return assign_agent_virtual_drag([table_legs_agent, table_surface_agent])
