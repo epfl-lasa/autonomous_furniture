@@ -388,7 +388,7 @@ def update_multi_layer_simulation(
     number_layer,
     number_agent,
     layer_list,
-    dt_simulation,
+    dt_simulation=None,
     agent_pos_saver=None,
 ):
     for k in range(number_layer):
@@ -446,7 +446,8 @@ def update_multi_layer_simulation(
                     layer_list[k][jj].linear_velocity = linear_velocity
                     layer_list[k][jj].angular_velocity = angular_velocity
                     layer_list[k][jj].apply_kinematic_constraints()
-                    layer_list[k][jj].do_velocity_step(dt_simulation)
+                    if not dt_simulation==None:
+                        layer_list[k][jj].do_velocity_step(dt_simulation)
                     if not agent_pos_saver == None:
                         agent_pos_saver[jj].append(
                             layer_list[k][jj]._reference_pose.position

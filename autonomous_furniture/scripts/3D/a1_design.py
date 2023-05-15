@@ -10,7 +10,7 @@ if __name__ == "__main__":
     N = 1000
     alpha = 1.5
 
-    # kappas = np.linspace(1, 1.1, N)
+    kappas = np.linspace(1, 1.1, N)
     d = np.linspace(d_max, d_min, N)
     # w1 = np.copy(d)
     # w1_alternative = np.copy(w1)
@@ -27,17 +27,19 @@ if __name__ == "__main__":
             * (kappa_list[i] - 1)
             / (kappa_list[i] - 1 + 1e-6)
         )
-        # new_term = (kappas - 1) / (kappas - 1 + 1e-6)
 
         # plt.plot(-d, w1, label="$\mu=$"+str(kappa_list[i]))
         plt.plot(-d, w1_alternative, label="$\mu=$" + str(kappa_list[i]))
 
+    new_term = (kappas - 1) / (kappas - 1 + 1e-6)
+
     plt.legend()
     plt.xlabel("d [m]")
     plt.ylabel("a1 [-]")
+    plt.title("a1 new")
     plt.show()
 
     # plt.plot(kappas, new_term)
     # plt.xlabel("$\mu$")
-    # plt.ylabel("$(\mu - 1) / (\mu - 1 + 1e-6)$")
-    # plt.show()
+    # plt.ylabel("$\dfrac{\mu - 1}{\mu - 1 + 10^{-6}}$")
+    plt.show()
