@@ -13,7 +13,7 @@ def apply_linear_and_angular_acceleration_constraints(
     maximum_angular_acceleration,
     time_step,
 ):
-    # This function checks whether the difference in new computed kinematics and old kinematics exceeds the acceleration limits
+    # This function checks whether the difference in new computed kinematics and old kinematics exceeds the acceleration limits and adapts the kinematics in case th elimits are exceeded
     linear_velocity_difference = linear_velocity - linear_velocity_old
     angular_velocity_difference = angular_velocity - angular_velocity_old
     linear_velocity_difference_allowed = maximum_linear_acceleration * time_step
@@ -58,6 +58,7 @@ def compute_ctr_point_vel_from_obs_avoidance(
     priority,
     cutoff_gamma_obs,
 ):
+    #This function calculates all the control point velocities using DSM
     velocities = np.zeros((2, number_ctrpt))
     for i in range(number_ctrpt):
         # define direction as initial velocities
@@ -86,6 +87,8 @@ def compute_ctr_point_vel_from_obs_avoidance(
 
 
 def compute_drag_angle(initial_velocity, actual_orientation):
+    #This function caomputed the drag angle which is the angle between the linear velocity of the reference point and the orientation with least virtual drag
+    
     # Direction (angle), of the linear_velocity in the global frame
     lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
@@ -208,9 +211,11 @@ def agent_kinematics_from_ctr_point_vel(
 
 
 def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
+    #This function computes the amount of virtual drag that should be used (a1)
+    
     if mini_drag:  # virtual drag
         r = d / (d + k)
-        w1 = (
+        a1 = (
             1
             / 2
             * (1 + np.tanh(virtual_drag * (d - alpha)))
@@ -218,13 +223,13 @@ def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
             * (virtual_drag - 1)
             / (virtual_drag - 1 + 1e-6)
         )
-        w2 = 1 - w1
+        a2 = 1 - a1
 
     else:  # no virtual drag
-        w1 = 0
-        w2 = 1
+        a1 = 0
+        a2 = 1
 
-    return w1, w2
+    return a1, a2
 
 
 def evaluate_safety_repulsion(
@@ -235,12 +240,13 @@ def evaluate_safety_repulsion(
     gamma_values: np.ndarray,
     velocities,
     gamma_critic,
-    local_control_points,
     safety_damping,
 ) -> None:
+    #This function takes the control point velocities and checkes wether any of the control point velocities need to be modulated using the safety module and modulates those
+    
     (
         gamma_list_colliding,  # list with critical gamma value
-        normals_for_ang_vel,  # list with already weighted normal direction for each control point
+        normals_collision,  # list with already weighted normal direction for each control point
     ) = collect_infos_for_crit_ctr_points(
         list_critic_gammas_indx,
         environment_without_me,
@@ -252,9 +258,9 @@ def evaluate_safety_repulsion(
 
     for i in range(len(gamma_list_colliding)):
         ctrpt_indx = np.where(gamma_values == gamma_list_colliding[i])[0][0]
-        if np.dot(velocities[:, ctrpt_indx], normals_for_ang_vel[i]) < 0:
+        if np.dot(velocities[:, ctrpt_indx], normals_collision[i]) < 0:
             b = 1 / ((gamma_critic - 1) * (gamma_list_colliding[i] - 1))
-            velocities[:, ctrpt_indx] += safety_damping * b * normals_for_ang_vel[i]
+            velocities[:, ctrpt_indx] += safety_damping * b * normals_collision[i]
 
     return velocities
 
@@ -262,6 +268,7 @@ def evaluate_safety_repulsion(
 def apply_velocity_constraints(
     linear_velocity, angular_velocity, maximum_linear_velocity, maximum_angular_velocity
 ):
+    #This function check wether the velocity constraints are resepcted and adapts the linear and angular velocity in case
     if (
         LA.norm(linear_velocity) > maximum_linear_velocity
     ):  # resize speed if it passes maximum speed
@@ -285,7 +292,9 @@ def collect_infos_for_crit_ctr_points(
     gamma_values,
     gamma_critic,
 ):
-    normals_for_ang_vel = []
+    #This function checks wether any control point is on a colliding trajectory with a neighbourg and give back the gamma values of those points and the average normal direction of collision
+    
+    normals_collision = []
     gamma_list_colliding = []
 
     for ii in list_critic_gammas_indx:
@@ -320,15 +329,17 @@ def collect_infos_for_crit_ctr_points(
 
         gamma_list_colliding.append(gamma_values[ii])
 
-        normals_for_ang_vel.append(normal)
+        normals_collision.append(normal)
 
     return (
         gamma_list_colliding,
-        normals_for_ang_vel,
+        normals_collision,
     )
 
 
 def get_gamma_product_crowd(position, env):
+    # This fuction gives back the smallest gamma value and its index for one control point
+    
     if not len(env):
         # Very large number
         return 1e20
@@ -347,6 +358,8 @@ def get_gamma_product_crowd(position, env):
 
 
 def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth):
+    #This function calculates the weights of each control point regarding the given gamma list
+    
     weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
     weights = weights / frac_gamma_nth
     weights = 1.0 / weights
@@ -358,6 +371,7 @@ def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth
 def get_weight_of_control_points(
     control_points, environment_without_me, cutoff_gamma, gamma0, frac_gamma_nth
 ):
+    #This function calculates the weights of each control point regarding the smallest gamma value of each point
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
     for ii in range(control_points.shape[1]):
@@ -391,6 +405,8 @@ def update_multi_layer_simulation(
     dt_simulation=None,
     agent_pos_saver=None,
 ):
+    #This function calculates the agent velocities given the list of layers for one step
+    
     for k in range(number_layer):
         # calculate the agents velocity in each layer
         for jj in range(number_agent):
@@ -429,7 +445,7 @@ def update_multi_layer_simulation(
                 jj,
                 number_layer,
                 layer_list,
-            )  ####     NEEDS TO BE CHANGED!!!!  ######
+            )
             # calculate the weighted linear and angular velocity for the agent and overwrite the kinematics of each layer
             linear_velocity = np.zeros((2))
             for i in range(len(agent_linear_velocities)):
@@ -460,6 +476,7 @@ def update_multi_layer_simulation(
 
 
 def compute_layer_weights(agent_number, number_layer, layer_list):
+    #This function calculates the weight das each for a piece of furniture layer should have when calculating the final furniture velocitties
     gamma_list = []
     for k in range(number_layer):
         if not layer_list[k][agent_number] == None:
@@ -478,6 +495,7 @@ def compute_layer_weights(agent_number, number_layer, layer_list):
 
 
 def attenuate_DSM_velocities(ctr_pt_number, velocities):
+    #This function changes the control points linear velocities lenghts in order to have all the same length without influencing the weighting
     norms = LA.norm(velocities, axis=0)
     avg_norm = np.average(norms)
     for i in range(ctr_pt_number):
@@ -508,6 +526,8 @@ def get_params_from_file(
     name,
     priority_value,
 ):
+    #This function checks wether any variable already is assigned and if not assigns the value from the parameter file
+    
     # check if any non-mandatory variable was defined, otherwise take the value from the json file
     with open(parameter_file, "r") as openfile:
         json_object = json.load(openfile)
