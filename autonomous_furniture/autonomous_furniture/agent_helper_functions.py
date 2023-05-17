@@ -240,7 +240,7 @@ def evaluate_safety_repulsion(
     gamma_values: np.ndarray,
     velocities,
     gamma_critic,
-    safety_damping,
+    safety_gain,
 ) -> None:
     #This function takes the control point velocities and checkes wether any of the control point velocities need to be modulated using the safety module and modulates those
     
@@ -260,7 +260,7 @@ def evaluate_safety_repulsion(
         ctrpt_indx = np.where(gamma_values == gamma_list_colliding[i])[0][0]
         if np.dot(velocities[:, ctrpt_indx], normals_collision[i]) < 0:
             b = 1 / ((gamma_critic - 1) * (gamma_list_colliding[i] - 1))
-            velocities[:, ctrpt_indx] += safety_damping * b * normals_collision[i]
+            velocities[:, ctrpt_indx] += safety_gain * b * normals_collision[i]
 
     return velocities
 
@@ -515,7 +515,7 @@ def get_params_from_file(
     maximum_angular_velocity,
     maximum_linear_acceleration,
     maximum_angular_acceleration,
-    safety_damping,
+    safety_gain,
     gamma_critic_max,
     gamma_critic_min,
     gamma_stop,
@@ -575,10 +575,10 @@ def get_params_from_file(
         agent.maximum_angular_acceleration = maximum_angular_acceleration
 
     # safety module
-    if safety_damping == None:
-        agent.safety_damping = json_object["safety module damping"]
+    if safety_gain == None:
+        agent.safety_gain = json_object["safety module damping"]
     else:
-        agent.safety_damping = safety_damping
+        agent.safety_gain = safety_gain
 
     if (
         gamma_critic_max == None

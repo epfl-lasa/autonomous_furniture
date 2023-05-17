@@ -76,7 +76,7 @@ class Furniture3D:
         gamma_critic_max: float = None,
         gamma_critic_min: float = None,
         gamma_stop: float = None,
-        safety_damping: float = None,
+        safety_gain: float = None,
         cutoff_gamma_weights: float = None,
         cutoff_gamma_obs: float = None,
         maximum_linear_velocity: float = None,  # m/s
@@ -105,7 +105,7 @@ class Furniture3D:
             maximum_angular_velocity,
             maximum_linear_acceleration,
             maximum_angular_acceleration,
-            safety_damping,
+            safety_gain,
             gamma_critic_max,
             gamma_critic_min,
             gamma_stop,
@@ -446,7 +446,7 @@ class Furniture3D:
                         velocities=velocities,
                         gamma_critic=self.gamma_critic,
                         local_control_points=self._control_points,
-                        safety_damping=self.safety_damping,
+                        safety_gain=self.safety_gain,
                     )
 
         linear_velocity, angular_velocity = agent_kinematics_from_ctr_point_vel(
