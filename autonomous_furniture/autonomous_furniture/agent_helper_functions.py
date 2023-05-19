@@ -576,7 +576,7 @@ def get_params_from_file(
 
     # safety module
     if safety_gain == None:
-        agent.safety_gain = yaml_object["safety module damping"]
+        agent.safety_gain = yaml_object["safety module gain"]
     else:
         agent.safety_gain = safety_gain
 

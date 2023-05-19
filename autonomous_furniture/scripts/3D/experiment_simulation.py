@@ -29,7 +29,7 @@ import pathlib
 def threeD_test(args=[]):
     parameter_file = (
         str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/experiment_simulation.json"
+        + "/parameters/experiment_simulation.yaml"
     )
 
     # List of environment shared by all the furniture/agent in the same layer

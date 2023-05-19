@@ -445,7 +445,6 @@ class Furniture3D:
                         gamma_values=gamma_values,
                         velocities=velocities,
                         gamma_critic=self.gamma_critic,
-                        local_control_points=self._control_points,
                         safety_gain=self.safety_gain,
                     )
 
