@@ -64,7 +64,7 @@ from visualization_msgs.msg import MarkerArray
 def get_layers():
     parameter_file = (
         str(pathlib.Path(__file__).parent.resolve())
-        + "/parameters/experiment_simulation.json"
+        + "/parameters/experiment_simulation.yaml"
     )
 
     # List of environment shared by all the furniture/agent in the same layer
@@ -279,4 +279,3 @@ class ExperimentNode():
                     self.layer_list[k][i].reference_pose = ObjectPose(position=self.furniture_poses[i].position, orientation=self.furniture_poses[i].orientation)
                     #update shape poses
                     for s in self.layer_list[k][i].shape_list
-                    
