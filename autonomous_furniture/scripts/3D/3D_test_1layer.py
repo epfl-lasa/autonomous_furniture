@@ -27,7 +27,7 @@ def threeD_test(args=[]):
     obstacle_environment = ObstacleContainer()
 
     parameter_file = (
-        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/3D_test_1layer.json"
+        str(pathlib.Path(__file__).parent.resolve()) + "/parameters/3D_test_1layer.yaml"
     )
 
     # control_points for the table

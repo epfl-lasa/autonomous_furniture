@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
-import json
+import yaml
 
 
 def apply_linear_and_angular_acceleration_constraints(
@@ -530,123 +530,123 @@ def get_params_from_file(
     
     # check if any non-mandatory variable was defined, otherwise take the value from the json file
     with open(parameter_file, "r") as openfile:
-        json_object = json.load(openfile)
+        yaml_object = yaml.safe_load(openfile)
 
     # used algorithms for agent
     if min_drag == None:
-        agent.min_drag = json_object["minimize virtual drag"]
+        agent.min_drag = yaml_object["minimize virtual drag"]
     else:
         agent.min_drag = min_drag
 
     if soft_decoupling == None:
-        agent.soft_decoupling = json_object["soft decoupling"]
+        agent.soft_decoupling = yaml_object["soft decoupling"]
     else:
         agent.soft_decoupling = soft_decoupling
 
     if safety_module == None:
-        agent.safety_module = json_object["safety module"]
+        agent.safety_module = yaml_object["safety module"]
     else:
         agent.safety_module = safety_module
 
     if emergency_stop == None:
-        agent.emergency_stop = json_object["emergency stop"]
+        agent.emergency_stop = yaml_object["emergency stop"]
     else:
         agent.emergency_stop = emergency_stop
 
     # kinematic constraints
     if maximum_linear_velocity == None:
-        agent.maximum_linear_velocity = json_object["maximum linear velocity"]
+        agent.maximum_linear_velocity = yaml_object["maximum linear velocity"]
     else:
         agent.maximum_linear_velocity = maximum_linear_velocity
 
     if maximum_angular_velocity == None:
-        agent.maximum_angular_velocity = json_object["maximum angular velocity"]
+        agent.maximum_angular_velocity = yaml_object["maximum angular velocity"]
     else:
         agent.maximum_angular_velocity = maximum_angular_velocity
 
     if maximum_linear_acceleration == None:
-        agent.maximum_linear_acceleration = json_object["maximum linear acceleration"]
+        agent.maximum_linear_acceleration = yaml_object["maximum linear acceleration"]
     else:
         agent.maximum_linear_acceleration = maximum_linear_acceleration
 
     if maximum_angular_acceleration == None:
-        agent.maximum_angular_acceleration = json_object["maximum angular acceleration"]
+        agent.maximum_angular_acceleration = yaml_object["maximum angular acceleration"]
     else:
         agent.maximum_angular_acceleration = maximum_angular_acceleration
 
     # safety module
     if safety_gain == None:
-        agent.safety_gain = json_object["safety module damping"]
+        agent.safety_gain = yaml_object["safety module damping"]
     else:
         agent.safety_gain = safety_gain
 
     if (
         gamma_critic_max == None
     ):  # value of gamma_critic before being closer than d_critic
-        agent.gamma_critic_max = json_object["max gamma critic"]
+        agent.gamma_critic_max = yaml_object["max gamma critic"]
     else:
         agent.gamma_critic_max = gamma_critic_max
 
     if (
         gamma_critic_min == None
     ):  # minimal value of gamma_critic as it should stay vigilant
-        agent.gamma_critic_min = json_object["min gamma critic"]
+        agent.gamma_critic_min = yaml_object["min gamma critic"]
     else:
         agent.gamma_critic_min = gamma_critic_min
 
     if (
         gamma_stop == None
     ):  # agent should stop when a ctrpoint reaches a gamma value under this threshold
-        agent.gamma_stop = json_object["gamma stop"]
+        agent.gamma_stop = yaml_object["gamma stop"]
     else:
         agent.gamma_stop = gamma_stop
 
     if d_critic == None:  # distance from which gamma_critic starts shrinking
-        agent.d_critic = json_object["critical distance"]
+        agent.d_critic = yaml_object["critical distance"]
     else:
         agent.d_critic = d_critic
 
     # cutoff gammas
     if cutoff_gamma_weights == None:
-        agent.cutoff_gamma_weights = json_object[
+        agent.cutoff_gamma_weights = yaml_object[
             "cutoff gamma for control point weights"
         ]
     else:
         agent.cutoff_gamma_weights = cutoff_gamma_weights
 
     if cutoff_gamma_obs == None:
-        agent.cutoff_gamma_obs = json_object["cutoff gamma for obstacle environment"]
+        agent.cutoff_gamma_obs = yaml_object["cutoff gamma for obstacle environment"]
     else:
         agent.cutoff_gamma_obs = cutoff_gamma_obs
 
     # static or dynamic agent
     if static == None:
-        agent.static = json_object["static"]
+        agent.static = yaml_object["static"]
     else:
         agent.static = static
 
     # agent name
     if name == "no_name":
-        agent.name = json_object["name"]
+        agent.name = yaml_object["name"]
     else:
         agent.name = name
 
     if priority_value == None:
-        agent.priority = json_object["priority"]
+        agent.priority = yaml_object["priority"]
     else:
         agent.priority = priority_value
 
     # save variables only for the agent helper functions
     # compute_ang_weights
-    agent.k = json_object[
+    agent.k = yaml_object[
         "k"
     ]  # parameter for term d/(d+k) which ensures the virtual drag weight w1 goes to zero when d=0
-    agent.alpha = json_object[
+    agent.alpha = yaml_object[
         "angle switch distance"
     ]  # distance at which the soft decoupling becomes stronger than the virtual drag
 
     # get_weight_from_gamma
-    agent.gamma0 = json_object["gamma surface"]  # gamma value on obstacle surface
-    agent.frac_gamma_nth = json_object["frac_gamma_nth"]  # boh this I don't know
+    agent.gamma0 = yaml_object["gamma surface"]  # gamma value on obstacle surface
+    agent.frac_gamma_nth = yaml_object["frac_gamma_nth"]  # boh this I don't know
 
     return agent

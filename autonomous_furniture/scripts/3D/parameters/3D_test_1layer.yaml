@@ -1,0 +1,52 @@
+{
+    # simulation visualization parameters
+    x limit: [-5, 10],
+    y limit: [0, 7],
+    figure size: [10, 7],
+    animation: true,
+    obstacle colors: ["orange", "blue", "green"],
+    check convergence: true,
+
+    # simulation parameters
+    maximum simulation time: 500,
+    time step of simulation: 0.02,
+    time step of sleep: 0.02,
+    animation name: "animation",
+    video file type: ".mp4",
+
+    # velocity calculation algorithm
+    minimize virtual drag: false,
+    soft decoupling: false,
+    safety module: false,
+    emergency stop: false,
+
+    # kinematic constraints
+    maximum linear velocity: 0.4,
+    maximum angular velocity: 1.5,
+    maximum linear acceleration: 10.0,
+    maximum angular acceleration: 10.0,
+
+    # safety module parameters
+    safety module damping: 1.0,
+    max gamma critic: 2.0,
+    min gamma critic: 1.1,
+    gamma stop: 1.05,
+    critical distance: 1.0,
+
+    # obstacle environment parameters
+    cutoff gamma for control point weights: 10.0,
+    cutoff gamma for obstacle environment: 4.0,
+
+    #virtual drag parameters
+    k: 0.01,
+    angle switch distance: 1.5,
+
+    # other agent specific parameters
+    static: false,
+    priority: 1.0,
+    name: "mobile_furniture",
+
+    # gamma calculation parameters
+    gamma surface: 1.0,
+    frac_gamma_nth: 0.5
+}
