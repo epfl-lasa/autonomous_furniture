@@ -9,10 +9,13 @@ import matplotlib.pyplot as plt
 
 import keyboard
 
-import rospy
-import tf
+import rclpy
+from rclpy.node import Node
+
+from geometry_msgs.msg import PoseStamped
 
 from tf2_ros import TransformBroadcaster, TransformStamped
+import tf_conversions
 
 from vartools.states import ObjectPose
 from vartools.dynamical_systems import LinearSystem
@@ -97,7 +100,9 @@ def get_layers():
         static=True,
         parameter_file=parameter_file,
     )
-
+    static_table_surface_agent.name = "static_table"
+    static_table_legs_agent.name = "static_table"
+    
     ### CREATE MOBILE LOW TABLE SECTIONS FOR ALL THE LAYERS
     mobile_table_reference_start = ObjectPose(
         position=np.array([2.25, 1.25]), orientation=0.0
@@ -123,7 +128,8 @@ def get_layers():
         parameter_file=parameter_file,
     )
     mobile_table_surface_agent.safety_module = False
-
+    mobile_table_surface_agent.name = "mobile_table"
+    
     chair_left_reference_start = ObjectPose(
         position=np.array([1.5, 0.5]), orientation=-np.pi / 2
     )
@@ -149,7 +155,9 @@ def get_layers():
         surface_positions=np.array([[0.0, 0.0]]),
         parameter_file=parameter_file,
     )
-
+    chair_left_surface_agent.name = "chair1"
+    chair_left_back_agent.name = "chair1"
+    
     chair_right_reference_start = ObjectPose(
         position=np.array([4.75, 1.75]), orientation=np.pi / 2
     )
@@ -175,12 +183,14 @@ def get_layers():
         surface_positions=np.array([[0.0, 0.0]]),
         parameter_file=parameter_file,
     )
-
+    chair_right_surface_agent.name="chair2"
+    chair_right_back_agent.name = "chair2"
+    
     layer_lower = [
-        chair_left_surface_agent,
-        chair_right_surface_agent,
-        mobile_table_surface_agent,
-        static_table_legs_agent,
+        chair_left_surface_agent, # agent 0
+        chair_right_surface_agent, # agent 1
+        mobile_table_surface_agent, # agent 2
+        static_table_legs_agent, # agent 3
     ]
     layer_upper = [
         chair_left_back_agent,
@@ -192,7 +202,7 @@ def get_layers():
     return [layer_lower, layer_upper]
 
 
-class ExperimentNode():
+class ExperimentNode(Node):
     # it_max: int
     # dt_sleep: float = 0.05
     # dt_simulation: float = 0.05
@@ -225,9 +235,18 @@ class ExperimentNode():
         
         self.time = 0.0
         
-        self.mobile_robot_publisher = rospy.Publisher("cmd_vel",Twist, 50)
-        self.vicon_subscriber=rospy.Subscriber("/groundtruth", MarkerArray, self.vicon_callback)
+        self.mobile_robot_publisher = self.create_publisher(Twist,"cmd_vel", 50)
         
+        self.vicon_publisher_chair1 = self.create_publisher(PoseStamped,"groundtruth_chair1", 50)
+        self.vicon_publisher_chair2 = self.create_publisher(PoseStamped,"groundtruth_chair2", 50)
+        self.vicon_publisher_mobile_table = self.create_publisher(PoseStamped,"groundtruth_mobile_table", 50)
+        self.vicon_publisher_static_table = self.create_publisher(PoseStamped,"groundtruth_static_table", 50)
+
+        self.vicon_subscriber_chair1=self.create_subscription("groundtruth_chair1", PoseStamped, self.vicon_callback)
+        self.vicon_subscriber_chair2=self.create_subscription("groundtruth_chair2", PoseStamped, self.vicon_callback)
+        self.vicon_subscriber_mobile_table=self.create_subscription("groundtruth_mobile_table", PoseStamped, self.vicon_callback)
+        self.vicon_subscriber_static_table=self.create_subscription("groundtruth_static_table", PoseStamped, self.vicon_callback)
+
     def update_step(self) -> None:
         
         self.update_states_with_vicon_feedback()
@@ -238,6 +257,7 @@ class ExperimentNode():
             layer_list=self.layer_list,
             dt_simulation=0.02
         )
+        self.publish_fake_vicon_groundtruth()
 
         self.send_mobile_robot_commands()
         
@@ -258,12 +278,20 @@ class ExperimentNode():
         self.past_furniture_poses = self.furniture_poses.copy()
 
         #copy new information into furniture pose list
-        for i in range(len(vicon_msg.markers)):
-            self.furniture_poses[i].position = np.array([vicon_msg.markers[i].pose.position.x, vicon_msg.markers[i].pose.position.y, vicon_msg.markers[i].pose.position.z])
-            self.furniture_poses[i].orientation = tf.transformations.euler_from_quaternion(vicon_msg.markers[i].pose.orientation)[2]
+        if  vicon_msg.header.frame_id=="chair1":
+            self.furniture_poses[0].position = np.array([vicon_msg.pose.position.x, vicon_msg.pose.position.y, vicon_msg.pose.position.z])
+            self.furniture_poses[0].orientation = tf_conversions.transformations.euler_from_quaternion(vicon_msg.pose.orientation)[2]
+        elif vicon_msg.header.frame_id=="chair2":
+            self.furniture_poses[1].position = np.array([vicon_msg.pose.position.x, vicon_msg.pose.position.y, vicon_msg.pose.position.z])
+            self.furniture_poses[1].orientation = tf_conversions.transformations.euler_from_quaternion(vicon_msg.pose.orientation)[2]
+        elif vicon_msg.header.frame_id=="mobile_table":
+            self.furniture_poses[2].position = np.array([vicon_msg.pose.position.x, vicon_msg.pose.position.y, vicon_msg.pose.position.z])
+            self.furniture_poses[2].orientation = tf_conversions.transformations.euler_from_quaternion(vicon_msg.pose.orientation)[2]
+        elif vicon_msg.header.frame_id=="static_table":
+            self.furniture_poses[3].position = np.array([vicon_msg.pose.position.x, vicon_msg.pose.position.y, vicon_msg.pose.position.z])
+            self.furniture_poses[3].orientation = tf_conversions.transformations.euler_from_quaternion(vicon_msg.pose.orientation)[2]
+            self.furniture_poses[-1] = vicon_msg.markers[0].header.stamp.secs + vicon_msg.markers[0].header.stamp.nsecs*1e-9
 
-        self.furniture_poses[-1] = vicon_msg.markers[0].header.stamp.secs + vicon_msg.markers[0].header.stamp.nsecs*1e-9
-    
     def update_states_with_vicon_feedback(self):
         
         dt = self.furniture_poses[-1] - self.past_furniture_poses[-1]
@@ -278,4 +306,10 @@ class ExperimentNode():
                     #update reference pose
                     self.layer_list[k][i].reference_pose = ObjectPose(position=self.furniture_poses[i].position, orientation=self.furniture_poses[i].orientation)
                     #update shape poses
-                    for s in self.layer_list[k][i].shape_list
+                    for s in range(len(self.layer_list[k][i].shape_list)):
+                        self.layer_list[k][i].shape_list[s].position = self.layer_list[k][i].reference_pose.transform_position_from_relative(self.layer_list[k][i].shape_positions[s].copy())
+                        self.layer_list[k][i].shape_list[s].orientation = self.layer_list[k][i].reference_pose.orientation
+    
+    
+    def publish_fake_vicon_groundtruth():
+        
