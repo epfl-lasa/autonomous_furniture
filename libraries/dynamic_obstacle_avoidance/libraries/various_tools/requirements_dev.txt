@@ -1,0 +1,6 @@
+# Development requirement
+pytest
+pre-commit
+mypy
+
+lark
