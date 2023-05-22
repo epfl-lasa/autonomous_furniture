@@ -1,5 +1,6 @@
 import copy
 import time
+import math
 import logging
 import multiprocessing
 from typing import ClassVar, Optional
@@ -12,6 +13,7 @@ from scipy.spatial.transform import Rotation
 
 from vartools.states import Pose, Twist
 from vartools.dynamical_systems import QuadraticAxisConvergence, LinearSystem
+from vartools.dynamics import WavyRotatedDynamics
 from vartools.animator import Animator
 
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
@@ -19,8 +21,13 @@ from dynamic_obstacle_avoidance.obstacles import Obstacle
 from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
 from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
 from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
+
 from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleAvoider
-from nonlinear_avoidance.arch_obstacle import MultiObstacleContainer, BlockArchObstacle
+from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleContainer
+from nonlinear_avoidance.arch_obstacle import BlockArchObstacle
+from nonlinear_avoidance.dynamics.projected_rotation_dynamics import (
+    ProjectedRotationDynamics,
+)
 
 # from nonlinear_avoidance.rotation_container import RotationContainer
 # from nonlinear_avoidance.avoidance import RotationalAvoider
@@ -37,8 +44,7 @@ from autonomous_furniture.message_generation import euler_to_quaternion
 from qolo_along_road import AgentTransformBroadCaster
 from qolo_along_road import RvizQolo
 from qolo_along_road import update_shapes_of_agent
-
-# from qolo_along_road import RvizQoloAnimator
+from utils import TrajectoryPublisher
 
 
 class WallPublisher(Node):
@@ -136,10 +142,13 @@ class QoloWallsAnimator(Animator):
         self.x_lim = x_lim
         self.y_lim = y_lim
 
-        start_position = np.array([-4.4, 1.5])
+        margin_absolut = 0.6
+        # start_position = np.array([-4.4, 1.5])
+        self.start_position = np.array([-2.5, 3])
+
         start_orientation = 0
         self.robot = RvizQolo(
-            pose=Pose(position=start_position, orientation=start_orientation)
+            pose=Pose(position=self.start_position, orientation=start_orientation)
         )
 
         attractor = np.array([4.0, -3])
@@ -154,13 +163,45 @@ class QoloWallsAnimator(Animator):
             maximum_velocity=1.0,
         )
 
+        # self.container = MultiObstacleContainer()
+        # self.container.append(
+        #     BlockArchObstacle(
+        #         wall_width=0.4,
+        #         axes_length=np.array([4.5, 6.5]),
+        #         pose=Pose(np.array([-1.5, -3.5]), orientation=90 * np.pi / 180.0),
+        #         margin_absolut=self.robot.required_margin,
+        #     )
+        # )
+
+        # self.container.append(
+        #     BlockArchObstacle(
+        #         wall_width=0.4,
+        #         axes_length=np.array([4.5, 6.0]),
+        #         pose=Pose(np.array([1.5, 3.0]), orientation=-90 * np.pi / 180.0),
+        #         margin_absolut=self.robot.required_margin,
+        #     )
+        # )
+
+        # self.avoider = MultiObstacleAvoider(
+        #     obstacle_container=self.container,
+        #     initial_dynamics=initial_dynamics,
+        #     # convergence_dynamics=rotation_projector,
+        #     create_convergence_dynamics=True,
+        # )
+        self.initial_dynamics = WavyRotatedDynamics(
+            pose=Pose(position=attractor, orientation=0),
+            maximum_velocity=1.0,
+            rotation_frequency=1,
+            rotation_power=1.2,
+            max_rotation=0.4 * math.pi,
+        )
         self.container = MultiObstacleContainer()
         self.container.append(
             BlockArchObstacle(
                 wall_width=0.4,
                 axes_length=np.array([4.5, 6.5]),
                 pose=Pose(np.array([-1.5, -3.5]), orientation=90 * np.pi / 180.0),
-                margin_absolut=self.robot.required_margin,
+                margin_absolut=margin_absolut,
             )
         )
 
@@ -169,15 +210,23 @@ class QoloWallsAnimator(Animator):
                 wall_width=0.4,
                 axes_length=np.array([4.5, 6.0]),
                 pose=Pose(np.array([1.5, 3.0]), orientation=-90 * np.pi / 180.0),
-                margin_absolut=self.robot.required_margin,
+                margin_absolut=margin_absolut,
             )
+        )
+
+        convergence_dynamics = LinearSystem(attractor, maximum_velocity=1.0)
+        rotation_projector = ProjectedRotationDynamics(
+            attractor_position=convergence_dynamics.attractor_position,
+            initial_dynamics=convergence_dynamics,
+            reference_velocity=lambda x: x - attractor,
         )
 
         self.avoider = MultiObstacleAvoider(
             obstacle_container=self.container,
-            initial_dynamics=initial_dynamics,
-            # convergence_dynamics=rotation_projector,
-            create_convergence_dynamics=True,
+            initial_dynamics=self.initial_dynamics,
+            convergence_dynamics=rotation_projector,
+            # convergence_radius=0.51 * np.pi,
+            # create_convergence_dynamics=True,
         )
 
         self.broadcaster = broadcaster
@@ -237,7 +286,7 @@ class RosAnimatorNode(Node):
 
 def main(
     it_max: int = 1000,
-    delta_time: float = 0.1,
+    delta_time: float = 0.05,
     do_ros: bool = True,
     # do_plotting: bool = False,
     do_plotting: bool = True,
@@ -255,8 +304,16 @@ def main(
     animator.setup(
         broadcaster=broadcaster, do_plotting=do_plotting, x_lim=[-5, 5], y_lim=[-5, 5]
     )
-    publisher = WallPublisher()
-    publisher.add_nodes_from_multibsticle_container(animator.container)
+
+    if do_ros:
+        traj_publisher = TrajectoryPublisher(
+            animator, avoid_functor=animator.avoider.evaluate
+        )
+
+    wall_publisher = WallPublisher()
+    # for ii in range(100):
+    # time.sleep(0.1)
+    wall_publisher.add_nodes_from_multibsticle_container(animator.container)
 
     # Create launch rviz
     print("Done Launching")

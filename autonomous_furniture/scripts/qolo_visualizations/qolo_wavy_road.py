@@ -45,6 +45,8 @@ from models import update_shapes_of_agent
 from models import AgentTransformBroadCaster
 from models import AgentContainer
 
+from utils import TrajectoryPublisher
+
 
 class GrassPublisher(Node):
     line_length = 1.0
@@ -195,6 +197,7 @@ class RvizQoloAnimator(Animator):
         self.x_lim = x_lim
         self.y_lim = y_lim
 
+        self.start_position = self.initial_dynamics.segments[0].start
         start_pose = Pose(
             position=self.initial_dynamics.segments[0].start, orientation=0.0
         )
@@ -351,6 +354,9 @@ def main_wavy(
         x_lim=[-10, 10],
         y_lim=[-10, 10],
     )
+
+    if do_ros:
+        traj_publisher = TrajectoryPublisher(animator)
 
     # Create launch rviz
     nodes = []
@@ -1186,17 +1192,16 @@ def plot_comparison():
     n_grid = 100
     save = True
     figsize = (4.0, 3.5)
-    # np.random.seed(278)
 
-    # plot_vectorfield_nonlinear_global(
-    #     n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
-    # )
-    # plot_switching_straight_dynamics(
-    #     n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
-    # )
-    # plot_switching_path_following(
-    #     n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
-    # )
+    plot_vectorfield_nonlinear_global(
+        n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
+    )
+    plot_switching_straight_dynamics(
+        n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
+    )
+    plot_switching_path_following(
+        n_grid=n_grid, save_figure=save, random_seed=seed, figsize=figsize
+    )
 
 
 if (__name__) == "__main__":
