@@ -9,7 +9,10 @@ from vartools.animator import Animator
 from dynamic_obstacle_avoidance.visualization import plot_obstacles
 from autonomous_furniture.agent3D import Furniture3D
 from dynamic_obstacle_avoidance.containers import ObstacleContainer
-from autonomous_furniture.agent_helper_functions import update_multi_layer_simulation
+from autonomous_furniture.agent_helper_functions import (
+    update_multi_layer_simulation,
+    plot_animation,
+)
 
 
 class DynamicalSystemAnimation3D(Animator):
@@ -130,100 +133,16 @@ class DynamicalSystemAnimation3D(Animator):
         if not anim:
             return
 
-        self.ax.clear()
-        for k in range(self.number_layer):
-            if len(self.obstacle_colors) > k:
-                color = self.obstacle_colors[k]
-            else:
-                color = "black"
-
-            for jj in range(self.number_agent):
-                if not self.layer_list[k][jj] == None:
-                    goal_control_points = self.layer_list[k][
-                        jj
-                    ].get_goal_control_points()  ##plot agent center position
-
-                    global_control_points = self.layer_list[k][
-                        jj
-                    ].get_global_control_points()
-                    self.ax.plot(
-                        global_control_points[0, :],
-                        global_control_points[1, :],
-                        color="black",
-                        marker=".",
-                        linestyle="",
-                    )
-
-                    self.ax.plot(
-                        goal_control_points[0, :],
-                        goal_control_points[1, :],
-                        color=color,
-                        marker=".",
-                        linestyle="",
-                    )
-
-                    self.ax.plot(
-                        self.layer_list[k][jj]._goal_pose.position[0],
-                        self.layer_list[k][jj]._goal_pose.position[1],
-                        color=color,
-                        marker="*",
-                    )
-
-                    self.ax.plot(
-                        self.layer_list[k][jj]._reference_pose.position[0],
-                        self.layer_list[k][jj]._reference_pose.position[1],
-                        color="black",
-                        marker="*",
-                    )
-
-                    x_values = np.zeros(len(self.agent_pos_saver[jj]))
-                    y_values = x_values.copy()
-                    for i in range(len(self.agent_pos_saver[jj])):
-                        x_values[i] = self.agent_pos_saver[jj][i][0]
-                        y_values[i] = self.agent_pos_saver[jj][i][1]
-
-                    self.ax.plot(
-                        x_values,
-                        y_values,
-                        color=color,
-                        linestyle="dashed",
-                    )
-
-                    if len(self.obstacle_colors):
-                        for i in range(len(self.layer_list[k][jj]._shape_list)):
-                            plot_obstacles(
-                                ax=self.ax,
-                                obstacle_container=[
-                                    self.layer_list[k][jj]._shape_list[i]
-                                ],
-                                x_lim=self.x_lim,
-                                y_lim=self.y_lim,
-                                showLabel=False,
-                                obstacle_color=color,
-                                draw_reference=False,
-                                set_axes=False,
-                                drawVelArrow=True,
-                            )
-                    else:
-                        plot_obstacles(
-                            ax=self.ax,
-                            obstacle_container=self.obstacle_environment,
-                            x_lim=self.x_lim,
-                            y_lim=self.y_lim,
-                            showLabel=False,
-                            obstacle_color=np.array([176, 124, 124]) / 255.0,
-                            draw_reference=False,
-                            set_axes=False,
-                            alpha_obstacle=0.5,
-                        )
-
-        self.ax.set_xlabel("x [m]", fontsize=9)
-        self.ax.set_ylabel("y [m]", fontsize=9)
-
-        self.ax.set_aspect("equal", adjustable="box")
-        self.ax.set_xlim(self.x_lim)
-        self.ax.set_ylim(self.y_lim)
-        plt.tight_layout()
+        plot_animation(
+            self.ax,
+            self.layer_list,
+            self.number_layer,
+            self.number_agent,
+            self.obstacle_colors,
+            self.agent_pos_saver,
+            self.x_lim,
+            self.y_lim,
+        )
 
     def has_converged(self, it: int) -> bool:
         if not self.check_convergence:

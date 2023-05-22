@@ -17,7 +17,6 @@ from launch.substitutions import (
 
 from autonomous_furniture.launch_helper_functions import node_creator
 
-
 def generate_launch_description(n_tables: int = 8):
 
 

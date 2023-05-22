@@ -2,6 +2,8 @@ import numpy as np
 from numpy import linalg as LA
 from dynamic_obstacle_avoidance.avoidance import obs_avoidance_interpolation_moving
 import yaml
+from dynamic_obstacle_avoidance.visualization import plot_obstacles
+import matplotlib.pyplot as plt
 
 
 def apply_linear_and_angular_acceleration_constraints(
@@ -58,7 +60,7 @@ def compute_ctr_point_vel_from_obs_avoidance(
     priority,
     cutoff_gamma_obs,
 ):
-    #This function calculates all the control point velocities using DSM
+    # This function calculates all the control point velocities using DSM
     velocities = np.zeros((2, number_ctrpt))
     for i in range(number_ctrpt):
         # define direction as initial velocities
@@ -87,8 +89,8 @@ def compute_ctr_point_vel_from_obs_avoidance(
 
 
 def compute_drag_angle(initial_velocity, actual_orientation):
-    #This function caomputed the drag angle which is the angle between the linear velocity of the reference point and the orientation with least virtual drag
-    
+    # This function caomputed the drag angle which is the angle between the linear velocity of the reference point and the orientation with least virtual drag
+
     # Direction (angle), of the linear_velocity in the global frame
     lin_vel_dir = np.arctan2(initial_velocity[1], initial_velocity[0])
 
@@ -211,8 +213,8 @@ def agent_kinematics_from_ctr_point_vel(
 
 
 def compute_ang_weights(mini_drag, d, virtual_drag, k, alpha):
-    #This function computes the amount of virtual drag that should be used (a1)
-    
+    # This function computes the amount of virtual drag that should be used (a1)
+
     if mini_drag:  # virtual drag
         r = d / (d + k)
         a1 = (
@@ -242,8 +244,8 @@ def evaluate_safety_repulsion(
     gamma_critic,
     safety_gain,
 ) -> None:
-    #This function takes the control point velocities and checkes wether any of the control point velocities need to be modulated using the safety module and modulates those
-    
+    # This function takes the control point velocities and checkes wether any of the control point velocities need to be modulated using the safety module and modulates those
+
     (
         gamma_list_colliding,  # list with critical gamma value
         normals_collision,  # list with already weighted normal direction for each control point
@@ -268,7 +270,7 @@ def evaluate_safety_repulsion(
 def apply_velocity_constraints(
     linear_velocity, angular_velocity, maximum_linear_velocity, maximum_angular_velocity
 ):
-    #This function check wether the velocity constraints are resepcted and adapts the linear and angular velocity in case
+    # This function check wether the velocity constraints are resepcted and adapts the linear and angular velocity in case
     if (
         LA.norm(linear_velocity) > maximum_linear_velocity
     ):  # resize speed if it passes maximum speed
@@ -292,8 +294,8 @@ def collect_infos_for_crit_ctr_points(
     gamma_values,
     gamma_critic,
 ):
-    #This function checks wether any control point is on a colliding trajectory with a neighbourg and give back the gamma values of those points and the average normal direction of collision
-    
+    # This function checks wether any control point is on a colliding trajectory with a neighbourg and give back the gamma values of those points and the average normal direction of collision
+
     normals_collision = []
     gamma_list_colliding = []
 
@@ -339,7 +341,7 @@ def collect_infos_for_crit_ctr_points(
 
 def get_gamma_product_crowd(position, env):
     # This fuction gives back the smallest gamma value and its index for one control point
-    
+
     if not len(env):
         # Very large number
         return 1e20
@@ -358,8 +360,8 @@ def get_gamma_product_crowd(position, env):
 
 
 def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth):
-    #This function calculates the weights of each control point regarding the given gamma list
-    
+    # This function calculates the weights of each control point regarding the given gamma list
+
     weights = (gammas - gamma0) / (cutoff_gamma - gamma0)
     weights = weights / frac_gamma_nth
     weights = 1.0 / weights
@@ -371,7 +373,7 @@ def get_weight_from_gamma(gammas, cutoff_gamma, n_points, gamma0, frac_gamma_nth
 def get_weight_of_control_points(
     control_points, environment_without_me, cutoff_gamma, gamma0, frac_gamma_nth
 ):
-    #This function calculates the weights of each control point regarding the smallest gamma value of each point
+    # This function calculates the weights of each control point regarding the smallest gamma value of each point
     gamma_values = np.zeros(control_points.shape[1])
     obs_idx = np.zeros(control_points.shape[1])
     for ii in range(control_points.shape[1]):
@@ -405,8 +407,8 @@ def update_multi_layer_simulation(
     dt_simulation=None,
     agent_pos_saver=None,
 ):
-    #This function calculates the agent velocities given the list of layers for one step
-    
+    # This function calculates the agent velocities given the list of layers for one step
+
     for k in range(number_layer):
         # calculate the agents velocity in each layer
         for jj in range(number_agent):
@@ -420,7 +422,7 @@ def update_multi_layer_simulation(
         for k in range(number_layer):
             if not layer_list[k][jj] == None:
                 if layer_list[k][jj].stop:
-                    linear_velocity = 0.0
+                    linear_velocity = [0.0, 0.0]
                     angular_velocity = 0.0
                     for l in range(number_layer):
                         if not layer_list[l][jj] == None:
@@ -462,7 +464,7 @@ def update_multi_layer_simulation(
                     layer_list[k][jj].linear_velocity = linear_velocity
                     layer_list[k][jj].angular_velocity = angular_velocity
                     layer_list[k][jj].apply_kinematic_constraints()
-                    if not dt_simulation==None:
+                    if not dt_simulation == None:
                         layer_list[k][jj].do_velocity_step(dt_simulation)
                     if not agent_pos_saver == None:
                         agent_pos_saver[jj].append(
@@ -476,7 +478,7 @@ def update_multi_layer_simulation(
 
 
 def compute_layer_weights(agent_number, number_layer, layer_list):
-    #This function calculates the weight das each for a piece of furniture layer should have when calculating the final furniture velocitties
+    # This function calculates the weight das each for a piece of furniture layer should have when calculating the final furniture velocitties
     gamma_list = []
     for k in range(number_layer):
         if not layer_list[k][agent_number] == None:
@@ -495,7 +497,7 @@ def compute_layer_weights(agent_number, number_layer, layer_list):
 
 
 def attenuate_DSM_velocities(ctr_pt_number, velocities):
-    #This function changes the control points linear velocities lenghts in order to have all the same length without influencing the weighting
+    # This function changes the control points linear velocities lenghts in order to have all the same length without influencing the weighting
     norms = LA.norm(velocities, axis=0)
     avg_norm = np.average(norms)
     for i in range(ctr_pt_number):
@@ -526,8 +528,8 @@ def get_params_from_file(
     name,
     priority_value,
 ):
-    #This function checks wether any variable already is assigned and if not assigns the value from the parameter file
-    
+    """This function checks wether any variable already is assigned and if not assigns the value from the parameter file"""
+
     # check if any non-mandatory variable was defined, otherwise take the value from the json file
     with open(parameter_file, "r") as openfile:
         yaml_object = yaml.safe_load(openfile)
@@ -650,3 +652,92 @@ def get_params_from_file(
     agent.frac_gamma_nth = yaml_object["frac_gamma_nth"]  # boh this I don't know
 
     return agent
+
+
+def plot_animation(
+    ax,
+    layer_list,
+    number_layer,
+    number_agent,
+    obstacle_colors,
+    agent_pos_saver,
+    x_lim,
+    y_lim,
+):
+    ax.clear()
+    for k in range(number_layer):
+        if len(obstacle_colors) > k:
+            color = obstacle_colors[k]
+        else:
+            color = "black"
+
+        for jj in range(number_agent):
+            if not layer_list[k][jj] == None:
+                goal_control_points = layer_list[k][
+                    jj
+                ].get_goal_control_points()  ##plot agent center position
+
+                global_control_points = layer_list[k][jj].get_global_control_points()
+                ax.plot(
+                    global_control_points[0, :],
+                    global_control_points[1, :],
+                    color="black",
+                    marker=".",
+                    linestyle="",
+                )
+
+                ax.plot(
+                    goal_control_points[0, :],
+                    goal_control_points[1, :],
+                    color=color,
+                    marker=".",
+                    linestyle="",
+                )
+
+                ax.plot(
+                    layer_list[k][jj]._goal_pose.position[0],
+                    layer_list[k][jj]._goal_pose.position[1],
+                    color=color,
+                    marker="*",
+                )
+
+                ax.plot(
+                    layer_list[k][jj]._reference_pose.position[0],
+                    layer_list[k][jj]._reference_pose.position[1],
+                    color="black",
+                    marker="*",
+                )
+
+                x_values = np.zeros(len(agent_pos_saver[jj]))
+                y_values = x_values.copy()
+                for i in range(len(agent_pos_saver[jj])):
+                    x_values[i] = agent_pos_saver[jj][i][0]
+                    y_values[i] = agent_pos_saver[jj][i][1]
+
+                ax.plot(
+                    x_values,
+                    y_values,
+                    color=color,
+                    linestyle="dashed",
+                )
+
+                for i in range(len(layer_list[k][jj]._shape_list)):
+                    plot_obstacles(
+                        ax=ax,
+                        obstacle_container=[layer_list[k][jj]._shape_list[i]],
+                        x_lim=x_lim,
+                        y_lim=y_lim,
+                        showLabel=False,
+                        obstacle_color=color,
+                        draw_reference=False,
+                        set_axes=False,
+                        drawVelArrow=True,
+                    )
+
+    ax.set_xlabel("x [m]", fontsize=9)
+    ax.set_ylabel("y [m]", fontsize=9)
+
+    ax.set_aspect("equal", adjustable="box")
+    ax.set_xlim(x_lim)
+    ax.set_ylim(y_lim)
+    plt.tight_layout()

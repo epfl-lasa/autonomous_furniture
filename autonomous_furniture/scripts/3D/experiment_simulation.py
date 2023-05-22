@@ -166,7 +166,7 @@ def threeD_test(args=[]):
         layer_list=[layer_lower, layer_upper], parameter_file=parameter_file
     )
 
-    my_animation.run(save_animation=args.rec)
+    my_animation.run(save_animation=False)
     # my_animation.logs(len(my_furniture))
 
 

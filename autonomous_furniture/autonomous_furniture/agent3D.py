@@ -93,7 +93,7 @@ class Furniture3D:
         self._control_points = control_points
         self._obstacle_environment = obstacle_environment
 
-        #save values written inside the parameter file if they are not already defined
+        # save values written inside the parameter file if they are not already defined
         self = get_params_from_file(
             self,
             parameter_file,
@@ -117,7 +117,7 @@ class Furniture3D:
             priority_value,
         )
 
-        #save priority value to single shapes (make other agents know when they are doig DSM and this agent is the obstacle)
+        # save priority value to single shapes (make other agents know when they are doig DSM and this agent is the obstacle)
         for i in range(len(shape_list)):
             self._shape_list[i].reactivity = self.priority
 
@@ -136,14 +136,14 @@ class Furniture3D:
         self._proximity = 0
         self._list_prox = []
         self.converged: bool = False
-        
-        #initialize other variables
-        self.stop: bool = False # used to communicate to same piece of furniture in another layer if furniture should stop
+
+        # initialize other variables
+        self.stop: bool = False  # used to communicate to same piece of furniture in another layer if furniture should stop
         self.gamma_critic = 0.0
         self.linear_velocity = np.array([0.0, 0.0])
         self.angular_velocity = 0.0
         self.min_gamma = 1e6
-        self.ctr_pt_number = self._control_points.shape[0] # number of control points
+        self.ctr_pt_number = self._control_points.shape[0]  # number of control points
         self.object_type = object_type
 
     def get_obstacles_without_me(self):
@@ -177,7 +177,7 @@ class Furniture3D:
         ).T
 
     def update_shape_kinematics(self):
-        #This function calculates the kinematics of the agent's shapes given the reference point twist
+        # This function calculates the kinematics of the agent's shapes given the reference point twist
         for i in range(len(self._shape_list)):
             if self.static:
                 self._shape_list[i].linear_velocity = 0.0
@@ -204,7 +204,7 @@ class Furniture3D:
                 )
 
     def do_velocity_step(self, dt):
-        #This function updates the pose of all the shapes and of the reference point given their kinematics and time step
+        # This function updates the pose of all the shapes and of the reference point given their kinematics and time step
         self.update_shape_kinematics()
         for i in range(len(self._shape_list)):
             self._shape_list[i].do_velocity_step(dt)
@@ -213,7 +213,7 @@ class Furniture3D:
         )
 
     def apply_kinematic_constraints(self):
-        #This function is a copy of the one found in the helper function but both are needed
+        # This function is a copy of the one found in the helper function but both are needed
         linear_velocity = np.copy(self.linear_velocity)
         angular_velocity = self.angular_velocity
 
@@ -244,7 +244,7 @@ class Furniture3D:
         time_step: float = 0.1,
     ) -> None:
         # This function calculates the velocity of the agent regarding which algorithms it should use and the obstacle environment
-        
+
         # if static velocities will always be 0 per definition
         if self.static:
             self.linear_velocity = np.array([0.0, 0.0])
@@ -390,7 +390,6 @@ class Furniture3D:
                     self.angular_velocity = 0
                     self.linear_velocity = np.array([0.0, 0.0])
                     self.stop = True
-                    self.stopped = True
                     return
                 else:
                     self.stop = False
