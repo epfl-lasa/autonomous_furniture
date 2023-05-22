@@ -1,0 +1,5 @@
+numpy
+pyqt5
+keyboard
+pyyaml
+transforms3d

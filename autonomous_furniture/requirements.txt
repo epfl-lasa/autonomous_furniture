@@ -1,4 +1,0 @@
-numpy
-pyqt5
-keyboard
-pyyaml

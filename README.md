@@ -116,6 +116,7 @@ Add the remaining missing packages:
 sudo apt install ros-<ros2-distro>-joint-state-publisher-gui
 sudo apt install ros-<ros2-distro>-joint-state-publisher
 sudo apt install ros-<ros2-distro>-xacro
+sudo apt install ros-<ros2-distro>-tf_transformations
 ```
 ### Python Install
 Go to file directory:
