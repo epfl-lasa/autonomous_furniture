@@ -144,6 +144,7 @@ source venv/bin/activate
 
 Setup the obstacle avoidance and various tools libraries:
 ```shell
+pip install --upgrade pip
 pip install -r requirements.txt
 pip install -e .
 cd libraries/dynamic_obstacle_avoidance/
