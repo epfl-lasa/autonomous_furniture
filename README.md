@@ -121,27 +121,28 @@ sudo apt install ros-<ros2-distro>-tf_transformations
 ### Python Install
 Go to file directory:
 ```shell
-cd src/autonomous_furniture/autonomous_furniture
+cd src/autonomous_furniture
 ```
 
 ## 
-Create a virtual environment and install the dependencies from the Pipfile:
+Create a virtual environment containing a python version >= 3.10 and install the dependencies from the Pipfile:
 ```shell
-pipenv install
+virtualenv --python=python3.10 venv
 ```
-This will create a Pipfile.lock and will take some time, so be patient.
 Once the virtual environment is setup start it with:
 ```shell
-pipenv shell
+source venv/bin/activate
 ```
 
 Setup the obstacle avoidance and various tools libraries:
 ```shell
+pip install -r requirements.txt
+pip install -e .
 cd libraries/dynamic_obstacle_avoidance/
 pip install -r requirements.txt
 pip install -e .
 cd libraries/various_tools/
-python setup.py develop
+pip install -r requirements.txt
 pip install -e .
 ```
 
