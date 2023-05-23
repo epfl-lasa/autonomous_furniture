@@ -111,12 +111,20 @@ rosdep update
 Install colcon:
 https://colcon.readthedocs.io/en/released/user/installation.html
 
-Add the remaining missing packages:
+Add the remaining missing packages.
+For Foxy:
 ```shell
-sudo apt install ros-<ros2-distro>-joint-state-publisher-gui
-sudo apt install ros-<ros2-distro>-joint-state-publisher
-sudo apt install ros-<ros2-distro>-xacro
-sudo apt install ros-<ros2-distro>-tf_transformations
+sudo apt install ros-foxy-joint-state-publisher-gui
+sudo apt install ros-foxy-joint-state-publisher
+sudo apt install ros-foxy-xacro
+sudo apt install ros-foxy-tf-transformations
+```
+For Humble:
+```shell
+sudo apt install ros-humble-joint-state-publisher-gui
+sudo apt install ros-humble-joint-state-publisher
+sudo apt install ros-humble-xacro
+sudo apt install ros-humble-tf-transformations
 ```
 ### Python Install
 Go to file directory:
