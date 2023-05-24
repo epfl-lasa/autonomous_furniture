@@ -82,6 +82,7 @@ cd workspace/src
 
 ```shell
 git clone --recurse-submodules git@github.com:epfl-lasa/autonomous_furniture.git
+git clone git@github.com:epfl-lasa/furniture_descriptions.git
 ```
 (Make sure that the submodule dynamic_obstacle_avoidance is in autonomous_furniture/libraries, and various_tools is in autonomous_furniture/libraries/dynamic_obstacle_avoidance/lib)
 
