@@ -96,7 +96,7 @@ Be sure your directory structure looks like this:
 └── workspace
     └──src  
         ├── autonomous_furniture
-        |   └── libraries
+        |    └── libraries
         |        └── dynamic_obstacle_avoidance
         |            └── libraries
         |                └── various_tools
