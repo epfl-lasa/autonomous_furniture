@@ -160,8 +160,9 @@ pip install -e .
 ```
 
 ### ROS2 install
-Build the ROS2 packages outside of the "pipenv shell":
+Build the ROS2 packages outside of the virtual environment:
 ```shell
+deactivate
 cd workspace
 colcon build --symlink-install
 ```
