@@ -19,7 +19,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "urdf/qolo_human.urdf.xacro"]
+                [FindPackageShare("furniture_descriptions"), "urdf/qolo_human.urdf.xacro"]
             ),
             " ",
             "prefix:=qolo_human_ ",
@@ -37,7 +37,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -58,7 +58,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -79,7 +79,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -100,7 +100,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -121,7 +121,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -142,7 +142,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -162,7 +162,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+                [FindPackageShare("furniture_descriptions"), "urdf/wall.urdf.xacro"]
             ),
             " ",
             "prefix:=wall_1_ ",
@@ -183,7 +183,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+                [FindPackageShare("furniture_descriptions"), "urdf/wall.urdf.xacro"]
             ),
             " ",
             "prefix:=wall_2_ ",
@@ -204,7 +204,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+                [FindPackageShare("furniture_descriptions"), "urdf/wall.urdf.xacro"]
             ),
             " ",
             "prefix:=wall_3_ ",
@@ -225,7 +225,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "urdf/wall.urdf.xacro"]
+                [FindPackageShare("furniture_descriptions"), "urdf/wall.urdf.xacro"]
             ),
             " ",
             "prefix:=wall_4_ ",
@@ -336,7 +336,7 @@ def generate_launch_description():
         arguments=[
             "-d",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "rviz/hos_env.rviz"]
+                [FindPackageShare("furniture_descriptions"), "rviz/hos_env.rviz"]
             ),
         ],
         output="log",

@@ -77,7 +77,7 @@ RUN rosdep update
 
 WORKDIR ${HOME}/ros2_ws/src
 COPY autonomous_furniture autonomous_furniture
-COPY objects_descriptions objects_descriptions
+COPY furniture_descriptions furniture_descriptions
 
 WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 RUN python3 -m pip install -r requirements.txt

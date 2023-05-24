@@ -20,7 +20,7 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("objects_descriptions"),
+                    FindPackageShare("furniture_descriptions"),
                     "urdf/hospital_bed.urdf.xacro",
                 ]
             ),
@@ -59,7 +59,7 @@ def generate_launch_description():
         arguments=[
             "-d",
             PathJoinSubstitution(
-                [FindPackageShare("objects_descriptions"), "rviz/object_move.rviz"]
+                [FindPackageShare("furniture_descriptions"), "rviz/object_move.rviz"]
             ),
         ],
         output="log",

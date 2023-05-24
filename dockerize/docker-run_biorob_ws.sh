@@ -12,7 +12,7 @@ sudo docker run \
 	   -v /tmp/.X11-unix:/tmp/.X11-unix \
 	   -v /data/$USER/.Xauthority:/home/ros/.Xauthority \
 	   -v "$(pwd)"/autonomous_furniture/:/home/ros/ros2_ws/src/autonomous_furniture:rw\
-	   -v "$(pwd)"/objects_descriptions/:/home/ros/ros2_ws/src/objects_descriptions:rw\
+	   -v "$(pwd)"/furniture_descriptions/:/home/ros/ros2_ws/src/furniture_descriptions:rw\
 	   ros2_autonomous_furniture
 
 # Local libraries

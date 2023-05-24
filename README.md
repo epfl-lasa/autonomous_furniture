@@ -93,10 +93,9 @@ Be sure your directory structure looks like this:
 ```bash
 .
 └── workspace
-    └──src
-        └──autonomous_furniture
-            ├── autonomous_furniture
-            └── objects_descriptions
+    └──src  
+        ├── autonomous_furniture
+        └── furniture_descriptions
 ```
 if not ROS2 will fail to build and through mising package errors.
 

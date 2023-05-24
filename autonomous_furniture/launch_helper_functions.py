@@ -13,7 +13,7 @@ from launch.substitutions import (
 
 import numpy as np
 
-URDF_DIRECTORY = "objects_descriptions"
+URDF_DIRECTORY = "furniture_descriptions"
 
 
 def node_creator(furniture_name, urdf_file_name, topicspace=""):
