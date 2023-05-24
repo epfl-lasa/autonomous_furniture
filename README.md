@@ -105,14 +105,14 @@ Be sure your directory structure looks like this:
 if not ROS2 will fail to build and through mising package errors.
 
 ### ROS2 Setup
-For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy and galactic.
+For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy, galactic, and humble. The required python version is 3.10, so in case you decide not to use humble, you will need to install foxy or galactic from source defining a python version >=3.10.
 With the basic version of ROS2 there are a few missing packages needed to properly run the code.
 First install rosdep:
 ```shell
 sudo apt install python3-rosdep2
 rosdep update
 ```
-Install colcon:
+Install colcon tu build the environment:
 https://colcon.readthedocs.io/en/released/user/installation.html
 
 Add the remaining missing packages.
