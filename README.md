@@ -95,12 +95,12 @@ Be sure your directory structure looks like this:
 .
 └── workspace
     └──src  
-        ├── autonomous_furniture
-        |    └── libraries
-        |        └── dynamic_obstacle_avoidance
-        |            └── libraries
-        |                └── various_tools
         └── furniture_descriptions
+        └── autonomous_furniture
+             └── libraries
+                └── dynamic_obstacle_avoidance
+                    └── libraries
+                        └── various_tools
 ```
 if not ROS2 will fail to build and through mising package errors.
 
