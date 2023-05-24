@@ -131,21 +131,12 @@ sudo apt install ros-humble-xacro
 sudo apt install ros-humble-tf-transformations
 ```
 ### Python Install
-Go to file directory:
+Go to file directory, create a virtual environment containing a python version >= 3.10 and activate it:
 ```shell
-cd src/autonomous_furniture
-```
-
-## 
-Create a virtual environment containing a python version >= 3.10 and install the dependencies from the Pipfile:
-```shell
+cd autonomous_furniture
 virtualenv --python=python3.10 venv
-```
-Once the virtual environment is setup start it with:
-```shell
 source venv/bin/activate
 ```
-
 Setup the obstacle avoidance and various tools libraries:
 ```shell
 pip install --upgrade pip
