@@ -1,7 +1,3 @@
 [submodule "autonomous_furniture/libraries/dynamic_obstacle_avoidance"]
 	path = libraries/dynamic_obstacle_avoidance
 	url = git@github.com:epfl-lasa/dynamic_obstacle_avoidance.git
-
-[submodule "furniture_descriptions"]
-	path = furniture_descriptions
-	url = git@github.com:epfl-lasa/furniture_descriptions.git
