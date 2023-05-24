@@ -208,7 +208,7 @@ git checkout feat/mobilerobot
 cd lib/various_tools/
 git pull origin main
 ```
-# Errors when using ROS Foxy and Ubuntu 20.04
+### Errors when using ROS Foxy and Ubuntu 20.04
 * If the command for upgrading pip results in an error, try to upgrade pip with the following command:
 ```shell
 curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
