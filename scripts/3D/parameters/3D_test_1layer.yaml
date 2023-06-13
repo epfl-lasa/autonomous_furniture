@@ -1,0 +1,52 @@
+{
+    # simulation visualization parameters
+    x limit: [-5, 10], # x-axis limit
+    y limit: [0, 7], # y-axis limit
+    figure size: [10, 7], # figure size [width, height]
+    animation: true, # true for showing animation, false for doing just computations
+    obstacle colors: ["orange", "blue", "green"], # colors of obstacles
+    check convergence: true, # true if convergence should be chacked, false and simulation stops only when maximum simulation time is reached
+
+    # simulation parameters
+    maximum simulation time: 500, # maximum simulation time measured in simulation seconds
+    time step of simulation: 0.02, # time interval between the single steps
+    time step of sleep: 0.02, # I don't know ask Lukas
+    animation name: "animation", # name of animation for saving
+    video file type: ".mp4", # video file in case animation should be saved
+
+    # velocity calculation algorithm
+    minimize virtual drag: false, # true if virtual drag should be minimized, false if virtual drag should be ignored (always ignored if soft decoupling is false)
+    soft decoupling: false, # true if soft decoupling should be active, false if soft decoupling should be ignored (needs to be true to use virtual drag minimization)
+    safety module: false, # true if safety module should be active, false if safety module should be ignored
+    emergency stop: false, # true if emergency stop should be active, false if emergency stop should be ignored
+
+    # kinematic constraints
+    maximum linear velocity: 0.4, # m/s
+    maximum angular velocity: 1.5, # rad/s
+    maximum linear acceleration: 10.0, # m/s²
+    maximum angular acceleration: 10.0, # rad/s²
+
+    # safety module parameters
+    safety module gain: 1.0, # gain to further tune safety module (>1 means stronger safety module response, <1 means weaker safety module response)
+    max gamma critic: 2.0, # value for gamma critic until critical distance from attractor is reached
+    min gamma critic: 1.1, # value for gramma critic when agent has converged
+    gamma stop: 1.05, # if any control point reached a gamma value equal or lower than the gamma stop value, the whole piece of furniture stops immediately
+    critical distance: 1.0, # value at which gamma critic starts shrinking linearly from max gamma critic to min gamma critic
+
+    # obstacle environment parameters
+    cutoff gamma for control point weights: 10.0, # gamma values greater than this won't be considered when calculating the control point weights
+    cutoff gamma for obstacle environment: 4.0, # obstacles with a gamma value greater than this value won't be considered for DSM
+
+    #virtual drag parameters
+    k: 0.01, # parameter that defined how strong a1 converges to zero because of d/(d+k) term
+    angle switch distance: 1.5, # distance from which the agent starts giving more weight at reaching it final orientation instead of minimizing the virtual drag
+
+    # other agent specific parameters
+    static: false, # true if agent cannot move, false if mobile agent
+    priority: 1.0, # priority of an agent when calculating DSM (has not yet any influence on the gamma value calculation and thus on the safety module) 
+    name: "mobile_furniture", # agent name
+
+    # gamma calculation parameters
+    gamma surface: 1.0, # I don't know ask Lukas
+    frac_gamma_nth: 0.5 # I don't know ask Lukas
+}

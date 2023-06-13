@@ -73,7 +73,7 @@ colcon build --symlink-install && ros2 launch autonomous_furniture assistive_env
 ```
 
 ## Setup on Host / Main computer
-Requirements: python, ROS2
+Requirements: python3.10, ROS2 (prefereably Humble)
 
 To setup the repository create "workspace/src" directory then clone the repository into the "src" directory:
 ```shell
@@ -82,8 +82,9 @@ cd workspace/src
 
 ```shell
 git clone --recurse-submodules git@github.com:epfl-lasa/autonomous_furniture.git
+git clone git@github.com:epfl-lasa/furniture_descriptions.git
 ```
-(Make sure that the submodule dynamic_obstacle_avoidance is in autonomous_furniture/libraries, and various_tools is in autonomous_furniture/libraries/dynamic_obstacle_avoidance/lib)
+(Make sure that the submodule dynamic_obstacle_avoidance is in autonomous_furniture/libraries, and various_tools is in autonomous_furniture/libraries/dynamic_obstacle_avoidance/libraries)
 
 if you forgot to add the "--recurse-submodules" flag, you can fetch the submodules with:
 ```
@@ -93,60 +94,66 @@ Be sure your directory structure looks like this:
 ```bash
 .
 └── workspace
-    └──src
-        └──autonomous_furniture
-            ├── autonomous_furniture
-            └── objects_descriptions
+    └──src  
+        └── furniture_descriptions
+        └── autonomous_furniture
+             └── libraries
+                └── dynamic_obstacle_avoidance
+                    └── libraries
+                        └── various_tools
 ```
 if not ROS2 will fail to build and through mising package errors.
 
 ### ROS2 Setup
-For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy and galactic.
+For the 3D visualization to work properly, a working version of ROS2 is needed. It has been tested on foxy, galactic, and humble. The required python version is 3.10, so in case you decide not to use Humble, you will need to install Foxy or Galactic from source defining a python version >=3.10.
 With the basic version of ROS2 there are a few missing packages needed to properly run the code.
 First install rosdep:
 ```shell
 sudo apt install python3-rosdep2
 rosdep update
 ```
-Install colcon:
+Install colcon tu build the environment:
 https://colcon.readthedocs.io/en/released/user/installation.html
 
-Add the remaining missing packages:
+Add the remaining missing packages.
+For Foxy:
 ```shell
-sudo apt install ros-<ros2-distro>-joint-state-publisher-gui
-sudo apt install ros-<ros2-distro>-joint-state-publisher
-sudo apt install ros-<ros2-distro>-xacro
+sudo apt install ros-foxy-joint-state-publisher-gui
+sudo apt install ros-foxy-joint-state-publisher
+sudo apt install ros-foxy-xacro
+sudo apt install ros-foxy-tf-transformations
+```
+For Humble:
+```shell
+sudo apt install ros-humble-joint-state-publisher-gui
+sudo apt install ros-humble-joint-state-publisher
+sudo apt install ros-humble-xacro
+sudo apt install ros-humble-tf-transformations
 ```
 ### Python Install
-Go to file directory:
+Go to file directory, create a virtual environment containing a python version >= 3.10 and activate it:
 ```shell
-cd src/autonomous_furniture/autonomous_furniture
+cd autonomous_furniture
+virtualenv --python=python3.10 venv
+source venv/bin/activate
 ```
-
-## 
-Create a virtual environment and install the dependencies from the Pipfile:
-```shell
-pipenv install
-```
-This will create a Pipfile.lock and will take some time, so be patient.
-Once the virtual environment is setup start it with:
-```shell
-pipenv shell
-```
-
 Setup the obstacle avoidance and various tools libraries:
 ```shell
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
 cd libraries/dynamic_obstacle_avoidance/
 pip install -r requirements.txt
 pip install -e .
 cd libraries/various_tools/
-python setup.py develop
+pip install -r requirements.txt
 pip install -e .
 ```
 
 ### ROS2 install
-Build the ROS2 packages outside of the "pipenv shell":
+Build the ROS2 packages outside of the virtual environment:
 ```shell
+deactivate
 cd workspace
 colcon build --symlink-install
 ```
@@ -169,17 +176,12 @@ In the first terminal install and source de ROS2 packages, then run:
 ros2 launch autonomous_furniture <env of choice>.launch.py
 ```
 Replace "env of choice" with any of the available environment in the launch directory.
-In the second terminal go to the autonomous_furniture directory and start the pipenv shell:
+In the second terminal go to the autonomous_furniture directory, start the virtual environment, and run the corresponding python publisher:
 ```shell
-cd workspace/src/autonomous_furniture/autonomous_furniture/
-pipenv shell
-```
-The run the corresponding python publisher:
-```shell
+cd workspace/src/autonomous_furniture/
+source venv/bin/activate
 python furniture_publisher/<env of choice>_state_publisher.py
 ```
-
-
 
 ### Publishers
 assistive_environment_state_publisher.py
@@ -206,6 +208,13 @@ git checkout feat/mobilerobot
 cd lib/various_tools/
 git pull origin main
 ```
+### Errors when using ROS Foxy and Ubuntu 20.04
+* If the command for upgrading pip results in an error, try to upgrade pip with the following command:
+```shell
+curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+```
+* Cannot import rclpy: this errors come from the fact that all debian packages in ROS Foxy rely on python3.8. You can solve it by building ROS Foxy from source and define its python version as 3.10.
+
 
 ### Docker - Cannot connect to host
 Add the xhost set to your `.profile` setup file by running:

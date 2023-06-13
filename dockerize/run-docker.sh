@@ -9,7 +9,7 @@ docker run \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
 		-v $HOME/.Xauthority:/home/ros/.Xauthority \
 		-v "$(pwd)"/../autonomous_furniture/:/home/ros/ros2_ws/src/autonomous_furniture:rw\
-		-v "$(pwd)"/../objects_descriptions/:/home/ros/ros2_ws/src/objects_descriptions:rw\
+		-v "$(pwd)"/../furniture_descriptions/:/home/ros/ros2_ws/src/furniture_descriptions:rw\
 		-v /home/lukas/Code/various_tools/vartools:/home/ros/python/various_tools/vartools:rw\
 		-v /home/lukas/Code/dynamic_obstacle_avoidance/dynamic_obstacle_avoidance:/home/ros/python/dynamic_obstacle_avoidance/dynamic_obstacle_avoidance:rw\
 		-v /home/lukas/Code/nonlinear_obstacle_avoidance/nonlinear_avoidance:/home/ros/python/nonlinear_obstacle_avoidance/nonlinear_avoidance:rw\
