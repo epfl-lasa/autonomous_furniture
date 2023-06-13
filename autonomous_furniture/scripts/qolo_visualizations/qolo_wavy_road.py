@@ -714,7 +714,7 @@ def plot_switching_linear_dynamics(n_grid=10, save_figure=False):
     )
     plot_grass(ax=ax, publisher=GrassPublisher)
 
-    integrate_with_qolo(
+    trajectory = integrate_with_qolo(
         position_start,
         # animator.initial_dynamics.evaluate,
         animator.avoider.evaluate,
@@ -723,7 +723,9 @@ def plot_switching_linear_dynamics(n_grid=10, save_figure=False):
         ax=ax,
         attractor_position=dynamics.attractor_position,
     )
-    breakpoint()
+
+    converged = has_converged(trajectory, dynamics.attractor_position)
+    print(f"Converged: {converged}")
 
 
 def plot_switching_path_following(n_grid=10, save_figure=False):
@@ -801,12 +803,12 @@ def get_fraction_outside(trajectory):
         if gamma >= 1:
             collision_free += 1
 
-        mean_sqrd_gamma += gamma**2
+        mean_sqrd_gamma += gamma ** 2
 
         tmp_distances = np.zeros(len(grass_container))
         for ii, obs in enumerate(grass_container):
             tmp_distances[ii] = obs.get_distance_to_surface(
-                trajectory[:, pp], in_global_frame=True
+                trajectory[:, pp], in_obstacle_frame=True
             )
 
         distances[pp] = np.min(tmp_distances)
@@ -826,8 +828,11 @@ def get_distance(trajectory):
     return np.sum(np.linalg.norm(local_dist, axis=0))
 
 
-def multi_test_switching_straight(x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt):
-    np.random.seed(rndm_seed)
+def has_converged(trajectory, attractor):
+    return np.allclose(trajectory[:, -1], attractor, atol=1e-1)
+
+
+def multi_test_switching_straight(x_lim, y_lim, n_runs, rndm_seeds, start, it_max, dt):
 
     distances = np.zeros(n_runs)
     fraction_free = np.zeros(n_runs)
@@ -836,6 +841,7 @@ def multi_test_switching_straight(x_lim, y_lim, n_runs, rndm_seed, start, it_max
     n_points = np.zeros(n_runs)
 
     for ii in range(n_runs):
+        np.random.seed(rndm_seeds[ii])
         dynamics = SwitchingDynamics(RvizQoloAnimator.initial_dynamics.segments)
 
         # container = None
@@ -863,24 +869,22 @@ def multi_test_switching_straight(x_lim, y_lim, n_runs, rndm_seed, start, it_max
 
         distances[ii] = get_distance(trajectory)
         fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
-        converged[ii] = np.allclose(
-            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
-        )
+        converged[ii] = has_converged(trajectory, dynamics.attractor_position)
+
         n_points[ii] = trajectory.shape[1]
 
-    outfile = Path("media", f"wavy_path_switching_straight_randseed_{rndm_seed}.csv")
+    outfile = Path("media", f"wavy_path_switching_straight.csv")
     np.savetxt(
         str(outfile),
-        ammas=np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
+        np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
         header="n_points, distance, free_fraction, converged, gammas",
         delimiter=",",
     )
 
 
 def multi_test_switching_pathfollowing(
-    x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt
+    x_lim, y_lim, n_runs, rndm_seeds, start, it_max, dt
 ):
-    np.random.seed(rndm_seed)
 
     distances = np.zeros(n_runs)
     fraction_free = np.zeros(n_runs)
@@ -889,6 +893,7 @@ def multi_test_switching_pathfollowing(
     n_points = np.zeros(n_runs)
 
     for ii in range(n_runs):
+        np.random.seed(rndm_seeds[ii])
         dynamics = SwitchingDynamicsPathFollowing(
             RvizQoloAnimator.initial_dynamics.segments
         )
@@ -921,15 +926,13 @@ def multi_test_switching_pathfollowing(
 
         distances[ii] = get_distance(trajectory)
         fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
-        converged[ii] = np.allclose(
-            trajectory[:, -1], dynamics.attractor_position, atol=1e-1
-        )
+        converged[ii] = has_converged(trajectory, dynamics.attractor_position)
         n_points[ii] = trajectory.shape[1]
 
-    outfile = Path("media", f"wavy_path_switching_path_randseed_{rndm_seed}.csv")
+    outfile = Path("media", f"wavy_path_switching_path.csv")
     np.savetxt(
         str(outfile),
-        ammas=np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
+        np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
         header="n_points, distance, free_fraction, converged, gammas",
         delimiter=",",
     )
@@ -959,8 +962,7 @@ def get_nonlinear_global_trajectory(start, x_lim, y_lim, it_max, dt):
     return trajectory, animator.initial_dynamics.attractor_position
 
 
-def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, dt):
-    np.random.seed(rndm_seed)
+def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seeds, start, it_max, dt):
 
     distances = np.zeros(n_runs)
     fraction_free = np.zeros(n_runs)
@@ -969,17 +971,18 @@ def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, 
     n_points = np.zeros(n_runs)
 
     for ii in range(n_runs):
+        np.random.seed(rndm_seeds[ii])
         trajectory, attractor = get_nonlinear_global_trajectory(
             start=start, x_lim=x_lim, y_lim=y_lim, it_max=it_max, dt=dt
         )
 
         distances[ii] = get_distance(trajectory)
         fraction_free[ii], gammas[ii] = get_fraction_outside(trajectory)
-        converged[ii] = np.allclose(trajectory[:, -1], attractor, atol=1e-1)
+        converged[ii] = has_converged(trajectory, attractor)
         n_points[ii] = trajectory.shape[1]
         converged[ii]
 
-    outfile = Path("media", f"wavy_path_global_nonlinear_randseed_{rndm_seed}.csv")
+    outfile = Path("media", f"wavy_path_global_nonlinear.csv")
     np.savetxt(
         str(outfile),
         np.vstack((n_points, distances, fraction_free, converged, gammas)).T,
@@ -989,39 +992,37 @@ def multi_test_nonlinear_global(x_lim, y_lim, n_runs, rndm_seed, start, it_max, 
 
 
 def run_comparison(n_runs=1):
-    rndm_seed = 0
     x_lim = [-6.5, 8.5]
     y_lim = [-7.0, 7.0]
     it_max = 2000
     dt = 0.1
     start_position = np.array([-5, -4.0])
 
-    # np.random.seed(rndm_seed)  # Do it here to, just to be sure..
-    # multi_test_switching_straight(
-    #     x_lim=x_lim,
-    #     y_lim=y_lim,
-    #     n_runs=n_runs,
-    #     rndm_seed=rndm_seed,
-    #     start=start_position,
-    #     it_max=it_max,
-    #     dt=dt,
-    # )
-    np.random.seed(rndm_seed)
-    multi_test_nonlinear_global(
+    rndm_seeds = np.arange(n_runs)
+
+    multi_test_switching_straight(
         x_lim=x_lim,
         y_lim=y_lim,
         n_runs=n_runs,
-        rndm_seed=rndm_seed,
+        rndm_seeds=rndm_seeds,
         start=start_position,
         it_max=it_max,
         dt=dt,
     )
-    # np.random.seed(rndm_seed)
+    # multi_test_nonlinear_global(
+    #     x_lim=x_lim,
+    #     y_lim=y_lim,
+    #     n_runs=n_runs,
+    #     rndm_seeds=rndm_seeds,
+    #     start=start_position,
+    #     it_max=it_max,
+    #     dt=dt,
+    # )
     # multi_test_switching_pathfollowing(
     #     x_lim=x_lim,
     #     y_lim=y_lim,
     #     n_runs=n_runs,
-    #     rndm_seed=rndm_seed,
+    #     rndm_seeds=rndm_seeds,
     #     start=start_position,
     #     it_max=it_max,
     #     dt=dt,
@@ -1066,6 +1067,7 @@ def main():
 if (__name__) == "__main__":
     # main()
 
+    np.random.seed(0)
     # plot_vectorfield_nonlinear_global(n_grid=10, save_figure=False)
     # plot_switching_linear_dynamics(n_grid=20)
     # plot_switching_path_following(n_grid=20)
