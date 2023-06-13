@@ -75,9 +75,14 @@ USER ros
 RUN mkdir -p ${HOME}/ros2_ws/src
 RUN rosdep update
 
+# Download dependencies
 WORKDIR ${HOME}/ros2_ws/src
+RUN git clone -b main https://github.com/epfl-lasa/autonomous_furniture
+
+# Set up work directory
+WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 COPY autonomous_furniture autonomous_furniture
-COPY furniture_descriptions furniture_descriptions
+
 
 WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 RUN python3 -m pip install -r requirements.txt

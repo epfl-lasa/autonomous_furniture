@@ -1,5 +1,5 @@
 #!/bin/bash
-cd .. && docker build -t ros2_autonomous_furniture -f dockerize/Dockerfile . && cd dockerize
+cd ../.. && docker build -t ros2_autonomous_furniture -f autonomous_furniture/dockerize/Dockerfile . && cd autonomous_furniture/dockerize
 
 # DOCKER_BUILDKIT=1 docker build --build-arg HOST_GID=$(id -g) --build-arg HOST_UID=$(id -u)
 # install ros package
@@ -7,4 +7,3 @@ cd .. && docker build -t ros2_autonomous_furniture -f dockerize/Dockerfile . && 
 # TO run:
 # 
 # $ docker run -it --rm ros_with_rviz
- 
