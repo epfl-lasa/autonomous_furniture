@@ -72,21 +72,21 @@ RUN python3 -m pip install --editable .
 
 # ROS-ENV setup
 USER ros
-RUN mkdir -p ${HOME}/ros2_ws/src
+RUN mkdir -p ${HOME}/ros2_ws/src/autonomous_furniture
 RUN rosdep update
 
-# Download dependencies
+# # Download dependencies
 WORKDIR ${HOME}/ros2_ws/src
-RUN git clone -b main https://github.com/epfl-lasa/autonomous_furniture
+RUN git clone -b main https://github.com/epfl-lasa/furniture_descriptions.git
+# # RUN git clone -b main https://github.com/epfl-lasa/autonomous_furniture
 
-# Set up work directory
-WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
+# Copy local directory Set up work directory
 COPY autonomous_furniture autonomous_furniture
 
-
+# WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
 RUN python3 -m pip install -r requirements.txt
-# TODO: remove requirements.txt files
+# # TODO: remove requirements.txt files
 
 # Setup Colcon
 # RUN mkdir -p ${COLCON_HOME}
@@ -99,7 +99,7 @@ WORKDIR ${HOME}/ros2_ws
 
 RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install"
 
-# Update bash file
+# # Update bash file
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash; \
 	source ~/ros2_ws/install/setup.bash" | cat - ${HOME}/.bashrc > tmp && mv tmp ${HOME}/.bashrc
 # RUN echo "source /opt/ros/humble/setup.bash" >> ${HOME}/.bashrc
