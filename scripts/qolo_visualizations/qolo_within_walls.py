@@ -22,6 +22,7 @@ from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
 from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
 from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
 
+from nonlinear_avoidance.arch_obstacle import create_arch_obstacle
 from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleAvoider
 from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleContainer
 from nonlinear_avoidance.arch_obstacle import BlockArchObstacle
@@ -142,7 +143,7 @@ class QoloWallsAnimator(Animator):
         self.x_lim = x_lim
         self.y_lim = y_lim
 
-        margin_absolut = 0.6
+        margin_absolut = 0.5
         # start_position = np.array([-4.4, 1.5])
         self.start_position = np.array([-2.5, 3])
 
@@ -188,6 +189,7 @@ class QoloWallsAnimator(Animator):
         #     # convergence_dynamics=rotation_projector,
         #     create_convergence_dynamics=True,
         # )
+
         self.initial_dynamics = WavyRotatedDynamics(
             pose=Pose(position=attractor, orientation=0),
             maximum_velocity=1.0,
@@ -195,6 +197,68 @@ class QoloWallsAnimator(Animator):
             rotation_power=1.2,
             max_rotation=0.4 * math.pi,
         )
+
+        self.create_container(margin_absolut)
+        self.create_avoider(LinearSystem(attractor, maximum_velocity=1.0))
+
+        self.broadcaster = broadcaster
+
+        self.do_plotting = do_plotting
+        if do_plotting:
+            self.fig, self.ax = plt.subplots()
+        else:
+            self.fig = None
+
+        # Initial update of transform
+        update_shapes_of_agent(self.robot)
+        # for agent in self.agent_container:
+        #     update_shapes_of_agent(agent)
+
+    def create_container(self, margin_absolut: float):
+        self.container = MultiObstacleContainer()
+        self.container.append(
+            create_arch_obstacle(
+                wall_width=0.4,
+                axes_length=np.array([4.5, 6.5]),
+                pose=Pose(np.array([-1.5, -3.5]), orientation=90 * np.pi / 180.0),
+                margin_absolut=margin_absolut,
+            )
+        )
+        self.container.append(
+            create_arch_obstacle(
+                wall_width=0.4,
+                axes_length=np.array([4.5, 6.0]),
+                pose=Pose(np.array([1.5, 3.0]), orientation=-90 * np.pi / 180.0),
+                margin_absolut=margin_absolut,
+            )
+        )
+
+    def create_avoider(self, *args, **kwargs):
+        self.avoider = MultiObstacleAvoider(
+            obstacle_container=self.container,
+            initial_dynamics=self.initial_dynamics,
+            default_dynamics=LinearSystem(self.initial_dynamics.attractor_position),
+            create_convergence_dynamics=True,
+            convergence_radius=0.53 * math.pi,
+        )
+
+    def create_avoider_manually(self, convergence_dynamics):
+        attractor = convergence_dynamics.attractor_position
+        rotation_projector = ProjectedRotationDynamics(
+            attractor_position=convergence_dynamics.attractor_position,
+            initial_dynamics=convergence_dynamics,
+            reference_velocity=lambda x: x - attractor,
+        )
+
+        self.avoider = MultiObstacleAvoider(
+            obstacle_container=self.container,
+            initial_dynamics=self.initial_dynamics,
+            convergence_dynamics=rotation_projector,
+            # convergence_radius=0.51 * np.pi,
+            # create_convergence_dynamics=True,
+        )
+
+    def create_container_from_block_obstacle(self, margin_absolut: float):
         self.container = MultiObstacleContainer()
         self.container.append(
             BlockArchObstacle(
@@ -213,34 +277,6 @@ class QoloWallsAnimator(Animator):
                 margin_absolut=margin_absolut,
             )
         )
-
-        convergence_dynamics = LinearSystem(attractor, maximum_velocity=1.0)
-        rotation_projector = ProjectedRotationDynamics(
-            attractor_position=convergence_dynamics.attractor_position,
-            initial_dynamics=convergence_dynamics,
-            reference_velocity=lambda x: x - attractor,
-        )
-
-        self.avoider = MultiObstacleAvoider(
-            obstacle_container=self.container,
-            initial_dynamics=self.initial_dynamics,
-            convergence_dynamics=rotation_projector,
-            # convergence_radius=0.51 * np.pi,
-            # create_convergence_dynamics=True,
-        )
-
-        self.broadcaster = broadcaster
-
-        self.do_plotting = do_plotting
-        if do_plotting:
-            self.fig, self.ax = plt.subplots()
-        else:
-            self.fig = None
-
-        # Initial update of transform
-        update_shapes_of_agent(self.robot)
-        # for agent in self.agent_container:
-        #     update_shapes_of_agent(agent)
 
     def update_step(self, ii):
         print("ii", ii)
@@ -305,7 +341,8 @@ def main(
         broadcaster=broadcaster, do_plotting=do_plotting, x_lim=[-5, 5], y_lim=[-5, 5]
     )
 
-    if do_ros:
+    publish_trajectory = False
+    if do_ros and publish_trajectory:
         traj_publisher = TrajectoryPublisher(
             animator, avoid_functor=animator.avoider.evaluate
         )

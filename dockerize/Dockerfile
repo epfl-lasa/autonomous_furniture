@@ -111,11 +111,13 @@ RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash; \
 
 # For development / testing purposes
 RUN python3 -m pip install -U pytest
+RUN sudo apt install python-is-python3
 
 # USER ros
 # USER root
 
-WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
+# WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture
+WORKDIR ${HOME}/ros2_ws/src/autonomous_furniture/scripts/qolo_visualizations
 # COPY setup_ros_env.sh ${HOME}/setup_ros_env.sh
 # RUN echo "bash ~/setup_ros_env.sh" >> ~/.bashrc
 

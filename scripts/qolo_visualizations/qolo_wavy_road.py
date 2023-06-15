@@ -22,6 +22,7 @@ from dynamic_obstacle_avoidance.visualization.plot_obstacle_dynamics import (
 
 from nonlinear_avoidance.visualization.plot_qolo import integrate_with_qolo
 from nonlinear_avoidance.avoidance import RotationalAvoider
+from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleAvoider
 from nonlinear_avoidance.rotation_container import RotationContainer
 from nonlinear_avoidance.dynamics.segmented_dynamics import create_segment_from_points
 from nonlinear_avoidance.dynamics.segmented_dynamics import WavyPathFollowing
@@ -212,19 +213,12 @@ class RvizQoloAnimator(Animator):
             intersecting_id = []
         # breakpoint()
 
-        rotation_projector = ProjectedRotationDynamics(
-            attractor_position=self.initial_dynamics.segments[-1].end,
-            initial_dynamics=self.initial_dynamics,
-            # reference_velocity=lambda x: x - center_velocity.center_position,
-        )
-
-        self.avoider = SingularityConvergenceDynamics(
-            initial_dynamics=self.initial_dynamics,
-            # convergence_system=convergence_dynamics,
-            obstacle_environment=self.agent_container.get_obstacles(
+        self.avoider = MultiObstacleAvoider.create_with_convergence_dynamics(
+            obstacle_container=self.agent_container.get_multi_obstacles(
                 desired_margin=self.robot.required_margin
             ),
-            obstacle_convergence=rotation_projector,
+            initial_dynamics=self.initial_dynamics,
+            create_convergence_dynamics=True,
         )
 
         self.broadcaster = broadcaster
@@ -307,6 +301,26 @@ class RvizQoloAnimator(Animator):
             noTicks=False,
         )
 
+        plot_arrows = True
+        if plot_arrows:
+            initial = self.initial_dynamics.evaluate(self.robot.pose.position)
+            self.ax.arrow(
+                self.robot.pose.position[0],
+                self.robot.pose.position[1],
+                initial[0],
+                initial[1],
+                color="red",
+                label="Initial",
+            )
+            self.ax.arrow(
+                self.robot.pose.position[0],
+                self.robot.pose.position[1],
+                self.robot.twist.linear[0],
+                self.robot.twist.linear[1],
+                color="blue",
+                label="ROAM",
+            )
+
         for segment in self.initial_dynamics.segments:
             self.ax.plot(
                 [segment.start[0], segment.end[0]],
@@ -355,7 +369,8 @@ def main_wavy(
         y_lim=[-10, 10],
     )
 
-    if do_ros:
+    do_init_trajectory = False
+    if do_ros and do_init_trajectory:
         traj_publisher = TrajectoryPublisher(animator)
 
     # Create launch rviz
@@ -919,7 +934,7 @@ def get_fraction_outside(trajectory):
         if gamma >= 1:
             collision_free += 1
 
-        mean_sqrd_gamma += gamma ** 2
+        mean_sqrd_gamma += gamma**2
 
         tmp_distances = np.zeros(len(grass_container))
         for ii, obs in enumerate(grass_container):
@@ -1203,6 +1218,10 @@ def plot_comparison():
 
 if (__name__) == "__main__":
     main()
+
+    # plot_vectorfield_nonlinear_global(
+    #     n_grid=20, save_figure=False, random_seed=None, figsize=(4.0, 3.5)
+    # )
     # plot_comparison()
     # run_comparison(n_runs=100)
 

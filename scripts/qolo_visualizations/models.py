@@ -11,6 +11,9 @@ from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
 from dynamic_obstacle_avoidance.obstacles import EllipseWithAxes as Ellipse
 from dynamic_obstacle_avoidance.containers import BaseContainer, ObstacleContainer
 
+from nonlinear_avoidance.multi_obstacle import MultiObstacle
+from nonlinear_avoidance.multi_obstacle_avoider import MultiObstacleContainer
+
 # from autonomous_furniture.rviz_animator import RvizSimulator
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
@@ -174,6 +177,37 @@ class AgentContainer:
                 # TODO: only take specific level [future implementation]
 
         return container_
+
+    def get_multi_obstacles(
+        self,
+        excluding_agents: list[SimpleAgent] = [],
+        level: Optional[int] = None,
+        desired_margin: Optional[float] = None,
+    ) -> BaseContainer:
+        """Returns an ObstacleContainer based on the obstacles, i.e., the avoidance-shapes."""
+        # Note that the (mutable) default argument is never changed.
+
+        container = MultiObstacleContainer()
+        for agent in self._agent_list:
+            if agent in excluding_agents:
+                continue
+
+            for obs in agent.shapes:
+                if desired_margin is not None:
+                    obs.margin_absolut = desired_margin
+                    obs.distance_scaling = 3
+
+                if level is None:
+                    obstacle_tree = MultiObstacle(Pose(np.array([0, 0.0])))
+                    obstacle_tree.set_root(obs)
+                    container.append(obstacle_tree)
+                    continue
+
+                else:
+                    raise NotImplementedError()
+                # TODO: only take specific level [future implementation]
+
+        return container
 
 
 class AgentTransformBroadCaster(Node):
