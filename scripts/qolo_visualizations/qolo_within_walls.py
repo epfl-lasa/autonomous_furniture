@@ -47,6 +47,8 @@ from qolo_along_road import RvizQolo
 from qolo_along_road import update_shapes_of_agent
 from utils import TrajectoryPublisher
 
+from disturbance import VelocityPublisher, MouseDisturbanceWithFigure
+
 
 class WallPublisher(Node):
     def __init__(self):
@@ -209,12 +211,19 @@ class QoloWallsAnimator(Animator):
         else:
             self.fig = None
 
+        self.mouse_offset_scaling = 0.1
+        self.mouse_listener = MouseDisturbanceWithFigure(fig=self.fig)
+        self.disturbance_publiser = VelocityPublisher(
+            name="disturbance", color=(255, 140, 0)
+        )
+        self.velocity_publisher = VelocityPublisher(name="velocity", color=(0, 0, 255))
+
         # Initial update of transform
         update_shapes_of_agent(self.robot)
         # for agent in self.agent_container:
         #     update_shapes_of_agent(agent)
 
-    def create_container(self, margin_absolut: float):
+    def create_container(self, margin_absolut: float, distance_scaling: float = 2.0):
         self.container = MultiObstacleContainer()
         self.container.append(
             create_arch_obstacle(
@@ -222,6 +231,7 @@ class QoloWallsAnimator(Animator):
                 axes_length=np.array([4.5, 6.5]),
                 pose=Pose(np.array([-1.5, -3.5]), orientation=90 * np.pi / 180.0),
                 margin_absolut=margin_absolut,
+                distance_scaling=2.0,
             )
         )
         self.container.append(
@@ -230,6 +240,7 @@ class QoloWallsAnimator(Animator):
                 axes_length=np.array([4.5, 6.0]),
                 pose=Pose(np.array([1.5, 3.0]), orientation=-90 * np.pi / 180.0),
                 margin_absolut=margin_absolut,
+                distance_scaling=2.0,
             )
         )
 
@@ -284,7 +295,15 @@ class QoloWallsAnimator(Animator):
             position=self.robot.pose.position,
             # obstacle_list=self.container,
         )
-        self.robot.update_step(dt=self.dt_simulation)
+
+        # Check for disturbance and add it (!)
+        disturbance = self.mouse_listener.click_offset * self.mouse_offset_scaling
+        self.disturbance_publiser.publish(self.robot.pose.position, disturbance)
+        self.robot.update_step(dt=self.dt_simulation, disturbance_velocity=disturbance)
+        self.velocity_publisher.publish(
+            self.robot.pose.position, self.robot.twist.linear * 3
+        )
+
         update_shapes_of_agent(self.robot)
         if self.broadcaster is not None:
             self.broadcaster.broadcast([self.robot])

@@ -48,6 +48,8 @@ from models import AgentContainer
 
 from utils import TrajectoryPublisher
 
+from disturbance import VelocityPublisher, MouseDisturbanceWithFigure
+
 
 class GrassPublisher(Node):
     line_length = 1.0
@@ -229,6 +231,13 @@ class RvizQoloAnimator(Animator):
         else:
             self.fig = None
 
+        self.mouse_offset_scaling = 0.1
+        self.mouse_listener = MouseDisturbanceWithFigure(fig=self.fig)
+        self.disturbance_publiser = VelocityPublisher(
+            name="disturbance", color=(255, 140, 0)
+        )
+        self.velocity_publisher = VelocityPublisher(name="velocity", color=(0, 0, 255))
+
         # Initial update of transform
         update_shapes_of_agent(self.robot)
         for ii, agent in enumerate(self.agent_container):
@@ -285,6 +294,14 @@ class RvizQoloAnimator(Animator):
         if self.broadcaster is not None:
             self.broadcaster.broadcast([self.robot])
             self.broadcaster.broadcast(self.agent_container)
+
+        # Check for disturbance and add it (!)
+        disturbance = self.mouse_listener.click_offset * self.mouse_offset_scaling
+        self.disturbance_publiser.publish(self.robot.pose.position, disturbance)
+        self.robot.update_step(dt=self.dt_simulation, disturbance_velocity=disturbance)
+        self.velocity_publisher.publish(
+            self.robot.pose.position, self.robot.twist.linear * 3
+        )
 
         if not self.do_plotting:
             return
@@ -346,7 +363,7 @@ class RosAnimatorNode(Node):
 
 def main_wavy(
     it_max: int = 1000,
-    delta_time: float = 0.1,
+    delta_time: float = 0.02,
     do_ros: bool = True,
     # do_plotting: bool = False,
     do_plotting: bool = True,

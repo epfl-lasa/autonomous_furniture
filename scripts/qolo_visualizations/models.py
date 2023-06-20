@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from vartools.states import Pose, Twist
+from vartools.angle_math import periodic_weighted_sum
 
 from dynamic_obstacle_avoidance.obstacles import Obstacle
 from dynamic_obstacle_avoidance.obstacles import CuboidXd as Cuboid
@@ -109,8 +110,16 @@ class RvizQolo:
 
     name: str = "qolo_human"
 
-    def update_step(self, dt: float) -> None:
+    orientation: float = 0.0
+    transition_weight: float = 0.1
+
+    def update_step(
+        self, dt: float, disturbance_velocity: Optional[np.ndarray] = None
+    ) -> None:
         self.pose.position = self.pose.position + self.twist.linear * dt
+        if disturbance_velocity is not None:
+            self.pose.position = self.pose.position + disturbance_velocity * dt
+
         self.pose.orientation = np.arctan2(self.twist.linear[1], self.twist.linear[0])
 
     @property
@@ -125,9 +134,14 @@ class RvizQolo:
         transform_stamped.transform.translation.y = self.pose.position[1]
         transform_stamped.transform.translation.z = 0.2
 
+        self.orientation = periodic_weighted_sum(
+            [self.pose.orientation, self.orientation],
+            [self.transition_weight, 1 - self.transition_weight],
+        )
+
         # roll-pitch-yaw
         transform_stamped.transform.rotation = euler_to_quaternion(
-            0, 0, self.pose.orientation
+            0, 0, self.orientation
         )
 
         return transform_stamped
