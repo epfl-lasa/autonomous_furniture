@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 
 from vartools.states import Pose, Twist
+from vartools.colors import hex_to_rgba
 from vartools.dynamical_systems import QuadraticAxisConvergence, LinearSystem
 from vartools.dynamics import WavyRotatedDynamics
 from vartools.animator import Animator
@@ -161,10 +162,10 @@ class QoloWallsAnimator(Animator):
         #     dimension=2,
         #     attractor_position=attractor,
         # )
-        initial_dynamics = LinearSystem(
-            attractor_position=attractor,
-            maximum_velocity=1.0,
-        )
+        # self.initial_dynamics = LinearSystem(
+        #     attractor_position=attractor,
+        #     maximum_velocity=1.0,
+        # )
 
         # self.container = MultiObstacleContainer()
         # self.container.append(
@@ -217,6 +218,9 @@ class QoloWallsAnimator(Animator):
             name="disturbance", color=(255, 140, 0)
         )
         self.velocity_publisher = VelocityPublisher(name="velocity", color=(0, 0, 255))
+        self.initial_publisher = VelocityPublisher(
+            name="initial", color=hex_to_rgba("7e4d85")
+        )
 
         # Initial update of transform
         update_shapes_of_agent(self.robot)
@@ -300,8 +304,15 @@ class QoloWallsAnimator(Animator):
         disturbance = self.mouse_listener.click_offset * self.mouse_offset_scaling
         self.disturbance_publiser.publish(self.robot.pose.position, disturbance)
         self.robot.update_step(dt=self.dt_simulation, disturbance_velocity=disturbance)
+
+        # Publish velocities
+        velocity_factor = 3.0
         self.velocity_publisher.publish(
-            self.robot.pose.position, self.robot.twist.linear * 3
+            self.robot.pose.position, self.robot.twist.linear * velocity_factor
+        )
+        self.initial_publisher.publish(
+            self.robot.pose.position,
+            self.initial_dynamics.evaluate(self.robot.pose.position) * velocity_factor,
         )
 
         update_shapes_of_agent(self.robot)

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from vartools.states import Pose
+from vartools.colors import hex_to_rgba
 from vartools.dynamical_systems import LinearSystem
 from vartools.animator import Animator
 
@@ -237,6 +238,9 @@ class RvizQoloAnimator(Animator):
             name="disturbance", color=(255, 140, 0)
         )
         self.velocity_publisher = VelocityPublisher(name="velocity", color=(0, 0, 255))
+        self.initial_publisher = VelocityPublisher(
+            name="initial", color=hex_to_rgba("7e4d85")
+        )
 
         # Initial update of transform
         update_shapes_of_agent(self.robot)
@@ -299,8 +303,15 @@ class RvizQoloAnimator(Animator):
         disturbance = self.mouse_listener.click_offset * self.mouse_offset_scaling
         self.disturbance_publiser.publish(self.robot.pose.position, disturbance)
         self.robot.update_step(dt=self.dt_simulation, disturbance_velocity=disturbance)
+
+        # Publish velocities
+        velocity_factor = 3.0
         self.velocity_publisher.publish(
-            self.robot.pose.position, self.robot.twist.linear * 3
+            self.robot.pose.position, self.robot.twist.linear * velocity_factor
+        )
+        self.initial_publisher.publish(
+            self.robot.pose.position,
+            self.initial_dynamics.evaluate(self.robot.pose.position) * velocity_factor,
         )
 
         if not self.do_plotting:
